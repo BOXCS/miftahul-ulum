@@ -1,0 +1,15 @@
+/* resources/css/app.css atau di dalam <style> di Blade */
+.indicator {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 38px; /* Sesuaikan dengan tinggi menu */
+    background-color: #007bff;
+    transition: top 0.3s ease;
+}
+
+.nav-link.active {
+    color: #007bff !important;
+    font-weight: bold;
+}
