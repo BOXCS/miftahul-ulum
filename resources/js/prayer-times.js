@@ -32,14 +32,14 @@ document.addEventListener("DOMContentLoaded", async function () {
             let isUpcoming = index === upcomingPrayerIndex;
 
             // Gaya inline untuk jadwal yang akan datang
-            let cardStyle = isUpcoming ? "background-color: rgb(29, 122, 129); color: white; font-size: 1.2rem; padding: 1.5rem; transform: scale(1.1); transition: all 0.3s ease-in-out;" : "";
+            let cardStyle = isUpcoming ? "background-color: rgb(29, 122, 129); color: white; font-size: 1rem; padding: 1.5rem; transform: scale(1.1); transition: all 0.3s ease-in-out;" : "";
 
             html += `
-                <div class="card border shadow-sm p-3" style="${cardStyle}">
+                <div class="card rounded-50 border shadow-sm p-3" style="${cardStyle}">
                     <p class="fw-light mb-1">Waktu adzan untuk daerah Jember</p>
                     <div class="d-flex flex-row align-items-center justify-content-between">
                         <p class="mb-0 ${isUpcoming ? 'fw-bold' : 'text-muted'}">${prayerLabels[index]}</p>
-                        <span class="px-3 py-2 rounded-pill text-black fw-bold align-items-center" style="background-color: #8DBABE;">
+                        <span class="px-3 py-1 rounded-pill text-black fw-bold align-items-center" style="background-color: #8DBABE;">
                             ${time}
                         </span>
                     </div>

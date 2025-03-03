@@ -4,10 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Miftahul-Ulum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Caros&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Caros', sans-serif;
+        }
+    </style>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    {{-- <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}"> --}}
+    {{-- <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}"> --}}
     @php
         use App\Helpers\ViteHelper;
     @endphp
