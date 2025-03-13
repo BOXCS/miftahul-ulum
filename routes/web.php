@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\SuperAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,30 +16,41 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+
+// Halaman Utama
 Route::get('/', function () {
     return view('welcome');
 });
- 
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->name('dashboard');
+// Halaman login
+Route::get('/login', [AuthController::class, 'login'])->name('login');
+Route::post('/login', [AuthController::class, 'authenticate']);
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+// Dashboard Admin (akses seperti sebelumnya)
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+});
 
+// Dashboard Superadmin (kosongan)
+Route::middleware(['auth', 'role:superadmin'])->group(function () {
+    Route::get('/superadmin/dashboard', [SuperAdminController::class, 'index'])->name('superadmin.dashboard');
+});
 
-Route::get('/management', function () {
-    return view('management');
-})->name('management');
+// Halaman Lainnya (Harus Login)
+Route::middleware('auth')->group(function () {
+    Route::get('/management', function () {
+        return view('management');
+    })->name('management');
 
-Route::get('/attendance', function () {
-    return view('attendance');
-})->name('attendance');
+    Route::get('/attendance', function () {
+        return view('attendance');
+    })->name('attendance');
 
-Route::get('/chat', function () {
-    return view('chat');
-})->name('chat');
+    Route::get('/chat', function () {
+        return view('chat');
+    })->name('chat');
 
-Route::get('/announcement', function () {
-    return view('announcement');
-})->name('announcement');
+    Route::get('/announcement', function () {
+        return view('announcement');
+    })->name('announcement');
+});
