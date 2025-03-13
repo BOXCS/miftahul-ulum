@@ -28,7 +28,7 @@
                         <h2 class="fw-bold">{{ $absenHariIni }} ({{ $persentaseAbsen }}%) ❌</h2>
                     </div>
                 </div>
-                
+
             </div>
 
             <!-- Grafik Kehadiran -->
@@ -50,7 +50,7 @@
                 <hr class="mt-2 mb-4 border-light"> <!-- Garis dengan warna lebih soft -->
                 <canvas id="chartAttendance"></canvas>
             </div>
-            
+
         </div>
 
         <!-- Jadwal Shalat & Santri Teraktif -->
@@ -72,16 +72,18 @@
                                 </li>
                             @endforeach
                         </ul>
-                    </div>                    
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ asset('js/chart-attendance.js') }}"></script>
     <script src="{{ asset('js/prayer-times.js') }}"></script>
 @endpush
+
 @endsection
