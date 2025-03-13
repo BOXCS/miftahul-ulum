@@ -1,0 +1,11 @@
+/* Atur tinggi grafik secara default */
+#chartAttendance {
+    height: 700px; /* Tinggi default untuk layar besar */
+}
+
+/* Atur tinggi grafik untuk layar kecil (≤ 768px) */
+@media (max-width: 768px) {
+    #chartAttendance {
+        height: 500px; /* Tinggi lebih besar untuk layar kecil */
+    }
+}

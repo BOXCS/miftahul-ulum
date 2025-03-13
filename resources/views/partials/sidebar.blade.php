@@ -1,5 +1,5 @@
 <!-- Sidebar -->
-<aside id="sidebar" class="shadow-sm p-3 sidebar d-md-block d-none" 
+<aside id="sidebar" class="shadow-sm p-3 sidebar d-lg-block d-none" 
        style="width: 300px; height: 100vh; position: fixed; background-color: #EFF0F5; transition: transform 0.3s ease;">
     
     <!-- Logo -->
@@ -42,7 +42,7 @@
 </aside>
 
 <!-- Tombol Hamburger -->
-<button id="toggleSidebar" class="btn btn-primary d-md-none position-fixed top-0 start-0 m-3">
+<button id="toggleSidebar" class="btn btn-primary d-lg-none position-end top-0 start-0 m-3">
     ☰
 </button>
 
