@@ -16,8 +16,6 @@ class CreateSantriTable extends Migration
             $table->enum('status', ['aktif', 'tidak aktif'])->nullable();
             $table->unsignedBigInteger('id_ortu');
             $table->foreign('id_ortu')->references('id_ortu')->on('orang_tua')->onDelete('cascade');
-            $table->unsignedBigInteger('id_izin');
-            $table->foreign('id_izin')->references('id_izin')->on('perizinan')->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -15,6 +15,8 @@ class CreatePengumumanTable extends Migration
             $table->date('tgl_mulai'); // Bisa diganti dengan timestamp jika perlu waktu juga
             $table->enum('kategori', ['akademik', 'administrasi', 'kegiatan'])->index();
             $table->string('foto')->nullable(); // Simpan path gambar, bukan binary data
+            $table->unsignedBigInteger('id_akun');
+            $table->foreign('id_akun')->references('id_akun')->on('akun')->onDelete('cascade');
             $table->timestamps();
         });        
     }
