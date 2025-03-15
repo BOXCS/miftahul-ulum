@@ -4,26 +4,24 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class SantriSeeder extends Seeder
 {
     public function run()
     {
-        $tahunAngkatan = '24'; // Misalnya tahun angkatan 2024
+        $tahunAngkatan = '24'; // Tahun angkatan 2024
         
         for ($i = 1; $i <= 10; $i++) {
-            $id = 'MU' . $tahunAngkatan . str_pad($i, 4, '0', STR_PAD_LEFT);
-            
-            $status = $i <= 7 ? 'Aktif' : ['Tidak Aktif', 'Izin', 'Sakit'][array_rand(['Tidak Aktif', 'Izin', 'Sakit'])];
-            
+            // Tentukan status santri
+            $status = $i <= 7 ? 'aktif' : 'tidak aktif';
+
             DB::table('santri')->insert([
-                'id' => $id,
-                'nama_lengkap' => 'Santri ' . $i,
+                'nama' => 'Santri ' . $i,
                 'tahun_angkatan' => $tahunAngkatan,
-                'nama_orang_tua' => 'Orang Tua ' . $i,
+                'sidik_jari' => null, // Sidik jari tidak diisi (nullable)
                 'status' => $status,
-                'sidik_jari' => null, // Karena binary, kita biarkan NULL dulu
+                'id_ortu' => rand(1, 5), // Id orang tua diacak antara 1-5 (sesuaikan dengan data orang tua)
+                'id_izin' => null, // Tidak semua santri memiliki izin, bisa diatur nanti
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

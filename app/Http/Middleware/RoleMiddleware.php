@@ -14,8 +14,9 @@ class RoleMiddleware
             return redirect('/login'); // Redirect ke login jika belum login
         }
 
-        if (Auth::user()->role !== $role) {
-            abort(403, 'Unauthorized action.'); // Jika bukan role yang diizinkan
+        // Cek apakah user memiliki hak akses yang sesuai
+        if (Auth::user()->hak_akses !== $role) {
+            abort(403, 'Unauthorized action.');
         }
 
         return $next($request);
