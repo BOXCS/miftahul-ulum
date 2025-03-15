@@ -20,7 +20,7 @@
     @endphp
 
     @vite(ViteHelper::allJsFiles())
-
+    @stack('styles');
 </head>
 
 <body style="background-color: #DFE7F5;" class="d-flex">

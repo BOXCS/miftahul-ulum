@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ManagementController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -25,10 +26,7 @@ Route::get('/dashboard', function () {
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-
-Route::get('/management', function () {
-    return view('management');
-})->name('management');
+Route::resource('management',ManagementController::class)->names('management');
 
 Route::get('/attendance', function () {
     return view('attendance');

@@ -18,4 +18,7 @@ class Santri extends Model
         'status',
         'sidik_jari',
     ];
+    protected $casts = [
+        'id' => 'string',
+    ];
 }
