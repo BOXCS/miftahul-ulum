@@ -2,22 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class Akun extends Authenticatable
 {
-    use Notifiable;
+    use HasFactory, Notifiable;
 
-    protected $table = 'akun'; // Sesuai dengan nama tabel di database
-    protected $primaryKey = 'id_akun'; // Primary key sesuai migration
+    protected $table = 'akun';
+    protected $primaryKey = 'id_akun';
 
-    protected $fillable = ['username', 'password', 'hak_akses'];
+    protected $fillable = ['username', 'email', 'password', 'hak_akses'];
 
     protected $hidden = ['password'];
-
-    public function getAuthPassword()
-    {
-        return $this->password;
-    }
 }
+

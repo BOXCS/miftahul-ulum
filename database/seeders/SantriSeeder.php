@@ -9,22 +9,31 @@ class SantriSeeder extends Seeder
 {
     public function run()
     {
-        $tahunAngkatan = '24'; // Tahun angkatan 2024
-        
-        for ($i = 1; $i <= 10; $i++) {
-            // Tentukan status santri
-            $status = $i <= 7 ? 'aktif' : 'tidak aktif';
+        $tahun_angkatan = '2024';
+        $tahun_2digit = substr($tahun_angkatan, 2, 2); // Ambil 2 digit terakhir (24)
+
+        // Ambil ID Orang Tua yang tersedia di database
+        $id_ortu_list = DB::table('orang_tua')->pluck('id_ortu')->toArray();
+
+        if (count($id_ortu_list) < 10) {
+            throw new \Exception("Jumlah orang tua kurang dari 10, harap cek data di database.");
+        }
+
+        for ($i = 0; $i < 10; $i++) {
+            $id_santri = 'MU01' . $tahun_2digit . str_pad($i + 1, 4, '0', STR_PAD_LEFT);
 
             DB::table('santri')->insert([
-                'nama' => 'Santri ' . $i,
-                'tahun_angkatan' => $tahunAngkatan,
-                'sidik_jari' => null, // Sidik jari tidak diisi (nullable)
-                'status' => $status,
-                'id_ortu' => rand(1, 5), // Id orang tua diacak antara 1-5 (sesuaikan dengan data orang tua)
-                'id_izin' => null, // Tidak semua santri memiliki izin, bisa diatur nanti
-                'created_at' => now(),
-                'updated_at' => now(),
+                'id_santri'     => $id_santri,
+                'nama'          => 'Santri ' . ($i + 1),
+                'tahun_angkatan'=> $tahun_angkatan,
+                'sidik_jari'    => null,
+                'status'        => 'aktif',
+                'id_ortu'       => $id_ortu_list[$i], // Ambil id_ortu yang valid
+                'created_at'    => now(),
+                'updated_at'    => now(),
             ]);
         }
     }
 }
+
+

@@ -13,7 +13,7 @@ class CreatePerizinanTable extends Migration
             $table->timestamp('waktu');
             $table->enum('jenis_izin', ['izin', 'sakit'])->nullable();
             $table->text('keterangan');
-            $table->unsignedBigInteger('id_santri');
+            $table->String('id_santri');
             $table->foreign('id_santri')->references('id_santri')->on('santri')->onDelete('cascade');
             $table->timestamps();
         });

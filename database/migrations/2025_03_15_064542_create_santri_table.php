@@ -9,11 +9,11 @@ class CreateSantriTable extends Migration
     public function up()
     {
         Schema::create('santri', function (Blueprint $table) {
-            $table->id('id_santri')->nullable();
+            $table->string('id_santri')->primary();
             $table->string('nama');
-            $table->string('tahun_angkatan', 2);
+            $table->string('tahun_angkatan', 4);
             $table->binary('sidik_jari')->nullable();
-            $table->enum('status', ['aktif', 'tidak aktif'])->nullable();
+            $table->enum('status', ['aktif', 'tidak aktif'])->default('aktif');
             $table->unsignedBigInteger('id_ortu');
             $table->foreign('id_ortu')->references('id_ortu')->on('orang_tua')->onDelete('cascade');
             $table->timestamps();

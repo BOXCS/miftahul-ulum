@@ -30,6 +30,9 @@ Route::post('/login', [AuthController::class, 'authenticate']);
 Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
 
+Route::get('/register-superadmin', [AuthController::class, 'showSuperadminForm'])->name('register.superadmin');
+Route::post('/register-superadmin', [AuthController::class, 'registerSuperadmin']);
+
 
 // Dashboard Admin (akses seperti sebelumnya)
 Route::middleware(['auth', 'role:admin'])->group(function () {

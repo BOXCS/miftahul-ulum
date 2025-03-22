@@ -9,9 +9,6 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         // Total Santri Aktif
@@ -22,6 +19,14 @@ class DashboardController extends Controller
         $yesterday = Carbon::yesterday()->toDateString();
         $weekStart = Carbon::now()->startOfWeek()->toDateString();
         $monthStart = Carbon::now()->startOfMonth()->toDateString();
+        $monthAgo = Carbon::now()->subMonth()->toDateString();
+
+        $totalKesempatanHadir = $totalSantri * 5;
+
+        // Total maksimal kehadiran dalam sebulan terakhir
+        $totalHari = Carbon::now()->diffInDays(Carbon::now()->subMonth()) + 1; // Jumlah hari dalam sebulan terakhir
+        $totalWaktuShalat = 5; // Jumlah ibadah per hari (Subuh, Dzuhur, Ashar, Maghrib, Isya)
+        $totalMaksimalKehadiran = $totalSantri * $totalHari * $totalWaktuShalat;
 
         // Fungsi untuk menghitung persentase kehadiran
         function getAttendancePercentage($dateFilter)
@@ -33,13 +38,13 @@ class DashboardController extends Controller
                 $totalHadir = DB::table('kehadiran')
                     ->whereDate('waktu', '>=', $dateFilter)
                     ->where('waktu_shalat', $waktu)
-                    ->whereNotNull('jam_masuk') // Hadir jika ada jam masuk
+                    ->whereNotNull('jam_masuk')
                     ->count();
 
                 $totalSantri = DB::table('santri')->where('status', 'aktif')->count();
                 $percentage = $totalSantri > 0 ? round(($totalHadir / $totalSantri) * 100) : 0;
 
-                $result[] = $percentage;
+                $result[$waktu] = $percentage;
             }
 
             return $result;
@@ -53,43 +58,53 @@ class DashboardController extends Controller
             'month' => getAttendancePercentage($monthStart)
         ];
 
-        // Hitung jumlah santri Hadir & Tidak Hadir hari ini
-        $hadirHariIni = DB::table('kehadiran')
+        // Hitung jumlah kehadiran berdasarkan total shalat yang diikuti santri
+        $totalHadirHariIni = DB::table('kehadiran')
             ->whereDate('waktu', $today)
-            ->whereNotNull('jam_masuk') // Hadir jika ada jam masuk
+            ->whereNotNull('jam_masuk')
+            ->count(); // Menghitung semua entri kehadiran (bukan santri unik)
+
+        $totalHadirBulanLalu = DB::table('kehadiran')
+            ->whereDate('waktu', '>=', $monthAgo)
+            ->whereNotNull('jam_masuk')
             ->count();
 
-        $absenHariIni = $totalSantri - $hadirHariIni; // Absen = Total Santri - Hadir
 
-        // Hitung persentase kehadiran hari ini
-        $persentaseHadir = $totalSantri > 0 ? round(($hadirHariIni / $totalSantri) * 100) : 0;
-        $persentaseAbsen = $totalSantri > 0 ? round(($absenHariIni / $totalSantri) * 100) : 0;
+        // Hitung jumlah santri yang hadir minimal 1 kali hari ini
+        $hadirHariIni = DB::table('kehadiran')
+            ->whereDate('waktu', $today)
+            ->whereNotNull('jam_masuk')
+            ->distinct()
+            ->count('id_santri'); // Hitung santri unik yang hadir
+
+        $totalAbsenHariIni = $totalKesempatanHadir - $totalHadirHariIni;
+
+        $absenHariIni = $totalSantri * 5 - $totalHadirHariIni;
+        $persentaseHadir = $totalKesempatanHadir > 0 ? round(($totalHadirHariIni / $totalKesempatanHadir) * 100, 2) : 0;
+        $persentaseAbsen = $totalKesempatanHadir > 0 ? round(($totalAbsenHariIni / $totalKesempatanHadir) * 100, 2) : 0;
 
         // Santri Teraktif (Paling Sering Hadir)
         $santriTeraktif = DB::table('kehadiran')
             ->join('santri', 'kehadiran.id_santri', '=', 'santri.id_santri')
+            ->whereDate('kehadiran.waktu', '>=', $monthAgo)
+            ->whereNotNull('kehadiran.jam_masuk')
             ->select(
                 'santri.id_santri',
                 'santri.nama',
                 DB::raw('COUNT(kehadiran.id_kehadiran) as jumlah_hadir'),
-                DB::raw('ROUND((COUNT(kehadiran.id_kehadiran) / (SELECT COUNT(*) FROM kehadiran)) * 100, 2) as persentase_hadir')
+                DB::raw("ROUND((COUNT(kehadiran.id_kehadiran) / $totalHadirBulanLalu) * 100, 2) as persentase_hadir")
             )
             ->groupBy('santri.id_santri', 'santri.nama')
-            ->orderByDesc('persentase_hadir')
+            ->orderByDesc('jumlah_hadir')
             ->limit(5)
             ->get();
 
         // Data Hadir Hari Ini
         $hadirHariIniData = DB::table('kehadiran')
             ->join('santri', 'kehadiran.id_santri', '=', 'santri.id_santri')
-            ->whereDate('waktu', $today)
-            ->whereNotNull('jam_masuk') // Hadir jika ada jam masuk
-            ->select(
-                'santri.nama',
-                'kehadiran.waktu_shalat',
-                'kehadiran.jam_masuk',
-                'kehadiran.jam_keluar'
-            )
+            ->whereDate('kehadiran.waktu', $today)
+            ->whereNotNull('kehadiran.jam_masuk')
+            ->select('santri.nama', 'kehadiran.waktu_shalat', 'kehadiran.jam_masuk', 'kehadiran.jam_keluar')
             ->get();
 
         // Data Absen Hari Ini
@@ -99,35 +114,29 @@ class DashboardController extends Controller
                     ->whereDate('kehadiran.waktu', $today);
             })
             ->where('santri.status', 'aktif')
-            ->whereNull('kehadiran.jam_masuk') // Tidak hadir jika tidak ada jam masuk
-            ->select(
-                'santri.nama'
-            )
+            ->whereNull('kehadiran.jam_masuk')
+            ->select('santri.nama')
             ->get();
 
         // Data Perizinan Hari Ini
         $izinHariIniData = DB::table('perizinan')
-            ->join('santri', 'perizinan.id_izin', '=', 'santri.id_izin')
+            ->join('santri', 'perizinan.id_santri', '=', 'santri.id_santri')
             ->whereDate('perizinan.waktu', $today)
-            ->select(
-                'santri.nama',
-                'perizinan.jenis_izin',
-                'perizinan.keterangan'
-            )
+            ->select('santri.nama', 'perizinan.jenis_izin', 'perizinan.keterangan')
             ->get();
 
-        // Kirim data ke view
         return view('dashboard', compact(
             'totalSantri',
             'hadirHariIni',
             'persentaseHadir',
+            'totalHadirHariIni',
             'absenHariIni',
             'persentaseAbsen',
             'santriTeraktif',
             'attendanceData',
             'hadirHariIniData',
             'absenHariIniData',
-            'izinHariIniData' // Data perizinan hari ini
+            'izinHariIniData'
         ));
     }
 

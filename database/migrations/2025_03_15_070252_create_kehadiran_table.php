@@ -14,7 +14,7 @@ class CreateKehadiranTable extends Migration
             $table->timestamp('jam_masuk')->nullable();
             $table->timestamp('jam_keluar')->nullable();
             $table->enum('waktu_shalat', ['Subuh', 'Dzuhur', 'Ashar', 'Maghrib', 'Isya']);
-            $table->unsignedBigInteger('id_santri')->index();
+            $table->String('id_santri')->index();
             $table->foreign('id_santri')->references('id_santri')->on('santri')->onDelete('cascade');
             $table->timestamps();
         });

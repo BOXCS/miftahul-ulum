@@ -19,7 +19,7 @@
                 <div class="col-md-4 col-6">
                     <div class="card bg-success text-white shadow-sm p-3 text-center">
                         <p>Hadir Hari Ini</p>
-                        <h2 class="fw-bold">{{ $hadirHariIni }} ({{ $persentaseHadir }}%) ✅</h2>
+                        <h2 class="fw-bold">{{ $totalHadirHariIni }} ({{ $persentaseHadir }}%) ✅</h2>
                     </div>
                 </div>
                 <div class="col-md-4 col-6 mx-auto">
@@ -68,7 +68,7 @@
                         <ul class="list-group list-group-flush">
                             @foreach ($santriTeraktif as $index => $santri)
                                 <li class="list-group-item">
-                                    {{ $index + 1 }}. {{ $santri->nama_santri }} - {{ $santri->persentase_hadir }}%
+                                    {{ $index + 1 }}. {{ $santri->nama }} - {{ $santri->persentase_hadir }}%
                                 </li>
                             @endforeach
                         </ul>

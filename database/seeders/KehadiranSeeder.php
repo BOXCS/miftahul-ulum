@@ -10,56 +10,52 @@ class KehadiranSeeder extends Seeder
 {
     public function run()
     {
-        $santri = DB::table('santri')->pluck('id', 'nama_lengkap');
-        $waktuShalat = ['Subuh' => '05:00:00', 'Dzuhur' => '12:00:00', 'Ashar' => '15:30:00', 'Maghrib' => '18:00:00', 'Isya' => '19:30:00'];
-        $startDate = Carbon::now()->subMonth(); // 1 bulan ke belakang
+        // Ambil semua santri yang aktif
+        $santri = DB::table('santri')->where('status', 'aktif')->pluck('id_santri');
 
-        foreach ($santri as $nama => $santri_id) {
-            for ($i = 0; $i < 30; $i++) { // 30 hari
-                $date = $startDate->copy()->addDays($i);
+        // Waktu shalat yang ada dalam sistem
+        $waktuShalat = ['Subuh', 'Dzuhur', 'Ashar', 'Maghrib', 'Isya'];
 
-                foreach ($waktuShalat as $shalat => $waktu) {
-                    // Tentukan waktu shalat berdasarkan jam masuk
-                    $waktuShalatValue = $this->getWaktuShalat($waktu);
+        // Tanggal bulan ini dan bulan lalu
+        $startThisMonth = Carbon::now()->startOfMonth();
+        $startLastMonth = Carbon::now()->subMonth()->startOfMonth();
+        $endLastMonth = Carbon::now()->subMonth()->endOfMonth();
 
-                    DB::table('kehadiran')->insert([
-                        'santri_id' => $santri_id,
-                        'nama_santri' => $nama,
-                        'jam_masuk' => $waktu,
-                        'jam_keluar' => Carbon::parse($waktu)->addMinutes(rand(10, 30))->format('H:i:s'),
-                        'status' => ['Hadir', 'Tidak Hadir', 'Izin', 'Sakit'][array_rand(['Hadir', 'Tidak Hadir', 'Izin', 'Sakit'])],
-                        'waktu_shalat' => $waktuShalatValue, // Waktu shalat diisi otomatis
-                        'tanggal_waktu' => $date->format('Y-m-d') . ' ' . $waktu,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
+        // Fungsi untuk generate kehadiran
+        function generateKehadiran($santri, $startDate, $endDate, $waktuShalat)
+        {
+            $kehadiranData = [];
+
+            while ($startDate <= $endDate) {
+                foreach ($santri as $idSantri) {
+                    foreach ($waktuShalat as $waktu) {
+                        // 80% kemungkinan hadir, 20% absen
+                        if (rand(1, 100) <= 80) {
+                            $kehadiranData[] = [
+                                'id_santri'   => $idSantri,
+                                'waktu'       => $startDate->toDateString(),
+                                'waktu_shalat' => $waktu,
+                                'jam_masuk'   => $startDate->copy()->setHour(rand(4, 20))->setMinute(rand(0, 59))->format('H:i:s'),
+                                'jam_keluar'  => $startDate->copy()->setHour(rand(4, 21))->setMinute(rand(0, 59))->format('H:i:s'),
+                                'created_at'  => now(),
+                                'updated_at'  => now(),
+                            ];
+                        }
+                    }
                 }
+                $startDate->addDay();
             }
-        }
-    }
 
-    /**
-     * Fungsi untuk menentukan waktu shalat berdasarkan jam masuk.
-     *
-     * @param string $jamMasuk
-     * @return string|null
-     */
-    private function getWaktuShalat($jamMasuk)
-    {
-        $jam = strtotime($jamMasuk);
-
-        if ($jam >= strtotime('04:00:00') && $jam < strtotime('06:00:00')) {
-            return 'Subuh';
-        } elseif ($jam >= strtotime('12:00:00') && $jam < strtotime('14:00:00')) {
-            return 'Dzuhur';
-        } elseif ($jam >= strtotime('15:00:00') && $jam < strtotime('17:00:00')) {
-            return 'Ashar';
-        } elseif ($jam >= strtotime('18:00:00') && $jam < strtotime('19:00:00')) {
-            return 'Maghrib';
-        } elseif ($jam >= strtotime('19:30:00') && $jam < strtotime('21:00:00')) {
-            return 'Isya';
-        } else {
-            return null; // Jika tidak masuk ke rentang waktu shalat
+            return $kehadiranData;
         }
+
+        // Buat data kehadiran untuk bulan lalu dan bulan ini
+        $dataKehadiran = array_merge(
+            generateKehadiran($santri, $startLastMonth, $endLastMonth, $waktuShalat),
+            generateKehadiran($santri, $startThisMonth, now(), $waktuShalat)
+        );
+
+        // Masukkan data ke tabel kehadiran
+        DB::table('kehadiran')->insert($dataKehadiran);
     }
 }

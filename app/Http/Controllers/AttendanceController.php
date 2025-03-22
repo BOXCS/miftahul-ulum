@@ -14,39 +14,44 @@ class AttendanceController extends Controller
         $waktuShalat = ['Subuh', 'Dzuhur', 'Ashar', 'Maghrib', 'Isya'];
         $data = [];
 
-        // Hitung persentase kehadiran berdasarkan filter
+        // Ambil total santri aktif
+        $totalSantri = DB::table('santri')->where('status', 'aktif')->count();
+
+        // Jika tidak ada santri, langsung return data 0%
+        if ($totalSantri === 0) {
+            return response()->json(array_fill(0, count($waktuShalat), 0));
+        }
+
         foreach ($waktuShalat as $shalat) {
-            $query = DB::table('kehadiran')
-                ->where('waktu_shalat', $shalat);
+            $query = DB::table('kehadiran')->where('waktu_shalat', $shalat);
 
             // Filter berdasarkan tanggal
             switch ($filter) {
                 case 'today':
-                    $query->whereDate('tanggal_waktu', Carbon::today());
+                    $query->whereDate('waktu', Carbon::today());
                     break;
                 case 'yesterday':
-                    $query->whereDate('tanggal_waktu', Carbon::yesterday());
+                    $query->whereDate('waktu', Carbon::yesterday());
                     break;
                 case 'week':
-                    $query->whereBetween('tanggal_waktu', [
+                    $query->whereBetween('waktu', [
                         Carbon::now()->startOfWeek(),
                         Carbon::now()->endOfWeek()
                     ]);
                     break;
                 case 'month':
-                    $query->whereMonth('tanggal_waktu', Carbon::now()->month);
+                    $query->whereMonth('waktu', Carbon::now()->month);
                     break;
                 default:
-                    // Jika filter tidak valid, kembalikan array kosong
                     return response()->json([]);
             }
 
-            // Hitung total kehadiran dan yang hadir
-            $total = $query->count();
-            $hadir = $query->where('status', 'Hadir')->count();
+            // Hitung total kehadiran pada waktu shalat tertentu
+            $totalHadir = $query->whereNotNull('jam_masuk')->count();
 
-            // Hitung persentase kehadiran
-            $persentase = ($total > 0) ? round(($hadir / $total) * 100, 2) : 0;
+            // Hitung persentase dengan total santri
+            $persentase = round(($totalHadir / ($totalSantri * 5)) * 100, 2);
+
             $data[] = $persentase;
         }
 

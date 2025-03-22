@@ -10,7 +10,8 @@ class CreateAkunTable extends Migration
     {
         Schema::create('akun', function (Blueprint $table) {
             $table->id('id_akun');
-            $table->string('username')->unique();
+            $table->string('email')->unique();
+            $table->string('username');
             $table->string('password', 60);
             $table->enum('hak_akses', ['admin', 'superadmin', 'ortu']);
             $table->timestamps();

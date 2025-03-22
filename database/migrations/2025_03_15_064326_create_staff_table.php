@@ -12,7 +12,6 @@ class CreateStaffTable extends Migration
             $table->id('id_staf');
             $table->string('nama');
             $table->string('alamat');
-            $table->string('email')->unique();
             $table->string('no_telp');
             $table->string('jabatan');
             $table->date('tgl_bergabung');
