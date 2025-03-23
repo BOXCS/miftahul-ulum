@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\AttendanceController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\KehadiranController;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,6 +15,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+//Route::get('/', function () {
+//    return view('attendance');
+//});
+
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/attendance');
 });
+
+Route::get('/attendance', [AttendanceController::class, 'attendance']);
