@@ -13,7 +13,7 @@
             $routes = [
                 'dashboard' => ['icon' => 'dashboard.png', 'label' => 'Dashboard'],
                 'management' => ['icon' => 'management.png', 'label' => 'Manajemen Data'],
-                'attendance' => ['icon' => 'attendance.png', 'label' => 'Laporan Kehadiran'],
+                'report.index' => ['icon' => 'report.png', 'label' => 'Laporan Kehadiran'],
                 'chat' => ['icon' => 'chat.png', 'label' => 'Chat'],
                 'announcement' => ['icon' => 'announcement.png', 'label' => 'Pengumuman/FAQ']
             ];

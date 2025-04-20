@@ -15,6 +15,7 @@
     <!-- Wrapper untuk halaman login/register -->
     <div class="d-flex flex-column min-vh-100 justify-content-center align-items-center">
         @yield('content')
+        @stack('scripts')
     </div>
 
     <!-- Bootstrap JS -->

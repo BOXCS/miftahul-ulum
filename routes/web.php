@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SuperAdminController;
 
 /*
@@ -24,7 +26,7 @@ Route::get('/', function () {
 
 // Halaman login
 Route::get('/login', [AuthController::class, 'login'])->name('login');
-Route::post('/login', [AuthController::class, 'authenticate']);
+Route::post('/login', [AuthController::class, 'authenticate'])->name('auth.authenticate');
 
 // Halaman Register
 Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
@@ -45,14 +47,13 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
 });
 
 // Halaman Lainnya (Harus Login)
-Route::middleware('auth')->group(function () {
+
+Route::middleware(['auth'])->group(function () {
     Route::get('/management', function () {
         return view('management');
     })->name('management');
 
-    Route::get('/attendance', function () {
-        return view('attendance');
-    })->name('attendance');
+    Route::resource('report', ReportController::class)->names('report');
 
     Route::get('/chat', function () {
         return view('chat');
