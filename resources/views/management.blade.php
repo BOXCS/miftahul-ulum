@@ -32,30 +32,44 @@
     <script>
         function changeMode() {
             var text = document.getElementById('mode').value;
-            document.getElementById("text").innerHTML = text;
+
+            // function for clear table (before reinitialize)
+            var tableId = "#datatable";
+            // clear first
+            if (tableObj != null) {
+                tableObj.clear();
+                tableObj.destroy();
+            }
+
+            //2nd empty html
+            $(tableId + " tbody").empty();
+            $(tableId + " thead").empty();
+
+            //3rd reCreate Datatable object
             switch (text) {
                 case "santri":
-                    new DataTable('#datatable', {
+                    tableObj = new DataTable('#datatable', {
                         data: {!! json_encode($Santris->toArray()) !!},
-                        columns: [
-                            { title: 'ID', data: 'id' },
-                            { title: 'Nama Lengkap', data: 'nama_lengkap' },
-                            { title: 'Orang Tua', data: 'nama_orang_tua' },
-                            { title: 'Sidik Jari', data: 'sidik_jari' },
-                            { title: 'Status', data: 'status' },
-                            { title: 'Aksi', data: 'sidik_jari' },
-                        ]
-                    });
-                    break;
-                case "ortu":
-                    new DataTable('#datatable', {
-                        data: {!! json_encode($Santris->values()->toArray()) !!},
                         columns: [
                             { title: 'ID'},
                             { title: 'Nama Lengkap'},
                             { title: 'Orang Tua'},
                             { title: 'Sidik Jari'},
                             { title: 'Status'},
+                            { title: 'Aksi'},
+                        ]
+                    });
+                    break;
+                case "ortu":
+                    tableObj = new DataTable('#datatable', {
+                        data: {!! json_encode($Santris->values()->toArray()) !!},
+                        columns: [
+                            { title: 'ID'},
+                            { title: 'Nama Orang Tua'},
+                            { title: 'Alamat'},
+                            { title: 'Email'},
+                            { title: 'No. Telp'},
+                            { title: 'Nama Santri'},
                             { title: 'Aksi'},
                         ],
                         columnDefs: [
@@ -64,19 +78,33 @@
                         ]
                     });
                     break;
+                case 'guru':
+                    tableObj = new DataTable('#datatable', {
+                        data: {!! json_encode($Santris->toArray()) !!},
+                        columns: [
+                            { title: 'ID'},
+                            { title: 'Nama Lengkap'},
+                            { title: 'Alamat'},
+                            { title: 'Email'},
+                            { title: 'No. Telp'},
+                            { title: 'Jabatan'},
+                            { title: 'Aksi'},
+                        ]
+                    });
+                    break;
                 default:
                     break;
             }
         }
-        new DataTable('#datatable', {
+        tableObj = new DataTable('#datatable', {
             data: {!! json_encode($Santris->values()->toArray()) !!},
             columns: [
-                { title: 'ID', data: 'id' },
-                { title: 'Nama Lengkap', data: 'nama_lengkap' },
-                { title: 'Orang Tua', data: 'nama_orang_tua' },
-                { title: 'Sidik Jari', data: 'sidik_jari' },
-                { title: 'Status', data: 'status' },
-                { title: 'Aksi', data: 'sidik_jari' },
+                { title: 'ID'},
+                { title: 'Nama Lengkap'},
+                { title: 'Orang Tua'},
+                { title: 'Sidik Jari'},
+                { title: 'Status'},
+                { title: 'Aksi'},
             ],
             columnDefs: [
                 { targets: 3, orderable: false, searchable: false },
