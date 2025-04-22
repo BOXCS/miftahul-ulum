@@ -1,7 +1,7 @@
 <!-- Sidebar -->
-<aside id="sidebar" class="shadow-sm p-3 sidebar d-md-block d-none" 
-       style="width: 300px; height: 100vh; position: fixed; background-color: #EFF0F5; transition: transform 0.3s ease;">
-    
+<aside id="sidebar" class="shadow-sm p-3 sidebar d-md-block d-none"
+    style="width: 300px; height: 100vh; position: fixed; background-color: #EFF0F5; transition: transform 0.3s ease;">
+
     <!-- Logo -->
     <div class="mb-4 text-center">
         <h5 class="fw-bold">Logo</h5>
@@ -15,27 +15,38 @@
                 'management' => ['icon' => 'management.png', 'label' => 'Manajemen Data'],
                 'report.index' => ['icon' => 'report.png', 'label' => 'Laporan Kehadiran'],
                 'chat' => ['icon' => 'chat.png', 'label' => 'Chat'],
-                'announcement' => ['icon' => 'announcement.png', 'label' => 'Pengumuman/FAQ']
+                'announcement' => ['icon' => 'announcement.png', 'label' => 'Pengumuman/FAQ'],
             ];
         @endphp
 
         @foreach ($routes as $route => $data)
-            <a href="{{ route($route) }}" 
-               class="nav-link d-flex align-items-center py-4 px-3 position-relative {{ request()->routeIs($route) ? 'active' : '' }}" 
-               style="color: {{ request()->routeIs($route) ? '#449098' : '#3A3541' }};">
-               
+            @php
+                try {
+                    $url = route($route);
+                } catch (Exception $e) {
+                    $url = '#'; // fallback
+                }
+            @endphp
+
+            <a href="{{ $url }}"
+                class="d-flex align-items-center py-4 px-3 position-relative {{ request()->routeIs($route) ? 'active' : '' }}"
+                style="color: {{ request()->routeIs($route) ? '#449098' : '#3A3541' }};">
+
                 @if (request()->routeIs($route))
                     <div class="active-indicator"></div>
                 @endif
 
-                <img src="{{ asset('icons/' . $data['icon']) }}" alt="{{ $data['label'] }}" class="me-2" style="width: 24px; height: 24px;">
+                <img src="{{ asset('image/' . $data['icon']) }}" alt="{{ $data['label'] }}" class="me-2"
+                    style="width: 24px; height: 24px;">
                 {{ $data['label'] }}
             </a>
         @endforeach
+
     </nav>
 
     <!-- Profil Admin -->
-    <div class="position-absolute bottom-0 start-50 translate-middle-x w-100 text-center p-3 bg-success text-white rounded">
+    <div
+        class="position-absolute bottom-0 start-50 translate-middle-x w-100 text-center p-3 bg-success text-white rounded">
         <p class="mb-1 fw-bold">Admin</p>
         <p class="mb-0">admin@gmail.com</p>
     </div>

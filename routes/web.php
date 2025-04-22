@@ -55,9 +55,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('report', ReportController::class)->names('report');
 
-    Route::get('/chat', function () {
-        return view('chat');
-    })->name('chat');
+    Route::get('/chat/{id_staf}/{id_ortu}', function ($id_staf, $id_ortu) {
+        return view('chat', compact('id_staf', 'id_ortu'));
+    });    
 
     Route::get('/announcement', function () {
         return view('announcement');

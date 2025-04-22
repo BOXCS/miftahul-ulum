@@ -12,7 +12,7 @@ class Santri extends Model
     protected $table = 'santri'; // Nama tabel
 
     protected $fillable = [
-        'nama_lengkap',
+        'nama',
         'tahun_angkatan',
         'nama_orang_tua',
         'status',

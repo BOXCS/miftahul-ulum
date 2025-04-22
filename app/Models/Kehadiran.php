@@ -10,6 +10,15 @@ class Kehadiran extends Model
 {
     use HasFactory;
 
+    protected $table = 'kehadiran';
+
+    // Kehadiran.php
+    public function santri()
+    {
+        return $this->belongsTo(Santri::class, 'santri_id');
+    }
+
+
     protected $fillable = [
         'santri_id',
         'nama_santri',
