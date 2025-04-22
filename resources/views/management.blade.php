@@ -49,7 +49,6 @@
             switch (text) {
                 case "santri":
                     tableObj = new DataTable('#datatable', {
-                        data: {!! json_encode($Santris->toArray()) !!},
                         columns: [
                             { title: 'ID'},
                             { title: 'Nama Lengkap'},
@@ -62,7 +61,6 @@
                     break;
                 case "ortu":
                     tableObj = new DataTable('#datatable', {
-                        data: {!! json_encode($Santris->values()->toArray()) !!},
                         columns: [
                             { title: 'ID'},
                             { title: 'Nama Orang Tua'},
@@ -80,7 +78,6 @@
                     break;
                 case 'guru':
                     tableObj = new DataTable('#datatable', {
-                        data: {!! json_encode($Santris->toArray()) !!},
                         columns: [
                             { title: 'ID'},
                             { title: 'Nama Lengkap'},
@@ -97,7 +94,6 @@
             }
         }
         tableObj = new DataTable('#datatable', {
-            data: {!! json_encode($Santris->values()->toArray()) !!},
             columns: [
                 { title: 'ID'},
                 { title: 'Nama Lengkap'},
