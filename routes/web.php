@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ManagementController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ReportController;
@@ -45,13 +46,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 Route::middleware(['auth', 'role:superadmin'])->group(function () {
     Route::get('/superadmin/dashboard', [SuperAdminController::class, 'index'])->name('superadmin.dashboard');
 });
-
 // Halaman Lainnya (Harus Login)
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/management', function () {
-        return view('management');
-    })->name('management');
+    Route::resource('management',ManagementController::class)->names('management');
 
     Route::resource('report', ReportController::class)->names('report');
 
