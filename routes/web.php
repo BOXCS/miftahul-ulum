@@ -1,8 +1,12 @@
 <?php
 
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ManagementController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SuperAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,27 +19,45 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+
+// Halaman Utama
 Route::get('/', function () {
     return view('welcome');
 });
- 
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->name('dashboard');
+// Halaman login
+Route::get('/login', [AuthController::class, 'login'])->name('login');
+Route::post('/login', [AuthController::class, 'authenticate'])->name('auth.authenticate');
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+// Halaman Register
+Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
+Route::post('/register', [AuthController::class, 'register']);
 
-Route::resource('management',ManagementController::class)->names('management');
+Route::get('/register-superadmin', [AuthController::class, 'showSuperadminForm'])->name('register.superadmin');
+Route::post('/register-superadmin', [AuthController::class, 'registerSuperadmin']);
 
-Route::get('/attendance', function () {
-    return view('attendance');
-})->name('attendance');
 
-Route::get('/chat', function () {
-    return view('chat');
-})->name('chat');
+// Dashboard Admin (akses seperti sebelumnya)
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+});
 
-Route::get('/announcement', function () {
-    return view('announcement');
-})->name('announcement');
+// Dashboard Superadmin (kosongan)
+Route::middleware(['auth', 'role:superadmin'])->group(function () {
+    Route::get('/superadmin/dashboard', [SuperAdminController::class, 'index'])->name('superadmin.dashboard');
+});
+// Halaman Lainnya (Harus Login)
+
+Route::middleware(['auth'])->group(function () {
+    Route::resource('management',ManagementController::class)->names('management');
+
+    Route::resource('report', ReportController::class)->names('report');
+
+    Route::get('/chat/{id_staf}/{id_ortu}', function ($id_staf, $id_ortu) {
+        return view('chat', compact('id_staf', 'id_ortu'));
+    });    
+
+    Route::get('/announcement', function () {
+        return view('announcement');
+    })->name('announcement');
+});

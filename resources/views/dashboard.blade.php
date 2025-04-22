@@ -19,7 +19,7 @@
                 <div class="col-md-4 col-6">
                     <div class="card bg-success text-white shadow-sm p-3 text-center">
                         <p>Hadir Hari Ini</p>
-                        <h2 class="fw-bold">{{ $hadirHariIni }} ({{ $persentaseHadir }}%) ✅</h2>
+                        <h2 class="fw-bold">{{ $totalHadirHariIni }} ({{ $persentaseHadir }}%) ✅</h2>
                     </div>
                 </div>
                 <div class="col-md-4 col-6 mx-auto">
@@ -28,7 +28,7 @@
                         <h2 class="fw-bold">{{ $absenHariIni }} ({{ $persentaseAbsen }}%) ❌</h2>
                     </div>
                 </div>
-                
+
             </div>
 
             <!-- Grafik Kehadiran -->
@@ -50,7 +50,7 @@
                 <hr class="mt-2 mb-4 border-light"> <!-- Garis dengan warna lebih soft -->
                 <canvas id="chartAttendance"></canvas>
             </div>
-            
+
         </div>
 
         <!-- Jadwal Shalat & Santri Teraktif -->
@@ -68,20 +68,22 @@
                         <ul class="list-group list-group-flush">
                             @foreach ($santriTeraktif as $index => $santri)
                                 <li class="list-group-item">
-                                    {{ $index + 1 }}. {{ $santri->nama_santri }} - {{ $santri->persentase_hadir }}%
+                                    {{ $index + 1 }}. {{ $santri->nama }} - {{ $santri->persentase_hadir }}%
                                 </li>
                             @endforeach
                         </ul>
-                    </div>                    
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ asset('js/chart-attendance.js') }}"></script>
     <script src="{{ asset('js/prayer-times.js') }}"></script>
 @endpush
+
 @endsection

@@ -10,56 +10,88 @@ class KehadiranSeeder extends Seeder
 {
     public function run()
     {
-        $santri = DB::table('santri')->pluck('id', 'nama_lengkap');
-        $waktuShalat = ['Subuh' => '05:00:00', 'Dzuhur' => '12:00:00', 'Ashar' => '15:30:00', 'Maghrib' => '18:00:00', 'Isya' => '19:30:00'];
-        $startDate = Carbon::now()->subMonth(); // 1 bulan ke belakang
+        // Pastikan SantriSeeder sudah dijalankan
+        $santriList = DB::table('santri')->where('status', 'aktif')->get();
+        
+        if ($santriList->isEmpty()) {
+            $this->command->info('Data santri aktif kosong! Jalankan SantriSeeder terlebih dahulu.');
+            return;
+        }
 
-        foreach ($santri as $nama => $santri_id) {
-            for ($i = 0; $i < 30; $i++) { // 30 hari
-                $date = $startDate->copy()->addDays($i);
+        $dataKehadiran = [];
+        $waktuShalat = ['Subuh', 'Dzuhur', 'Ashar', 'Maghrib', 'Isya'];
+        $now = Carbon::now();
+        $startDate = $now->copy()->subDays(30); // Data untuk 30 hari terakhir
 
-                foreach ($waktuShalat as $shalat => $waktu) {
-                    // Tentukan waktu shalat berdasarkan jam masuk
-                    $waktuShalatValue = $this->getWaktuShalat($waktu);
-
-                    DB::table('kehadiran')->insert([
-                        'santri_id' => $santri_id,
-                        'nama_santri' => $nama,
-                        'jam_masuk' => $waktu,
-                        'jam_keluar' => Carbon::parse($waktu)->addMinutes(rand(10, 30))->format('H:i:s'),
-                        'status' => ['Hadir', 'Tidak Hadir', 'Izin', 'Sakit'][array_rand(['Hadir', 'Tidak Hadir', 'Izin', 'Sakit'])],
-                        'waktu_shalat' => $waktuShalatValue, // Waktu shalat diisi otomatis
-                        'tanggal_waktu' => $date->format('Y-m-d') . ' ' . $waktu,
+        foreach ($santriList as $santri) {
+            $currentDate = $startDate->copy();
+            
+            while ($currentDate <= $now) {
+                foreach ($waktuShalat as $shalat) {
+                    // 20% kemungkinan tidak hadir
+                    $hadir = rand(1, 100) > 20;
+                    
+                    $waktuShalatDate = $this->getWaktuShalat($currentDate, $shalat);
+                    
+                    $dataKehadiran[] = [
+                        'waktu' => $waktuShalatDate,
+                        'jam_masuk' => $hadir ? $this->getJamMasuk($waktuShalatDate) : null,
+                        'jam_keluar' => $hadir ? $this->getJamKeluar($waktuShalatDate, $shalat) : null,
+                        'waktu_shalat' => $shalat,
+                        'id_santri' => $santri->id_santri,
                         'created_at' => now(),
                         'updated_at' => now(),
-                    ]);
+                    ];
                 }
+                $currentDate->addDay();
             }
+        }
+
+        // Chunk insert untuk menghindari memory limit
+        foreach (array_chunk($dataKehadiran, 500) as $chunk) {
+            DB::table('kehadiran')->insert($chunk);
         }
     }
 
     /**
-     * Fungsi untuk menentukan waktu shalat berdasarkan jam masuk.
-     *
-     * @param string $jamMasuk
-     * @return string|null
+     * Mendapatkan waktu shalat berdasarkan jenis shalat dan tanggal
      */
-    private function getWaktuShalat($jamMasuk)
+    private function getWaktuShalat(Carbon $date, string $shalat): Carbon
     {
-        $jam = strtotime($jamMasuk);
+        $time = match ($shalat) {
+            'Subuh' => '05:00:00',
+            'Dzuhur' => '12:00:00',
+            'Ashar' => '15:00:00',
+            'Maghrib' => '18:00:00',
+            'Isya' => '19:30:00',
+            default => '12:00:00',
+        };
 
-        if ($jam >= strtotime('04:00:00') && $jam < strtotime('06:00:00')) {
-            return 'Subuh';
-        } elseif ($jam >= strtotime('12:00:00') && $jam < strtotime('14:00:00')) {
-            return 'Dzuhur';
-        } elseif ($jam >= strtotime('15:00:00') && $jam < strtotime('17:00:00')) {
-            return 'Ashar';
-        } elseif ($jam >= strtotime('18:00:00') && $jam < strtotime('19:00:00')) {
-            return 'Maghrib';
-        } elseif ($jam >= strtotime('19:30:00') && $jam < strtotime('21:00:00')) {
-            return 'Isya';
-        } else {
-            return null; // Jika tidak masuk ke rentang waktu shalat
-        }
+        return $date->copy()->setTimeFromTimeString($time);
+    }
+
+    /**
+     * Mendapatkan jam masuk dengan variasi +/- 15 menit dari waktu shalat
+     */
+    private function getJamMasuk(Carbon $waktuShalat): Carbon
+    {
+        return $waktuShalat->copy()->addMinutes(rand(-15, 15));
+    }
+
+    /**
+     * Mendapatkan jam keluar berdasarkan jenis shalat
+     */
+    private function getJamKeluar(Carbon $waktuShalat, string $shalat): Carbon
+    {
+        $duration = match ($shalat) {
+            'Subuh' => rand(20, 40), // 20-40 menit
+            'Dzuhur' => rand(15, 30),
+            'Ashar' => rand(15, 30),
+            'Maghrib' => rand(10, 20),
+            'Isya' => rand(20, 40),
+            default => 30,
+        };
+
+        return $waktuShalat->copy()->addMinutes($duration);
     }
 }
