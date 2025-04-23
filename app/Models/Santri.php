@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Santri extends Model
 {
@@ -21,4 +22,10 @@ class Santri extends Model
     protected $casts = [
         'id' => 'string',
     ];
+
+    // create relationship one to many (inverse)/Belongs to for santri->ortu
+    public function ortu(): BelongsTo  
+    {
+        return $this->belongsTo(OrangTua::class, 'id_ortu');
+    }
 }
