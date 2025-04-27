@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('BROADCAST_DRIVER', 'null'),
+    'default' => env('BROADCAST_CONNECTION', 'reverb'),
 
     /*
     |--------------------------------------------------------------------------
@@ -30,6 +30,11 @@ return [
 
     'connections' => [
 
+        'reverb' => [
+            'driver' => 'reverb',
+        ],
+
+
         'pusher' => [
             'driver' => 'pusher',
             'key' => env('968c3d27b685795c649a'),
@@ -37,7 +42,7 @@ return [
             'app_id' => env('1978452'),
             'options' => [
                 'cluster' => env('ap1'),
-                'host' => env('PUSHER_HOST') ?: 'api-'.env('PUSHER_APP_CLUSTER', 'mt1').'.pusher.com',
+                'host' => env('PUSHER_HOST') ?: 'api-' . env('PUSHER_APP_CLUSTER', 'mt1') . '.pusher.com',
                 'port' => env('PUSHER_PORT', 443),
                 'scheme' => env('PUSHER_SCHEME', 'https'),
                 'encrypted' => true,
