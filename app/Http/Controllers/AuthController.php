@@ -22,45 +22,45 @@ class AuthController extends Controller
     }
 
     public function authenticate(Request $request)
-    {
-        $credentials = $request->only('email', 'password');
+{
+    // Validasi input
+    $validated = $request->validate([
+        'email' => 'required|email',
+        'password' => 'required|min:6',
+    ], [
+        'email.required' => 'Email wajib diisi.',
+        'email.email' => 'Format email tidak valid.',
+        'password.required' => 'Password wajib diisi.',
+        'password.min' => 'Password minimal 6 karakter.',
+    ]);
 
-        Log::debug('Autentikasi dimulai', ['data' => $credentials]);
+    $credentials = $request->only('email', 'password');
 
-        // Cek apakah email ada
-        $user = Akun::where('email', $request->email)->first();
-        if (!$user) {
-            Log::error('Login Error: email tidak ditemukan', ['email' => $request->email]);
-            return back()->with('error', 'email tidak ditemukan');
+    Log::debug('Autentikasi dimulai', ['data' => $credentials]);
+
+    // Coba login langsung dengan Auth::attempt
+    if (Auth::attempt($credentials)) {
+        $request->session()->regenerate();
+
+        $user = Auth::user();
+
+        if ($user->hak_akses === 'superadmin') {
+            return redirect()->route('superadmin.dashboard');
+        } elseif ($user->hak_akses === 'admin') {
+            return redirect()->route('dashboard');
         }
 
-        // Cek apakah password cocok
-        if (!Hash::check($request->password, $user->password)) {
-            Log::error('Login Error: Password salah', ['email' => $request->email]);
-            return back()->with('error', 'Password salah');
-        }
-
-        // Coba login dengan Auth
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-
-            // Ambil hak_akses user yang login
-            $user = Auth::user();
-
-            // Redirect berdasarkan hak_akses
-            if ($user->hak_akses === 'superadmin') {
-                return redirect()->route('superadmin.dashboard');
-            } elseif ($user->hak_akses === 'admin') {
-                return redirect()->route('dashboard');
-            }
-
-            return redirect('/');
-        }
-
-        Log::error('Login Error: email tidak ditemukan', ['email' => $request->email]);
-
-        return back()->with('error', 'Login gagal, silakan coba lagi.');
+        return redirect('/');
     }
+
+    // Jika sampai sini berarti login gagal
+    Log::error('Login Error: Kredensial tidak valid', ['email' => $request->email]);
+    
+    return back()->withInput()->withErrors([
+        'email' => 'Email atau password salah',
+    ])->with('error', 'Email atau password salah');
+}
+
 
 
     public function registerForm()

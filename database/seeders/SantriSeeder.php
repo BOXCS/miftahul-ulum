@@ -4,36 +4,44 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class SantriSeeder extends Seeder
 {
     public function run()
     {
-        $tahun_angkatan = '2024';
-        $tahun_2digit = substr($tahun_angkatan, 2, 2); // Ambil 2 digit terakhir (24)
-
-        // Ambil ID Orang Tua yang tersedia di database
-        $id_ortu_list = DB::table('orang_tua')->pluck('id_ortu')->toArray();
-
-        if (count($id_ortu_list) < 10) {
-            throw new \Exception("Jumlah orang tua kurang dari 10, harap cek data di database.");
+        // Pastikan OrangTuaSeeder sudah dijalankan sebelumnya
+        $orangTua = DB::table('orang_tua')->get();
+        
+        if ($orangTua->isEmpty()) {
+            $this->command->info('Data orang tua kosong! Jalankan OrangTuaSeeder terlebih dahulu.');
+            return;
         }
 
-        for ($i = 0; $i < 10; $i++) {
-            $id_santri = 'MU01' . $tahun_2digit . str_pad($i + 1, 4, '0', STR_PAD_LEFT);
-
-            DB::table('santri')->insert([
-                'id_santri'     => $id_santri,
-                'nama'          => 'Santri ' . ($i + 1),
-                'tahun_angkatan'=> $tahun_angkatan,
-                'sidik_jari'    => null,
-                'status'        => 'aktif',
-                'id_ortu'       => $id_ortu_list[$i], // Ambil id_ortu yang valid
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ]);
+        $dataSantri = [];
+        $faker = \Faker\Factory::create('id_ID');
+        
+        // Generate 3-5 santri per orang tua
+        foreach ($orangTua as $ortu) {
+            $jumlahSantri = rand(1, 3); // Setiap ortu punya 1-3 santri
+            
+            for ($i = 1; $i <= $jumlahSantri; $i++) {
+                $tahunAngkatan = (string) $faker->numberBetween(2018, 2023);
+                $idSantri = 'ST' . $tahunAngkatan . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+                
+                $dataSantri[] = [
+                    'id_santri' => $idSantri,
+                    'nama' => $faker->firstName . ' ' . $faker->lastName,
+                    'tahun_angkatan' => $tahunAngkatan,
+                    'sidik_jari' => null, // Bisa diisi binary data jika diperlukan
+                    'status' => $faker->randomElement(['aktif', 'tidak aktif']),
+                    'id_ortu' => $ortu->id_ortu,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
         }
+
+        DB::table('santri')->insert($dataSantri);
     }
 }
-
-
