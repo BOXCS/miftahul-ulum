@@ -4,7 +4,8 @@ use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SuperAdminController;
-
+use App\Http\Controllers\FaqController;
+use App\Http\Controllers\PengumumanController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -62,3 +63,9 @@ Route::middleware('auth')->group(function () {
         return view('announcement');
     })->name('announcement');
 });
+
+Route::resource('faq', FaqController::class);
+
+
+Route::get('/pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
+Route::post('/pengumuman', [PengumumanController::class, 'store'])->name('pengumuman.store');
