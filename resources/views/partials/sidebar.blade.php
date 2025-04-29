@@ -14,7 +14,7 @@
                 'dashboard' => ['icon' => 'dashboard.png', 'label' => 'Dashboard'],
                 'management.index' => ['icon' => 'management.png', 'label' => 'Manajemen Data'],
                 'report.index' => ['icon' => 'report.png', 'label' => 'Laporan Kehadiran'],
-                'chat' => ['icon' => 'chat.png', 'label' => 'Chat'],
+                'Chat.index' => ['icon' => 'chat.png', 'label' => 'Chat'],
                 'announcement' => ['icon' => 'announcement.png', 'label' => 'Pengumuman/FAQ'],
             ];
         @endphp
