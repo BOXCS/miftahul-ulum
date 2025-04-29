@@ -7,10 +7,10 @@
 
 @section('content')
 
-{{-- <div class="container-fluid min-vh-100 d-flex flex-column">
-    <div class="row flex-grow-1 g-3"> --}}
-<div class="container-fluid">
-    <div class="d-flex flex-row mb-3 gap-2" >
+<div class="container-fluid d-flex flex-column" style="height: 94vh">
+    <div class="row flex-grow-1 g-3">
+{{-- <div class="container-fluid">
+    <div class="d-flex flex-row mb-3 gap-4 overflow-auto" > --}}
 
         <!-- Sidebar Chat List -->
         <div class="col-12 col-md-4 col-lg-3 d-flex flex-column">
