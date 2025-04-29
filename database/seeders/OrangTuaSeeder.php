@@ -10,15 +10,28 @@ class OrangTuaSeeder extends Seeder
 {
     public function run()
     {
-        for ($i = 1; $i <= 10; $i++) {
-            DB::table('orang_tua')->insert([
-                'alamat'    => 'Jl. Contoh No.' . $i,
-                'no_telp'   => '081234567' . str_pad($i, 2, '0', STR_PAD_LEFT),
-                'id_akun'   => $i, // Pastikan id_akun sudah ada di tabel akun
+        // Pastikan AkunSeeder sudah dijalankan sebelumnya
+        // Ambil ID akun dengan hak akses 'ortu' (10 akun pertama yang dibuat)
+        $ortuAccounts = DB::table('akun')
+                        ->where('hak_akses', 'ortu')
+                        ->orderBy('id_akun')
+                        ->take(10)
+                        ->get();
+
+        $dataOrtu = [];
+        $faker = \Faker\Factory::create('id_ID'); // Faker dengan lokal Indonesia
+
+        foreach ($ortuAccounts as $index => $account) {
+            $dataOrtu[] = [
+                'alamat' => $faker->address,
+                'nama_lengkap' => $faker->name,
+                'no_telp' => $faker->phoneNumber,
+                'id_akun' => $account->id_akun,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]);
+            ];
         }
+
+        DB::table('orang_tua')->insert($dataOrtu);
     }
 }
-
