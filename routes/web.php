@@ -7,6 +7,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\ChatController;
+
+
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -49,15 +54,17 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
 // Halaman Lainnya (Harus Login)
 
 Route::middleware(['auth'])->group(function () {
-    Route::resource('management',ManagementController::class)->names('management');
+    Route::resource('management', ManagementController::class)->names('management');
 
     Route::resource('report', ReportController::class)->names('report');
 
     Route::get('/chat/{id_staf}/{id_ortu}', function ($id_staf, $id_ortu) {
         return view('chat', compact('id_staf', 'id_ortu'));
-    });    
+    });
 
     Route::get('/announcement', function () {
         return view('announcement');
     })->name('announcement');
+
+    Route::resource('Chat', ChatController::class)->names('Chat');
 });
