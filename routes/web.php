@@ -31,8 +31,8 @@ Route::get('/', function () {
 });
 
 // Halaman login
-Route::get('/login', [AuthController::class, 'login'])->name('login');
-Route::post('/login', [AuthController::class, 'authenticate'])->name('auth.authenticate');
+Route::get('/', [AuthController::class, 'login'])->name('login');
+Route::post('/', [AuthController::class, 'authenticate'])->name('auth.authenticate');
 
 // Halaman Register
 Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
