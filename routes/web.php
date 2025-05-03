@@ -7,11 +7,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\FaqController;
+use App\Http\Controllers\PengumumanController;
 use App\Http\Controllers\ChatController;
-
-
-
-
 
 /*
 |--------------------------------------------------------------------------
@@ -68,3 +66,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('Chat', ChatController::class)->names('Chat');
 });
+
+Route::resource('faq', FaqController::class);
+
+
+Route::get('/pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
+Route::post('/pengumuman', [PengumumanController::class, 'store'])->name('pengumuman.store');
