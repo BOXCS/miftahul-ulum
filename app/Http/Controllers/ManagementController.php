@@ -51,7 +51,7 @@ class ManagementController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        return "Edit data dengan id ini $id";
     }
 
     /**
@@ -67,6 +67,6 @@ class ManagementController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        return "Delete data dengan id ini $id";
     }
 }
