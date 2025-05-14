@@ -25,19 +25,19 @@ use App\Http\Controllers\ChatController;
 
 // Halaman Utama
 Route::get('/', function () {
-    return view('welcome');
+    return view('landing');
 });
 
 // Halaman login
-Route::get('/', [AuthController::class, 'login'])->name('login');
+Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/', [AuthController::class, 'authenticate'])->name('auth.authenticate');
 
 // Halaman Register
-Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
-Route::post('/register', [AuthController::class, 'register']);
+// Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
+// Route::post('/register', [AuthController::class, 'register']);
 
-Route::get('/register-superadmin', [AuthController::class, 'showSuperadminForm'])->name('register.superadmin');
-Route::post('/register-superadmin', [AuthController::class, 'registerSuperadmin']);
+// Route::get('/register-superadmin', [AuthController::class, 'showSuperadminForm'])->name('register.superadmin');
+// Route::post('/register-superadmin', [AuthController::class, 'registerSuperadmin']);
 
 
 // Dashboard Admin (akses seperti sebelumnya)
@@ -64,11 +64,9 @@ Route::middleware(['auth'])->group(function () {
         return view('announcement');
     })->name('announcement');
 
-    Route::resource('Chat', ChatController::class)->names('Chat');
+    Route::resource('chat', ChatController::class)->names('chat');
+    Route::post('/api/chat/send', [App\Http\Controllers\ChatController::class, 'store']);
+    Route::get('/api/chat/session/{id}', [ChatController::class, 'getSessionMessages']);
+
+    Route::resource('announcement', PengumumanController::class)->names('announcement');
 });
-
-Route::resource('faq', FaqController::class);
-
-
-Route::get('/pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
-Route::post('/pengumuman', [PengumumanController::class, 'store'])->name('pengumuman.store');

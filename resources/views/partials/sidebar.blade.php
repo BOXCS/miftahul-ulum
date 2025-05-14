@@ -8,14 +8,14 @@
     </div>
 
     <!-- Navigasi -->
-    <nav class="nav flex-column position-relative px-2">
+    <nav class="nav flex-column position-relative px-2 gap-3">
         @php
             $routes = [
                 'dashboard' => ['icon' => 'dashboard.png', 'label' => 'Dashboard'],
-                'management.index' => ['icon' => 'management.png', 'label' => 'Manajemen Data'],
+                'management.index' => ['icon' => 'dashboard.png', 'label' => 'Manajemen Data'],
                 'report.index' => ['icon' => 'report.png', 'label' => 'Laporan Kehadiran'],
-                'Chat.index' => ['icon' => 'chat.png', 'label' => 'Chat'],
-                'announcement' => ['icon' => 'announcement.png', 'label' => 'Pengumuman/FAQ'],
+                'chat.index' => ['icon' => 'chat.png', 'label' => 'Chat'],
+                'announcement.index' => ['icon' => 'announcement.png', 'label' => 'Pengumuman/FAQ'],
             ];
         @endphp
 

@@ -15,7 +15,7 @@
         </div>
     @endif
 
-    <form action="{{ route('pengumuman.store') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('announcement.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div>
             <label>Judul Pengumuman</label>
