@@ -27,11 +27,11 @@ use App\Http\Controllers\ChatController;
 //    return view('attendance');
 //});
 
-Route::get('/', function () {
-    return redirect('/attendance');
-});
+// Route::get('/', function () {
+//     return redirect('/attendance');
+// });
 
-Route::get('/attendance', [AttendanceController::class, 'attendance']);
+// Route::get('/attendance', [AttendanceController::class, 'attendance']);
 
 // Halaman Utama
 Route::get('/', function () {
@@ -76,7 +76,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('chat', ChatController::class)->names('chat');
     Route::post('/api/chat/send', [App\Http\Controllers\ChatController::class, 'store']);
-    Route::get('/api/chat/session/{id}', [ChatController::class, 'getSessionMessages']);
+    Route::get('/api/chat/session/{id}', [ChatController::class, 'getSessionMessages']);    
 
     Route::resource('announcement', PengumumanController::class)->names('announcement');
+
+    Route::resource('attendance', AttendanceController::class)->names('attendance');
 });

@@ -1,8 +1,11 @@
-@extends('app')
+@extends('layouts.app') 
 
 @section('content')
-<div class="container-fluid p-4" style="background-color: #dfe7f5;">
-    <h2 class="fw-bold text-primary">Laporan Kehadiran</h2>
+<div class="container-fluid px-3">
+    <div class="row g-4">
+        <div class="col-12">
+            <h1 class="text-center text-md-start">Laporan Kehadiran</h1>
+        </div>
 
     <div class="d-flex gap-2 flex-wrap mb-3">
         <select class="form-select w-auto">
