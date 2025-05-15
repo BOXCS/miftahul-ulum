@@ -1,0 +1,21 @@
+/* Garis di bawah label */
+hr {
+    border: 0;
+    height: 1px;
+    background: #ddd;
+    margin: 10px 0;
+}
+
+/* Dropdown styling */
+.dropdown-toggle {
+    background-color: #1d7a81;
+    border: none;
+}
+
+.dropdown-toggle:hover {
+    background-color: #16646b;
+}
+
+.dropdown-item {
+    cursor: pointer;
+}
