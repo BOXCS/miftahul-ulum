@@ -42,7 +42,36 @@
                 { title: 'Orang Tua', data: 'nama' },
                 { title: 'Sidik Jari', data: 'sidik_jari' },
                 { title: 'Status', data: 'status' },
-                { title: 'Aksi', data: 'status' }
+                { title: 'Aksi', data: 'id_santri',
+                    render: function (data) {
+                        const test = `
+                            <a href="{{ route('management.edit', ['management' => '__ID__']) }}" class="btn btn-primary">Edit</a>
+                            <a type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal${data}">Delete</a>
+                            <div class="modal fade" id="exampleModal${data}" tabindex="-1" aria-labelledby="exampleModal__ID__" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>${data}</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <form action="/management/${data}" method="POST">
+                                                <input type="hidden" name="_method" value="DELETE">
+                                                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-danger">Hapus</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        return test.replace('__ID__', data);
+                    }
+                }
             ],
             // detail properti tiap kolom
             columnDefs: [
@@ -78,7 +107,36 @@
                             { title: 'Orang Tua', data: 'nama' },
                             { title: 'Sidik Jari', data: 'sidik_jari' },
                             { title: 'Status', data: 'status' },
-                            { title: 'Aksi', data: 'status' }
+                            { title: 'Aksi', data: 'id_santri',
+                                render: function (data) {
+                                    const test = `
+                                        <a href="{{ route('management.edit', ['management' => '__ID__']) }}" class="btn btn-primary">Edit</a>
+                                        <a type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal${data}">Delete</a>
+                                        <div class="modal fade" id="exampleModal${data}" tabindex="-1" aria-labelledby="exampleModal__ID__" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>${data}</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <form action="/management/${data}" method="POST">
+                                                            <input type="hidden" name="_method" value="DELETE">
+                                                            <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                                            <button type="submit" class="btn btn-danger">Hapus</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                    return test.replace('__ID__', data);
+                                }
+                            }
                         ],
                         columnDefs: [
                             { targets: 3, orderable: false, searchable: false },
@@ -96,7 +154,36 @@
                             { title: 'Alamat', data: 'alamat' },
                             { title: 'No. Telp', data: 'no_telp' },
                             { title: 'Nama Santri', data: 'santri[, ].nama' },
-                            { title: 'Aksi', data: 'id_ortu' },
+                            { title: 'Aksi', data: 'id_ortu',
+                                render: function (data) {
+                                    const test = `
+                                        <a href="{{ route('management.edit', ['management' => '__ID__']) }}" class="btn btn-primary">Edit</a>
+                                        <a type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal${data}">Delete</a>
+                                        <div class="modal fade" id="exampleModal${data}" tabindex="-1" aria-labelledby="exampleModal__ID__" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>${data}</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <form action="/management/${data}" method="POST">
+                                                            <input type="hidden" name="_method" value="DELETE">
+                                                            <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                                            <button type="submit" class="btn btn-danger">Hapus</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                    return test.replace('__ID__', data);
+                                }
+                            }
                         ],
                         columnDefs: [
                             { targets: 3, orderable: false },
@@ -113,7 +200,36 @@
                             { title: 'Alamat', data: 'alamat' },
                             { title: 'No. Telp', data: 'no_telp' },
                             { title: 'Jabatan', data: 'jabatan' },
-                            { title: 'Aksi', data: 'id_staf' },
+                            { title: 'Aksi', data: 'id_staf',
+                                render: function (data) {
+                                    const test = `
+                                        <a href="{{ route('management.edit', ['management' => '__ID__']) }}" class="btn btn-primary">Edit</a>
+                                        <a type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal${data}">Delete</a>
+                                        <div class="modal fade" id="exampleModal${data}" tabindex="-1" aria-labelledby="exampleModal__ID__" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>${data}</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <form action="/management/${data}" method="POST">
+                                                            <input type="hidden" name="_method" value="DELETE">
+                                                            <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                                            <button type="submit" class="btn btn-danger">Hapus</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                    return test.replace('__ID__', data);
+                                }
+                            }
                         ],
                         columnDefs: [
                             { targets: 3, orderable: false },
