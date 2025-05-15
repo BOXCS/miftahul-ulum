@@ -147,7 +147,7 @@
                         <a class="nav-link active" href="#beranda">Beranda</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#profil">Profil</a>
+                        <a class="nav-link" href="#profil">Ptofil</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#program">Program</a>
