@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\KehadiranController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ManagementController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,15 @@ use App\Http\Controllers\ChatController;
 |
 */
 
+//Route::get('/', function () {
+//    return view('attendance');
+//});
+
+Route::get('/', function () {
+    return redirect('/attendance');
+});
+
+Route::get('/attendance', [AttendanceController::class, 'attendance']);
 
 // Halaman Utama
 Route::get('/', function () {
