@@ -1,192 +1,123 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Pengumuman & FAQ</h2>
-        <div class="badge bg-primary p-2">
-            <i class="fas fa-bullhorn me-2"></i>Buat Pengumuman Baru
-        </div>
-    </div>
+<div class="container pt-3 pb-5">
 
-    {{-- Menampilkan pesan error jika ada --}}
-    @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show">
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Error!</h5>
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+    <div class="card shadow border-0 rounded-4">
+        <div class="card-header border-0 rounded-top-4"
+             style="background: linear-gradient(135deg, #018183f3);">
+            <h4 class="mb-0 text-center fw-bold py-3 text-white">
+                Form Input Pengumuman
+            </h4>
         </div>
-    @endif
 
-    <div class="card shadow-sm border-0">
-        <div class="card-body">
-            <form action="{{ route('announcement.store') }}" method="POST" enctype="multipart/form-data">
+        <div class="card-body px-5 py-4">
+            @if ($errors->any())
+                <div class="alert alert-danger border-0 shadow-sm rounded-3">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            @if(session('success'))
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                <script>
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: '{{ session('success') }}',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                </script>
+            @endif
+
+            <form action="{{ route('pengumuman.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="row">
-                    {{-- Kiri --}}
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="judul" class="form-label fw-bold">Judul Pengumuman</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light"><i class="fas fa-heading"></i></span>
-                                <input type="text" name="judul" class="form-control" placeholder="Masukkan judul pengumuman" required>
-                            </div>
+                    <!-- Kolom Kiri -->
+                    <div class="col-md-6 pe-md-5">
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-black">Kategori</label>
+                            <select name="kategori" class="form-select border border-black shadow-sm py-2" required>
+                                <option value="" disabled selected>Pilih Kategori</option>
+                                <option value="akademik">Akademik</option>
+                                <option value="administrasi">Administrasi</option>
+                                <option value="kegiatan">Kegiatan</option>
+                            </select>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="isi" class="form-label fw-bold">Isi Pengumuman</label>
-                            <textarea name="isi" class="form-control" rows="5" placeholder="Tulis isi pengumuman disini..." required></textarea>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-black">Judul Pengumuman</label>
+                            <input type="text" name="judul" class="form-control border border-black shadow-sm py-2"
+                                   placeholder="Contoh: Libur Lebaran" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-black">Isi Pengumuman</label>
+                            <textarea name="isi" class="form-control border border-black shadow-sm" rows="6"
+                                      placeholder="Contoh: Santri akan diliburkan..." required></textarea>
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="tgl_mulai" class="form-label fw-bold">Tanggal Mulai</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light"><i class="far fa-calendar-alt"></i></span>
-                                    <input type="date" name="tgl_mulai" class="form-control" required>
-                                </div>
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-semibold text-black">Tanggal Mulai</label>
+                                <input type="date" name="tgl_mulai" id="tgl_mulai"
+                                       class="form-control border border-black shadow-sm" required>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="tgl_selesai" class="form-label fw-bold">Tanggal Selesai</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light"><i class="far fa-calendar-check"></i></span>
-                                    <input type="date" name="tgl_selesai" class="form-control" required>
-                                </div>
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-semibold text-black">Tanggal Selesai</label>
+                                <input type="date" name="tgl_selesai" id="tgl_selesai"
+                                       class="form-control border border-black shadow-sm" required>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Kanan --}}
+                    <!-- Kolom Kanan -->
                     <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="kategori" class="form-label fw-bold">Kategori</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light"><i class="fas fa-tag"></i></span>
-                                <select name="kategori" class="form-select" required>
-                                    <option value="" selected disabled>Pilih Kategori</option>
-                                    <option value="akademik">Akademik</option>
-                                    <option value="administrasi">Administrasi</option>
-                                    <option value="kegiatan">Kegiatan</option>
-                                </select>
+                        <label class="form-label fw-semibold text-black">Upload Gambar Pendukung</label>
+
+                        <div class="image-upload-container position-relative rounded-4 shadow-sm overflow-hidden"
+                             style="height: 360px; border: 2px dashed #20c997; background-color: #ffffff; transition: 0.3s;">
+
+                            <input type="file" name="foto" id="foto"
+                                   class="position-absolute w-100 h-100 opacity-0"
+                                   style="z-index: 10; cursor: pointer;" accept="image/*" onchange="previewImage(event)">
+
+                            <div id="upload-placeholder"
+                                 class="d-flex flex-column justify-content-center align-items-center h-100 w-100 position-absolute top-0 start-0"
+                                 style="z-index: 2;">
+                                <div class="text-center p-4">
+                                    <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-teal"></i>
+                                    <h5 class="fw-semibold text-dark">Unggah Gambar</h5>
+                                    <p class="text-muted mb-0">Klik atau tarik file ke sini</p>
+                                </div>
+                            </div>
+
+                            <div id="preview-container"
+                                 class="position-absolute top-0 start-0 w-100 h-100"
+                                 style="z-index: 4; display: none;">
+                                <img id="preview" class="w-100 h-100" style="object-fit: cover;">
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="foto" class="form-label fw-bold d-block">Upload Gambar</label>
-                            <div class="border border-2 border-dashed rounded p-4 text-center hover-shadow" 
-                                id="dropArea" 
-                                style="cursor: pointer; background-color: #f8f9fa; transition: all 0.3s;">
-                                <input type="file" name="foto" class="form-control d-none" id="fileUpload" accept="image/*">
-                                <label for="fileUpload" class="d-block">
-                                    <div class="mb-3">
-                                        <i class="fas fa-cloud-upload-alt fa-3x text-primary"></i>
-                                    </div>
-                                    <h5 class="mb-2">Seret & Lepaskan Gambar Disini</h5>
-                                    <p class="mb-1 text-muted">Atau klik untuk memilih file</p>
-                                    <small class="text-muted d-block">Format yang didukung: SVG, PNG, JPG, GIF</small>
-                                    <small class="text-muted d-block">Ukuran maksimal: 2MB</small>
-                                </label>
-                                <div id="preview" class="mt-3 d-none">
-                                    <img id="previewImage" src="#" alt="Preview" class="img-thumbnail" style="max-height: 150px;">
-                                    <button type="button" class="btn btn-sm btn-danger mt-2" id="removeImage">
-                                        <i class="fas fa-trash me-1"></i>Hapus
-                                    </button>
-                                </div>
-                            </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="text-muted">Format: SVG, PNG, JPG, GIF (max 800x400px)</small>
+                            <small id="file-size" class="text-muted"></small>
+                        </div>
+                        <div class="mt-1">
+                            <small id="file-name" class="text-muted"></small>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-4 text-end">
-                    <button type="reset" class="btn btn-outline-secondary me-2">
-                        <i class="fas fa-undo me-1"></i>Reset
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-1"></i>Simpan Pengumuman
-                    </button>
-                </div>
-            </form>
+        <div>
+            <label>Upload Gambar</label>
+            <input type="file" name="foto" class="form-control">
         </div>
     </div>
 </div>
-
-@section('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const dropArea = document.getElementById('dropArea');
-        const fileInput = document.getElementById('fileUpload');
-        const preview = document.getElementById('preview');
-        const previewImage = document.getElementById('previewImage');
-        const removeBtn = document.getElementById('removeImage');
-
-        // Highlight drop area when item is dragged over it
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, highlight, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, unhighlight, false);
-        });
-
-        function highlight() {
-            dropArea.classList.add('border-primary');
-            dropArea.style.backgroundColor = '#e9f5ff';
-        }
-
-        function unhighlight() {
-            dropArea.classList.remove('border-primary');
-            dropArea.style.backgroundColor = '#f8f9fa';
-        }
-
-        // Handle dropped files
-        dropArea.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            if (files.length) {
-                fileInput.files = files;
-                handleFiles(files);
-            }
-        }
-
-        // Handle selected files
-        fileInput.addEventListener('change', function() {
-            handleFiles(this.files);
-        });
-
-        function handleFiles(files) {
-            const file = files[0];
-            if (file && file.type.match('image.*')) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    previewImage.src = e.target.result;
-                    preview.classList.remove('d-none');
-                }
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // Remove image
-        removeBtn.addEventListener('click', function() {
-            fileInput.value = '';
-            preview.classList.add('d-none');
-            previewImage.src = '#';
-        });
-    });
-</script>
-@endsection
 @endsection
