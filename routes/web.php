@@ -56,15 +56,15 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/chat/{id_staf}/{id_ortu}', function ($id_staf, $id_ortu) {
         return view('chat', compact('id_staf', 'id_ortu'));
-    });    
+    });
 
     Route::get('/announcement', function () {
         return view('announcement');
     })->name('announcement');
-});
-
-Route::resource('faq', FaqController::class);
+    Route::resource('faq', FaqController::class);
 
 
 Route::get('/pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
 Route::post('/pengumuman', [PengumumanController::class, 'store'])->name('pengumuman.store');
+});
+
