@@ -73,6 +73,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/announcement', function () {
         return view('announcement');
     })->name('announcement');
+    Route::resource('faq', FaqController::class);
 
     Route::resource('chat', ChatController::class)->names('chat');
     Route::post('/api/chat/send', [App\Http\Controllers\ChatController::class, 'store']);
@@ -80,5 +81,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('announcement', PengumumanController::class)->names('announcement');
 
-    Route::resource('attendance', AttendanceController::class)->names('attendance');
+Route::get('/pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
+Route::post('/pengumuman', [PengumumanController::class, 'store'])->name('pengumuman.store');
+});
+
+    // Route::resource('attendance', AttendanceController::class)->names('attendance');
 });
