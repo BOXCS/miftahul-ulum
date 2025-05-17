@@ -11,6 +11,9 @@ class Santri extends Model
     use HasFactory;
 
     protected $table = 'santri'; // Nama tabel
+    // Di model Santri.php
+    protected $primaryKey = 'id_santri';
+
 
     protected $fillable = [
         'nama',
@@ -24,8 +27,13 @@ class Santri extends Model
     ];
 
     // create relationship one to many (inverse)/Belongs to for santri->ortu
-    public function ortu(): BelongsTo  
+    public function ortu(): BelongsTo
     {
         return $this->belongsTo(OrangTua::class, 'id_ortu');
+    }
+
+    public function kehadiran()
+    {
+        return $this->hasMany(Kehadiran::class, 'id_santri', 'id_santri');
     }
 }

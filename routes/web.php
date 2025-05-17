@@ -42,6 +42,9 @@ Route::get('/', function () {
 Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/', [AuthController::class, 'authenticate'])->name('auth.authenticate');
 
+Route::get('/laporan-kehadiran', [AttendanceController::class, 'index'])->name('laporan.kehadiran');
+Route::get('/laporan-kehadiran/export', [AttendanceController::class, 'export'])->name('laporan.kehadiran.export');
+
 // Halaman Register
 // Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
 // Route::post('/register', [AuthController::class, 'register']);

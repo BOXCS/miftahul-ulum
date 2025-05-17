@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-    var ctx = document.getElementById('chartAttendance').getContext('2d');
+    var ctx = document.getElementById("chartAttendance").getContext("2d");
     var chart;
     var attendanceData = {}; // Variabel untuk menyimpan data dari server
 
@@ -8,35 +8,52 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch(`/api/attendance?filter=${filter}`);
             const data = await response.json();
-            attendanceData[filter] = data; // Simpan data ke variabel
-            initChart(filter); // Inisialisasi grafik setelah data diambil
+            // Simpan dua data: present dan absent
+            attendanceData[filter] = {
+                present: data.present,
+                absent: data.absent,
+            };
+            initChart(filter);
         } catch (error) {
-            console.error('Error fetching attendance data:', error);
+            console.error("Error fetching attendance data:", error);
         }
     }
 
     // Inisialisasi grafik dengan data dari server
     function initChart(filter) {
         if (chart) {
-            chart.destroy(); // Hapus grafik sebelumnya jika ada
+            chart.destroy(); // Reset grafik lama
         }
+    
+        const data = attendanceData[filter];
+    
         chart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: ['Subuh', 'Dzuhur', 'Ashar', 'Maghrib', 'Isya'],
-                datasets: [{
-                    label: 'Persentase Kehadiran',
-                    data: attendanceData[filter], // Ambil data dari variabel
-                    backgroundColor: 'rgb(29 122 129)',
-                    borderRadius: 25,
-                    borderSkipped: false,
-                }]
+                datasets: [
+                    {
+                        label: 'Persentase Kehadiran',
+                        data: data.present,
+                        backgroundColor: 'rgb(29 122 129)',
+                        borderRadius: 25,
+                        borderSkipped: false,
+                    },
+                    {
+                        label: 'Persentase Ketidakhadiran',
+                        data: data.absent,
+                        backgroundColor: 'rgb(220 53 69)', // Warna merah
+                        borderRadius: 25,
+                        borderSkipped: false,
+                    }
+                ]
             },
             options: {
                 responsive: true,
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        max: 100 // karena persentase
                     }
                 },
                 barPercentage: 0.6,
@@ -44,16 +61,18 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
+    
 
     // Inisialisasi grafik pertama kali
-    fetchAttendanceData('today');
+    fetchAttendanceData("today");
 
     // Event listener untuk dropdown filter
-    document.querySelectorAll('.dropdown-item').forEach(item => {
-        item.addEventListener('click', function (e) {
+    document.querySelectorAll(".dropdown-item").forEach((item) => {
+        item.addEventListener("click", function (e) {
             e.preventDefault();
-            var filter = this.getAttribute('data-filter');
-            document.getElementById('filterDropdown').textContent = this.textContent;
+            var filter = this.getAttribute("data-filter");
+            document.getElementById("filterDropdown").textContent =
+                this.textContent;
             fetchAttendanceData(filter); // Ambil data baru dan perbarui grafik
         });
     });
