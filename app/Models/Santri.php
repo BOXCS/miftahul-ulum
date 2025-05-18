@@ -5,13 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Santri extends Model
 {
     use HasFactory;
 
     protected $table = 'santri'; // Nama tabel
-
+    protected $primaryKey = 'id_santri';
+    protected $keyType = 'string';
     protected $fillable = [
         'nama',
         'tahun_angkatan',
@@ -27,5 +29,9 @@ class Santri extends Model
     public function ortu(): BelongsTo  
     {
         return $this->belongsTo(OrangTua::class, 'id_ortu');
+    }
+    public function kehadiran():HasMany
+    {
+        return $this->hasMany(Kehadiran::class, 'id_santri');
     }
 }
