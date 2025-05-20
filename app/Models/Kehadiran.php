@@ -15,12 +15,11 @@ class Kehadiran extends Model
     // Kehadiran.php
     public function santri()
     {
-        return $this->belongsTo(Santri::class, 'santri_id');
+        return $this->belongsTo(Santri::class, 'id_santri', 'id_santri');
     }
 
-
     protected $fillable = [
-        'santri_id',
+        'id_santri',
         'nama_santri',
         'jam_masuk',
         'jam_keluar',

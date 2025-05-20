@@ -114,57 +114,32 @@
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-end mt-5">
-                    <a href="{{ route('pengumuman.index') }}" class="btn btn-outline-secondary me-2 px-4 py-2 rounded-pill">
-                        <i class="fas fa-times me-1"></i> Batal
-                    </a>
-                    <button type="submit" class="btn px-4 py-2 rounded-pill"
-                            style="background: linear-gradient(135deg, #006c6df3); color: white;">
-                        <i class="fas fa-save me-1"></i> Simpan Pengumuman
+                <!-- Tombol Submit -->
+                <div class="text-end mt-4">
+                    <button type="submit" class="btn btn-success px-4 py-2 rounded-3 shadow">
+                        Kirim Pengumuman
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-@endsection
 
-@section('scripts')
 <script>
-    document.getElementById('tgl_mulai').addEventListener('change', function () {
-        const mulai = this.value;
-        const selesai = document.getElementById('tgl_selesai');
-        selesai.min = mulai;
-        if (selesai.value < mulai) {
-            selesai.value = mulai;
-        }
-    });
+function previewImage(event) {
+    const preview = document.getElementById('preview');
+    const container = document.getElementById('preview-container');
+    const placeholder = document.getElementById('upload-placeholder');
+    const file = event.target.files[0];
 
-    function previewImage(event) {
-        const file = event.target.files[0];
-        const preview = document.getElementById('preview');
-        const previewContainer = document.getElementById('preview-container');
-        const placeholder = document.getElementById('upload-placeholder');
-        const fileName = document.getElementById('file-name');
-        const fileSize = document.getElementById('file-size');
+    if (file) {
+        preview.src = URL.createObjectURL(file);
+        container.style.display = 'block';
+        placeholder.style.display = 'none';
 
-        if (file && file.type.startsWith('image/')) {
-            placeholder.style.display = 'none';
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                preview.src = e.target.result;
-                previewContainer.style.display = 'block';
-                fileName.textContent = `Nama file: ${file.name}`;
-                fileSize.textContent = `Ukuran: ${(file.size / 1024).toFixed(1)} KB`;
-            };
-            reader.readAsDataURL(file);
-        } else {
-            preview.src = '';
-            previewContainer.style.display = 'none';
-            placeholder.style.display = 'flex';
-            fileName.textContent = '';
-            fileSize.textContent = '';
-        }
+        document.getElementById('file-size').textContent = `${(file.size / 1024).toFixed(2)} KB`;
+        document.getElementById('file-name').textContent = file.name;
     }
+}
 </script>
 @endsection
