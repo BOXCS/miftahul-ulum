@@ -114,10 +114,32 @@
                     </div>
                 </div>
 
-        <div>
-            <label>Upload Gambar</label>
-            <input type="file" name="foto" class="form-control">
+                <!-- Tombol Submit -->
+                <div class="text-end mt-4">
+                    <button type="submit" class="btn btn-success px-4 py-2 rounded-3 shadow">
+                        Kirim Pengumuman
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+<script>
+function previewImage(event) {
+    const preview = document.getElementById('preview');
+    const container = document.getElementById('preview-container');
+    const placeholder = document.getElementById('upload-placeholder');
+    const file = event.target.files[0];
+
+    if (file) {
+        preview.src = URL.createObjectURL(file);
+        container.style.display = 'block';
+        placeholder.style.display = 'none';
+
+        document.getElementById('file-size').textContent = `${(file.size / 1024).toFixed(2)} KB`;
+        document.getElementById('file-name').textContent = file.name;
+    }
+}
+</script>
 @endsection

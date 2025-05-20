@@ -84,9 +84,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('announcement', PengumumanController::class)->names('announcement');
 
-    Route::get('/pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
-    Route::post('/pengumuman', [PengumumanController::class, 'store'])->name('pengumuman.store');
+    // Route::get('/pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
+    // Route::post('/pengumuman', [PengumumanController::class, 'store'])->name('pengumuman.store');
+
+    Route::resource('pengumuman', PengumumanController::class)->names('pengumuman');
+    Route::resource('attendance', AttendanceController::class)->names('attendance');
+    Route::get('/laporan-kehadiran/export', [AttendanceController::class, 'export'])->name('attendance.export');
 });
 
-    // Route::resource('attendance', AttendanceController::class)->names('attendance');
 // });
