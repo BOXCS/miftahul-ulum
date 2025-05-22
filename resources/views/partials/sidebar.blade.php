@@ -20,7 +20,7 @@
                 'management.index' => ['icon' => 'dashboard.png', 'label' => 'Manajemen Data'],
                 'attendance.index' => ['icon' => 'report.png', 'label' => 'Laporan Kehadiran'],
                 'chat.index' => ['icon' => 'dashboard.png', 'label' => 'Chat'],
-                'announcement.index' => ['icon' => 'dashboard.png', 'label' => 'Pengumuman/FAQ'],
+                'pengumuman.index' => ['icon' => 'dashboard.png', 'label' => 'Pengumuman/FAQ'],
             ];
         @endphp
 

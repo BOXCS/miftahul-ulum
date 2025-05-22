@@ -16,9 +16,8 @@ class Kehadiran extends Model
     // Kehadiran.php
     public function santri(): BelongsTo
     {
-        return $this->belongsTo(Santri::class, 'id_santri');
+        return $this->belongsTo(Santri::class, 'id_santri', 'id_santri');
     }
-
 
     protected $fillable = [
         'id_santri',
