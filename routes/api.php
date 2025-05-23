@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AkunController;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\Api\MobileDataController;
 use App\Http\Controllers\AttendanceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,11 @@ Route::post('/akun', [AkunController::class, 'store']); // Tambah akun
 Route::get('/akun/{id}', [AkunController::class, 'show']); // Ambil akun berdasarkan ID
 Route::put('/akun/{id}', [AkunController::class, 'update']); // Update akun
 Route::delete('/akun/{id}', [AkunController::class, 'destroy']); // Hapus akun
+
+// API for mobile
+Route::get('/kehadiran/{id}',[MobileDataController::class, 'kehadiranById']);
+Route::get('/santri/{id}',[MobileDataController::class, 'dataSantriById']);
+Route::get('/pengumuman', [MobileDataController::class, 'pengumuman']);
 
 Route::get('/chat/user-info/{session}', function($sessionId) {
     $session = \App\Models\ChatSession::where('id_session', $sessionId)->first();
