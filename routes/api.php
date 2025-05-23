@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AkunController;
+use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\Api\MobileDataController;
 use App\Http\Controllers\AttendanceController;
 use Illuminate\Http\Request;
@@ -41,4 +42,11 @@ Route::get('/chat/user-info/{session}', function($sessionId) {
         'wali_dari' => $session->wali_dari,
         'asal_daerah' => $session->asal_daerah,
     ];
+});
+
+// for mobile authentication
+Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/me', [AuthController::class, 'index']);
+    Route::post('/logout', [AuthController::class, 'logout']);
 });
