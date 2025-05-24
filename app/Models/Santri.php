@@ -15,11 +15,12 @@ class Santri extends Model
     protected $primaryKey = 'id_santri';
     protected $keyType = 'string';
     protected $fillable = [
+        'id_santri',
         'nama',
         'tahun_angkatan',
-        'nama_orang_tua',
-        'status',
         'sidik_jari',
+        'status',
+        'id_ortu',
     ];
     protected $casts = [
         'id' => 'string',
@@ -28,10 +29,10 @@ class Santri extends Model
     // create relationship one to many (inverse)/Belongs to for santri->ortu
     public function ortu(): BelongsTo  
     {
-        return $this->belongsTo(OrangTua::class, 'id_ortu');
+        return $this->belongsTo(OrangTua::class, 'id_ortu', 'id_ortu');
     }
     public function kehadiran():HasMany
     {
-        return $this->hasMany(Kehadiran::class, 'id_santri');
+        return $this->hasMany(Kehadiran::class, 'id_santri', 'id_santri');
     }
 }

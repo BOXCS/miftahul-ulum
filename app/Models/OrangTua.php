@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class OrangTua extends Model
 {
@@ -13,12 +14,16 @@ class OrangTua extends Model
     protected $table = 'orang_tua';
     protected $primaryKey = 'id_ortu';
 
-    protected $fillable = ['id_akun', 'alamat', 'no_telp'];
+    protected $fillable = ['nama_lengkap', 'id_akun', 'alamat', 'no_telp'];
 
     // create relationship one to many for ortu->santri
     public function santri(): HasMany
     {
-        return $this->hasMany(Santri::class, 'id_ortu');
+        return $this->hasMany(Santri::class, 'id_ortu', 'id_ortu');
+    }
+    public function akun(): HasOne
+    {
+        return $this->hasOne(Akun::class, 'id_akun', 'id_akun');
     }
 }
 

@@ -9,7 +9,7 @@ class CreateSantriTable extends Migration
     public function up()
     {
         Schema::create('santri', function (Blueprint $table) {
-            $table->string('id_santri')->primary();
+            $table->char('id_santri', 9)->primary();
             $table->string('nama');
             $table->string('tahun_angkatan', 4);
             $table->binary('sidik_jari')->nullable();

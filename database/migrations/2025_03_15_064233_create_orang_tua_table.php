@@ -10,8 +10,8 @@ class CreateOrangTuaTable extends Migration
     {
         Schema::create('orang_tua', function (Blueprint $table) {
             $table->id('id_ortu');
-            $table->string('alamat');
             $table->string('nama_lengkap');
+            $table->string('alamat');
             $table->string('no_telp');
             $table->unsignedBigInteger('id_akun');
             $table->foreign('id_akun')->references('id_akun')->on('akun')->onDelete('cascade');
