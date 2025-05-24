@@ -26,10 +26,5 @@ class OrangTua extends Model
         return $this->hasOne(Akun::class, 'id_akun', 'id_akun');
     }
 
-    public function akun()
-{
-    return $this->belongsTo(Akun::class, 'id_akun', 'id_akun');
-}
-
 }
 
