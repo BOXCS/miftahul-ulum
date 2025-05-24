@@ -4,6 +4,7 @@ use App\Http\Controllers\AkunController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\Api\MobileDataController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\ChatController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -31,18 +32,29 @@ Route::put('/akun/{id}', [AkunController::class, 'update']); // Update akun
 Route::delete('/akun/{id}', [AkunController::class, 'destroy']); // Hapus akun
 
 // API for mobile
-Route::get('/kehadiran/{id}',[MobileDataController::class, 'kehadiranById']);
-Route::get('/santri/{id}',[MobileDataController::class, 'dataSantriById']);
+Route::get('/kehadiran/{id}', [MobileDataController::class, 'kehadiranById']);
+Route::get('/santri/{id}', [MobileDataController::class, 'dataSantriById']);
 Route::get('/pengumuman', [MobileDataController::class, 'pengumuman']);
 
-Route::get('/chat/user-info/{session}', function($sessionId) {
-    $session = \App\Models\ChatSession::where('id_session', $sessionId)->first();
+Route::get('/chat/messages/{session}', [MobileDataController::class, 'chatMessagesBySession']);
+
+Route::get('/chat/user-info/{session}', function ($sessionId) {
+    $session = \App\Models\ChatSession::with('orangTua')->where('id_session', $sessionId)->first();
+
+    if (!$session || !$session->orangTua) {
+        return response()->json(['message' => 'Session or user not found'], 404);
+    }
+
+    // Cari santri yang wali-nya orang_tua ini (ambil nama santri-nya sebagai "wali_dari")
+    $santri = \App\Models\Santri::where('id_ortu', $session->id_ortu)->first();
+
     return [
-        'nama_orang_tua' => $session->nama_orang_tua,
-        'wali_dari' => $session->wali_dari,
-        'asal_daerah' => $session->asal_daerah,
+        'nama_orang_tua' => $session->orangTua->nama_lengkap,
+        'asal_daerah' => $session->orangTua->alamat,
+        'wali_dari' => $santri ? $santri->nama : null,
     ];
 });
+
 
 // for mobile authentication
 Route::post('/login', [AuthController::class, 'login']);

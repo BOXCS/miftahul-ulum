@@ -21,12 +21,26 @@ class ChatController extends Controller
     // Menampilkan halaman chat utama (default session ID 1)
     public function index()
     {
+        $sessions = ChatSession::with(['santri', 'orangTua'])->get();
+
+        foreach ($sessions as $session) {
+            $session->setAttribute('wali_dari', $session->santri->pluck('nama')->implode(', '));
+            $session->setAttribute('nama_lengkap', $session->orangTua->nama_lengkap ?? '-');
+            $session->setAttribute('alamat_ortu', $session->orangTua->alamat ?? '-');
+        }
+
+        // Ambil ID session aktif pertama jika ada
+        $activeSessionId = $sessions->first()->id_session ?? null;
+
         return view('chat', [
-            'sessions' => ChatSession::all(),
-            'messages' => ChatMessage::where('id_session', 1)->get(),
-            'activeSessionId' => 1,
+            'sessions' => $sessions,
+            'messages' => $activeSessionId ? $this->getMessages($activeSessionId) : [],
+            'chat' => $activeSessionId ? $this->getUserInfo($activeSessionId) : null,
+            'activeSessionId' => $activeSessionId,
         ]);
     }
+
+
 
     // Menampilkan chat berdasarkan session ID
     public function show($id)
@@ -54,9 +68,9 @@ class ChatController extends Controller
             'waktu' => now(),
         ]);
 
-        // 🔥 Publish ke Ably
+        // 🔥 Ganti ke channel global
         $ably = new AblyRest(env('ABLY_API_KEY'));
-        $ably->channels->get('chat-session-' . $request->id_session)->publish('new-message', [
+        $ably->channels->get('pesantren-chat')->publish('new-message', [
             'id_session' => $request->id_session,
             'pengirim' => $request->pengirim,
             'pesan' => $request->pesan,
@@ -65,6 +79,7 @@ class ChatController extends Controller
 
         return response()->json(['success' => true, 'message' => $message]);
     }
+
 
 
     // Blokir user (hapus session)
@@ -82,5 +97,52 @@ class ChatController extends Controller
         $messages = ChatMessage::where('id_session', $id)->orderBy('waktu', 'asc')->get();
 
         return response()->json($messages);
+    }
+
+    public function getUserInfo($sessionId)
+    {
+        $session = ChatSession::where('id_session', $sessionId)->first();
+
+        if (!$session) {
+            return null;
+        }
+
+        return [
+            'nama_orang_tua' => $session->nama_orang_tua,
+            'wali_dari' => $session->wali_dari,
+            'asal_daerah' => $session->asal_daerah,
+        ];
+    }
+
+
+    protected function getMessages($sessionId)
+    {
+        return ChatMessage::where('id_session', $sessionId)
+            ->orderBy('waktu', 'asc')
+            ->get();
+    }
+
+    public function sendMessage(Request $request)
+    {
+        $request->validate([
+            'id_session' => 'required|exists:chat_sessions,id_session',
+            'pengirim' => 'required|in:staf,orang_tua',
+            'pesan' => 'required|string',
+        ]);
+
+        $message = ChatMessage::create([
+            'id_session' => $request->id_session,
+            'pengirim' => $request->pengirim,
+            'pesan' => $request->pesan,
+            'created_at' => now(),
+        ]);
+
+        // Bisa broadcast ke realtime channel di sini jika perlu (misal pakai Ably)
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pesan terkirim',
+            'data' => $message,
+        ]);
     }
 }
