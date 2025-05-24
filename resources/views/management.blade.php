@@ -12,7 +12,7 @@
                 <option value="ortu">Orang tua</option>
                 <option value="staf">Staf</option>
             </select>
-            <h3 id="text"></h3>
+            <a href="{{ route('santri.create') }}" class="btn btn-primary" id="add-button">Tambah Santri Baru</a>
             <table id="datatable" class="table table-striped" style="width:100%">
                 <thead>
                 </thead>
@@ -39,27 +39,27 @@
             columns: [
                 { title: 'ID', data: 'id_santri' },
                 { title: 'Nama Lengkap', data: 'nama' },
-                { title: 'Orang Tua', data: 'nama' },
+                { title: 'Orang Tua', data: 'ortu.nama_lengkap' },
                 { title: 'Sidik Jari', data: 'sidik_jari' },
                 { title: 'Status', data: 'status' },
                 { title: 'Aksi', data: 'id_santri',
-                    render: function (data) {
+                    render: function (data, type, row) {
                         const test = `
-                            <a href="{{ route('management.edit', ['management' => '__ID__']) }}" class="btn btn-primary">Edit</a>
-                            <a type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal${data}">Delete</a>
+                            <a href="{{ route('santri.edit', ['santri' => '__ID__']) }}" class="btn btn-primary">Edit</a>
+                            <a type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal${data}">Hapus</a>
                             <div class="modal fade" id="exampleModal${data}" tabindex="-1" aria-labelledby="exampleModal__ID__" aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                                            <h1 class="modal-title fs-5" id="exampleModalLabel">Konfirmasi Hapus</h1>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <p>${data}</p>
+                                            <p>Apakah anda ingin menghapus santri yang bernama <span class="fw-bold">${row.nama}</span>?</p>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                            <form action="/management/${data}" method="POST">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                            <form action="/santri/${data}" method="POST">
                                                 <input type="hidden" name="_method" value="DELETE">
                                                 <input type="hidden" name="_token" value="{{ csrf_token() }}">
                                                 <button type="submit" class="btn btn-danger">Hapus</button>
@@ -83,6 +83,7 @@
         // function for changes datatable will be display
         function changeMode() {
             var text = document.getElementById('mode').value;
+            var addButton = document.getElementById('add-button');
 
             // function for clear table (before reinitialize)
             var tableId = "#datatable";
@@ -99,6 +100,11 @@
             //3rd reCreate Datatable object
             switch (text) {
                 case "santri":
+                    // ganti tombol "tambah"
+                    addButton.innerHTML = "Tambah Santri Baru";
+                    addButton.setAttribute('href', '{{ route("santri.create") }}');
+
+                    // ganti data dari datatable
                     tableObj = new DataTable('#datatable', {
                         data: {!! json_encode($santri->toArray()) !!},
                         columns: [
@@ -108,23 +114,23 @@
                             { title: 'Sidik Jari', data: 'sidik_jari' },
                             { title: 'Status', data: 'status' },
                             { title: 'Aksi', data: 'id_santri',
-                                render: function (data) {
+                                render: function (data, type, row) {
                                     const test = `
-                                        <a href="{{ route('management.edit', ['management' => '__ID__']) }}" class="btn btn-primary">Edit</a>
-                                        <a type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal${data}">Delete</a>
+                                        <a href="{{ route('santri.edit', ['santri' => '__ID__']) }}" class="btn btn-primary">Edit</a>
+                                        <a type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal${data}">Hapus</a>
                                         <div class="modal fade" id="exampleModal${data}" tabindex="-1" aria-labelledby="exampleModal__ID__" aria-hidden="true">
                                             <div class="modal-dialog">
                                                 <div class="modal-content">
                                                     <div class="modal-header">
-                                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Konfirmasi Hapus</h1>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <p>${data}</p>
+                                                        <p>Apakah anda ingin menghapus santri yang bernama <span class="fw-bold">${row.nama}</span>?</p>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                        <form action="/management/${data}" method="POST">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                        <form action="/santri/${data}" method="POST">
                                                             <input type="hidden" name="_method" value="DELETE">
                                                             <input type="hidden" name="_token" value="{{ csrf_token() }}">
                                                             <button type="submit" class="btn btn-danger">Hapus</button>
@@ -146,6 +152,11 @@
                     });
                     break;
                 case "ortu":
+                    // ganti tombol "tambah"
+                    addButton.innerHTML = "Tambah Orang Tua Baru";
+                    addButton.setAttribute('href', '{{ route("orangtua.create") }}');
+
+                    // ganti data dari datatable
                     tableObj = new DataTable('#datatable', {
                         data: {!! json_encode($ortu->toArray()) !!},
                         columns: [
@@ -155,23 +166,23 @@
                             { title: 'No. Telp', data: 'no_telp' },
                             { title: 'Nama Santri', data: 'santri[, ].nama' },
                             { title: 'Aksi', data: 'id_ortu',
-                                render: function (data) {
+                                render: function (data, type, row) {
                                     const test = `
-                                        <a href="{{ route('management.edit', ['management' => '__ID__']) }}" class="btn btn-primary">Edit</a>
-                                        <a type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal${data}">Delete</a>
+                                        <a href="{{ route('orangtua.edit', ['orang_tua' => '__ID__']) }}" class="btn btn-primary">Edit</a>
+                                        <a type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal${data}">Hapus</a>
                                         <div class="modal fade" id="exampleModal${data}" tabindex="-1" aria-labelledby="exampleModal__ID__" aria-hidden="true">
                                             <div class="modal-dialog">
                                                 <div class="modal-content">
                                                     <div class="modal-header">
-                                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Konfirmasi Hapus</h1>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <p>${data}</p>
+                                                        <p>Apakah anda ingin menghapus orang tua santri yang bernama <span class="fw-bold">${row.nama_lengkap}</span>?</p>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                        <form action="/management/${data}" method="POST">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                        <form action="/orang-tua/${data}" method="POST">
                                                             <input type="hidden" name="_method" value="DELETE">
                                                             <input type="hidden" name="_token" value="{{ csrf_token() }}">
                                                             <button type="submit" class="btn btn-danger">Hapus</button>
@@ -192,6 +203,11 @@
                     });
                     break;
                 case 'staf':
+                    // ganti tombol "tambah"
+                    addButton.innerHTML = "Tambah Staf Baru";
+                    addButton.setAttribute('href', '{{ route("staff.create") }}');
+
+                    // ganti data dari datatable
                     tableObj = new DataTable('#datatable', {
                         data: {!! json_encode($staff->toArray()) !!},
                         columns: [
@@ -201,23 +217,23 @@
                             { title: 'No. Telp', data: 'no_telp' },
                             { title: 'Jabatan', data: 'jabatan' },
                             { title: 'Aksi', data: 'id_staf',
-                                render: function (data) {
+                                render: function (data, type, row) {
                                     const test = `
-                                        <a href="{{ route('management.edit', ['management' => '__ID__']) }}" class="btn btn-primary">Edit</a>
-                                        <a type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal${data}">Delete</a>
+                                        <a href="{{ route('staff.edit', ['staff' => '__ID__']) }}" class="btn btn-primary">Edit</a>
+                                        <a type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal${data}">Hapus</a>
                                         <div class="modal fade" id="exampleModal${data}" tabindex="-1" aria-labelledby="exampleModal__ID__" aria-hidden="true">
                                             <div class="modal-dialog">
                                                 <div class="modal-content">
                                                     <div class="modal-header">
-                                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Konfirmasi Hapus</h1>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <p>${data}</p>
+                                                        <p>Apakah anda ingin menghapus staf yang bernama <span class="fw-bold">${row.nama}</span>?</p>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                        <form action="/management/${data}" method="POST">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                        <form action="/staff/${data}" method="POST">
                                                             <input type="hidden" name="_method" value="DELETE">
                                                             <input type="hidden" name="_token" value="{{ csrf_token() }}">
                                                             <button type="submit" class="btn btn-danger">Hapus</button>

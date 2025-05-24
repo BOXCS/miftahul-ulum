@@ -4,6 +4,9 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\KehadiranController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ManagementController;
+use App\Http\Controllers\OrangtuaController;
+use App\Http\Controllers\SantriController;
+use App\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ReportController;
@@ -55,17 +58,20 @@ Route::get('/laporan-kehadiran/export', [AttendanceController::class, 'export'])
 
 // Dashboard Admin (akses seperti sebelumnya)
 Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 
 // Dashboard Superadmin (kosongan)
 Route::middleware(['auth', 'role:superadmin'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/superadmin/dashboard', [SuperAdminController::class, 'index'])->name('superadmin.dashboard');
 });
 // Halaman Lainnya (Harus Login)
 
 Route::middleware(['auth'])->group(function () {
     Route::resource('management', ManagementController::class)->names('management');
+    Route::resource('santri', SantriController::class)->names('santri');
+    Route::resource('orang-tua', OrangtuaController::class)->names('orangtua');
+    Route::resource('staff', StaffController::class)->names('staff');
 
     Route::resource('report', ReportController::class)->names('report');
 

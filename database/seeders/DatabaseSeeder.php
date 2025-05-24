@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             KehadiranSeeder::class,
             PerizinanSeeder::class,
             PengumumanSeeder::class,
+            ChatSessionSeeder::class
         ]);
     }
 }

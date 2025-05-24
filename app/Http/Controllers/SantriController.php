@@ -2,23 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\OrangTua;
 use App\Models\Santri;
-use App\Models\Staff;
 use Illuminate\Http\Request;
 
-class ManagementController extends Controller
+class SantriController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $ortu=OrangTua::with('santri')->get();
-        $santri=Santri::with('ortu')->get();
-        $staff=Staff::get();
-        return view('management', compact('ortu', 'santri', 'staff'));
-
+        //
     }
 
     /**
@@ -26,7 +20,7 @@ class ManagementController extends Controller
      */
     public function create()
     {
-        //
+        return view('management.santri.create');
     }
 
     /**
@@ -34,7 +28,16 @@ class ManagementController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $tahun = date('Y');
+        $request->validate([
+            'id_santri' => 'required|string',
+            'nama' => 'required|string',
+            'tahun_angkatan' => "required|numeric|max:$tahun",
+            'id_ortu' => 'required|string',
+            'status' => 'required|string',
+        ]);
+        Santri::create($request->all());
+        return redirect()->route('management.index')->with('success', 'Santri berhasil ditambahkan.');
     }
 
     /**
@@ -50,7 +53,9 @@ class ManagementController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $santri = Santri::with('ortu')->find($id);
+        $edit = true;
+        return view('management.santri.create', compact('santri', 'edit'));
     }
 
     /**
@@ -66,6 +71,9 @@ class ManagementController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $santri = Santri::find($id);
+        $santri->delete();
+
+        return redirect()->route('management.index')->with('success', 'Santri berhasil dihapus');
     }
 }
