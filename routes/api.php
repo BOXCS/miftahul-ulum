@@ -4,6 +4,7 @@ use App\Http\Controllers\AkunController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\Api\MobileDataController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\SantriController;
 use App\Http\Controllers\ChatController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -32,22 +33,18 @@ Route::put('/akun/{id}', [AkunController::class, 'update']); // Update akun
 Route::delete('/akun/{id}', [AkunController::class, 'destroy']); // Hapus akun
 
 // API for mobile
-Route::get('/kehadiran/{id}', [MobileDataController::class, 'kehadiranById']);
-Route::get('/santri/{id}', [MobileDataController::class, 'dataSantriById']);
+Route::get('/kehadiran-bytime/{id}',[MobileDataController::class, 'kehadiranByIdByTime']);
+Route::get('/kehadiran-mingguan/{id}', [MobileDataController::class,'kehadiranSeminggu']);
+Route::get('/perizinan/{id}', [MobileDataController::class, 'perizinanSetahun']);
+Route::get('/ortu/{id}',[MobileDataController::class, 'dataOrtuSantriById']);
 Route::get('/pengumuman', [MobileDataController::class, 'pengumuman']);
-
-Route::get('/chat/messages/{session}', [MobileDataController::class, 'chatMessagesBySession']);
-
-Route::get('/chat/user-info/{session}', function ($sessionId) {
-    $session = \App\Models\ChatSession::with('orangTua')->where('id_session', $sessionId)->first();
-
-    if (!$session || !$session->orangTua) {
-        return response()->json(['message' => 'Session or user not found'], 404);
-    }
-
-    // Cari santri yang wali-nya orang_tua ini (ambil nama santri-nya sebagai "wali_dari")
-    $santri = \App\Models\Santri::where('id_ortu', $session->id_ortu)->first();
-
+Route::prefix('santri')->group(function () {
+    Route::get('/', [SantriController::class, 'apiIndex']);
+    Route::get('/{id}', [SantriController::class, 'apiShow']);
+    Route::get('/{id}/profile', [SantriController::class, 'apiProfile']);
+});
+Route::get('/chat/user-info/{session}', function($sessionId) {
+    $session = \App\Models\ChatSession::where('id_session', $sessionId)->first();
     return [
         'nama_orang_tua' => $session->orangTua->nama_lengkap,
         'asal_daerah' => $session->orangTua->alamat,
@@ -58,6 +55,9 @@ Route::get('/chat/user-info/{session}', function ($sessionId) {
 
 // for mobile authentication
 Route::post('/login', [AuthController::class, 'login']);
+// routes/api.php
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'index']);
     Route::post('/logout', [AuthController::class, 'logout']);
