@@ -31,8 +31,10 @@ Route::put('/akun/{id}', [AkunController::class, 'update']); // Update akun
 Route::delete('/akun/{id}', [AkunController::class, 'destroy']); // Hapus akun
 
 // API for mobile
-Route::get('/kehadiran/{id}',[MobileDataController::class, 'kehadiranById']);
-Route::get('/santri/{id}',[MobileDataController::class, 'dataSantriById']);
+Route::get('/kehadiran-bytime/{id}',[MobileDataController::class, 'kehadiranByIdByTime']);
+Route::get('/kehadiran-mingguan/{id}', [MobileDataController::class,'kehadiranSeminggu']);
+Route::get('/perizinan/{id}', [MobileDataController::class, 'perizinanSetahun']);
+Route::get('/ortu/{id}',[MobileDataController::class, 'dataOrtuSantriById']);
 Route::get('/pengumuman', [MobileDataController::class, 'pengumuman']);
 
 Route::get('/chat/user-info/{session}', function($sessionId) {

@@ -12,6 +12,7 @@ class Kehadiran extends Model
     use HasFactory;
 
     protected $table = 'kehadiran';
+    protected $primaryKey = 'id_kehadiran';
 
     // Kehadiran.php
     public function santri(): BelongsTo
