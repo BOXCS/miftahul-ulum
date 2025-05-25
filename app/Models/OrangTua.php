@@ -25,5 +25,6 @@ class OrangTua extends Model
     {
         return $this->hasOne(Akun::class, 'id_akun', 'id_akun');
     }
+
 }
 

@@ -62,12 +62,12 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
 // Dashboard Superadmin (kosongan)
 Route::middleware(['auth', 'role:superadmin'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/superadmin/dashboard', [SuperAdminController::class, 'index'])->name('superadmin.dashboard');
 });
 // Halaman Lainnya (Harus Login)
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('management', ManagementController::class)->names('management');
     Route::resource('santri', SantriController::class)->names('santri');
     Route::resource('orang-tua', OrangtuaController::class)->names('orangtua');

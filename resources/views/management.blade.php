@@ -110,7 +110,7 @@
                         columns: [
                             { title: 'ID', data: 'id_santri' },
                             { title: 'Nama Lengkap', data: 'nama' },
-                            { title: 'Orang Tua', data: 'nama' },
+                            { title: 'Orang Tua', data: 'ortu.nama_lengkap' },
                             { title: 'Sidik Jari', data: 'sidik_jari' },
                             { title: 'Status', data: 'status' },
                             { title: 'Aksi', data: 'id_santri',
