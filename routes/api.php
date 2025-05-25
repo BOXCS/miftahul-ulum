@@ -4,6 +4,7 @@ use App\Http\Controllers\AkunController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\Api\MobileDataController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\SantriController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -36,7 +37,11 @@ Route::get('/kehadiran-mingguan/{id}', [MobileDataController::class,'kehadiranSe
 Route::get('/perizinan/{id}', [MobileDataController::class, 'perizinanSetahun']);
 Route::get('/ortu/{id}',[MobileDataController::class, 'dataOrtuSantriById']);
 Route::get('/pengumuman', [MobileDataController::class, 'pengumuman']);
-
+Route::prefix('santri')->group(function () {
+    Route::get('/', [SantriController::class, 'apiIndex']);
+    Route::get('/{id}', [SantriController::class, 'apiShow']);
+    Route::get('/{id}/profile', [SantriController::class, 'apiProfile']);
+});
 Route::get('/chat/user-info/{session}', function($sessionId) {
     $session = \App\Models\ChatSession::where('id_session', $sessionId)->first();
     return [
@@ -48,6 +53,9 @@ Route::get('/chat/user-info/{session}', function($sessionId) {
 
 // for mobile authentication
 Route::post('/login', [AuthController::class, 'login']);
+// routes/api.php
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'index']);
     Route::post('/logout', [AuthController::class, 'logout']);

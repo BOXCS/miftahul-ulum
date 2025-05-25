@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Akun;
 use Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
 
 class AuthController extends Controller
 {
@@ -40,4 +42,22 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logout succesful']);
     }
+
+public function resetPassword(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email',
+        'new_password' => 'required|min:6|confirmed', // password_confirmation harus dikirim juga
+    ]);
+
+    $akun = Akun::where('email', $request->email)->first();
+    if (!$akun) {
+        return response()->json(['message' => 'Email tidak ditemukan'], 404);
+    }
+
+    $akun->password = Hash::make($request->new_password);
+    $akun->save();
+
+    return response()->json(['message' => 'Password berhasil direset'], 200);
+}
 }
