@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\OrangTua;
 use App\Models\Santri;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class SantriController extends Controller
 {
@@ -147,7 +149,9 @@ class SantriController extends Controller
      */
     public function create()
     {
-        return view('management.santri.create');
+        $idSantriTerakhir=Santri::select('tahun_angkatan', DB::raw('MAX(id_santri) as id_terbaru'))->groupBy('tahun_angkatan')->get();
+        $ortu = OrangTua::get(['id_ortu', 'nama_lengkap']);
+        return view('management.santri.create', compact('ortu', 'idSantriTerakhir'));
     }
 
     /**
@@ -180,9 +184,10 @@ class SantriController extends Controller
      */
     public function edit(string $id)
     {
+        $idSantriTerakhir=Santri::select('tahun_angkatan', DB::raw('MAX(id_santri) as id_terbaru'))->groupBy('tahun_angkatan')->get();
+        $ortu = OrangTua::get(['id_ortu', 'nama_lengkap']);
         $santri = Santri::with('ortu')->find($id);
-        $edit = true;
-        return view('management.santri.create', compact('santri', 'edit'));
+        return view('management.santri.create', compact('santri', 'idSantriTerakhir', 'ortu'));
     }
 
     /**
@@ -190,7 +195,17 @@ class SantriController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $tahun = date('Y');
+        $request->validate([
+            'id_santri' => 'required|string',
+            'nama' => 'required|string',
+            'tahun_angkatan' => "required|numeric|max:$tahun",
+            'id_ortu' => 'required|string',
+            'status' => 'required|string',
+        ]);
+        $santri = Santri::find($id);
+        $santri->update($request->all());
+        return redirect()->route('management.index')->with('success', 'Santri berhasil ditambahkan.');
     }
 
     /**

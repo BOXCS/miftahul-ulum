@@ -6,14 +6,32 @@
 @section('content')
     <div class="container-fluid">
         <div class="row g-4">
-            <h1>Manajemen Data</h1>
-            <select class="form-select" aria-label="Default select example" name="mode" id="mode" onchange="changeMode()">
+            <h1>Manajemen Data <span class="subTitle">Santri</span></h1>
+            <select class="form-select" aria-label="Default select example" name="mode" id="mode" oninput="changeMode()">
                 <option value="santri">Santri</option>
                 <option value="ortu">Orang tua</option>
                 <option value="staf">Staf</option>
             </select>
-            <a href="{{ route('santri.create') }}" class="btn btn-primary" id="add-button">Tambah Santri Baru</a>
-            <table id="datatable" class="table table-striped" style="width:100%">
+            <a href="javascript:void(0)" class="btn btn-primary" id="add-button" data-bs-toggle="modal" data-bs-target="#TambahSantri">Tambah Santri Baru</a>
+            <div class="modal fade" id="TambahSantri" tabindex="-1" aria-labelledby="Tambah santri" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="exampleModalLabel">Konfirmasi Tambah Santri</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Apakah siswa yang akan ditambahkan sudah memiliki data orang tua dalam sistem?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <a href="{{ route("orangtua.create") }}" class="btn btn-success" style="color:white">Belum</a>
+                            <a href="{{ route("santri.create") }}" class="btn btn-primary">Sudah</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <table id="datatable" class="table table-striped overflow-y" style="width:100%">
                 <thead>
                 </thead>
                 <tbody>
@@ -43,6 +61,8 @@
                 { title: 'Sidik Jari', data: 'sidik_jari' },
                 { title: 'Status', data: 'status' },
                 { title: 'Aksi', data: 'id_santri',
+                    
+                    // add button edit and delete
                     render: function (data, type, row) {
                         const test = `
                             <a href="{{ route('santri.edit', ['santri' => '__ID__']) }}" class="btn btn-primary">Edit</a>
@@ -84,6 +104,7 @@
         function changeMode() {
             var text = document.getElementById('mode').value;
             var addButton = document.getElementById('add-button');
+            var subTitle =document.getElementsByClassName('subTitle')[0];
 
             // function for clear table (before reinitialize)
             var tableId = "#datatable";
@@ -92,17 +113,19 @@
                 tableObj.clear();
                 tableObj.destroy();
             }
-
+            
             //2nd empty html
             $(tableId + " tbody").empty();
             $(tableId + " thead").empty();
-
+            
             //3rd reCreate Datatable object
             switch (text) {
                 case "santri":
                     // ganti tombol "tambah"
                     addButton.innerHTML = "Tambah Santri Baru";
-                    addButton.setAttribute('href', '{{ route("santri.create") }}');
+                    addButton.setAttribute("data-bs-toggle", "modal");
+                    addButton.setAttribute("data-bs-target", "#TambahSantri");
+                    subTitle.innerText = "Santri";
 
                     // ganti data dari datatable
                     tableObj = new DataTable('#datatable', {
@@ -114,6 +137,8 @@
                             { title: 'Sidik Jari', data: 'sidik_jari' },
                             { title: 'Status', data: 'status' },
                             { title: 'Aksi', data: 'id_santri',
+                                
+                                // add button edit and delete
                                 render: function (data, type, row) {
                                     const test = `
                                         <a href="{{ route('santri.edit', ['santri' => '__ID__']) }}" class="btn btn-primary">Edit</a>
@@ -155,6 +180,9 @@
                     // ganti tombol "tambah"
                     addButton.innerHTML = "Tambah Orang Tua Baru";
                     addButton.setAttribute('href', '{{ route("orangtua.create") }}');
+                    addButton.removeAttribute("data-bs-toggle");
+                    addButton.removeAttribute("data-bs-target");
+                    subTitle.innerText = "Orang Tua";
 
                     // ganti data dari datatable
                     tableObj = new DataTable('#datatable', {
@@ -166,6 +194,8 @@
                             { title: 'No. Telp', data: 'no_telp' },
                             { title: 'Nama Santri', data: 'santri[, ].nama' },
                             { title: 'Aksi', data: 'id_ortu',
+                                
+                                // add button edit and delete
                                 render: function (data, type, row) {
                                     const test = `
                                         <a href="{{ route('orangtua.edit', ['orang_tua' => '__ID__']) }}" class="btn btn-primary">Edit</a>
@@ -206,6 +236,9 @@
                     // ganti tombol "tambah"
                     addButton.innerHTML = "Tambah Staf Baru";
                     addButton.setAttribute('href', '{{ route("staff.create") }}');
+                    addButton.removeAttribute("data-bs-toggle");
+                    addButton.removeAttribute("data-bs-target");
+                    subTitle.innerText = "Staf";
 
                     // ganti data dari datatable
                     tableObj = new DataTable('#datatable', {
@@ -217,6 +250,8 @@
                             { title: 'No. Telp', data: 'no_telp' },
                             { title: 'Jabatan', data: 'jabatan' },
                             { title: 'Aksi', data: 'id_staf',
+                                
+                                // add button edit and delete
                                 render: function (data, type, row) {
                                     const test = `
                                         <a href="{{ route('staff.edit', ['staff' => '__ID__']) }}" class="btn btn-primary">Edit</a>
