@@ -43,8 +43,16 @@ Route::prefix('santri')->group(function () {
     Route::get('/{id}', [SantriController::class, 'apiShow']);
     Route::get('/{id}/profile', [SantriController::class, 'apiProfile']);
 });
+Route::get('/santri/ortu/{idOrtu}', [SantriController::class, 'apiByOrtuId']);
 Route::get('/chat/user-info/{session}', function($sessionId) {
     $session = \App\Models\ChatSession::where('id_session', $sessionId)->first();
+
+    if (!$session || !$session->orangTua) {
+        return response()->json(['message' => 'Session or user not found'], 404);
+    }
+
+    // Cari santri yang wali-nya orang_tua ini (ambil nama santri-nya sebagai "wali_dari")
+    $santri = \App\Models\Santri::where('id_ortu', $session->id_ortu)->first();
     return [
         'nama_orang_tua' => $session->orangTua->nama_lengkap,
         'asal_daerah' => $session->orangTua->alamat,
@@ -56,6 +64,7 @@ Route::get('/chat/user-info/{session}', function($sessionId) {
 // for mobile authentication
 Route::post('/login', [AuthController::class, 'login']);
 // routes/api.php
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 Route::middleware('auth:sanctum')->group(function () {

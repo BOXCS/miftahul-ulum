@@ -7,11 +7,16 @@
     <div class="container-fluid">
         <div class="row g-4">
             <h1>Manajemen Data</h1>
-            <select class="form-select" aria-label="Default select example" name="mode" id="mode" onchange="changeMode()">
+            <select class="form-select" aria-label="Default select example" name="mode" id="mode"
+                onchange="changeMode()">
                 <option value="santri">Santri</option>
-                <option value="ortu">Orang tua</option>
-                <option value="staf">Staf</option>
+                <option value="ortu">Orang Tua</option>
+                @if (auth()->user()->role === 'superadmin')
+                    <option value="staf">Staf</option>
+                @endif
             </select>
+
+
             <a href="{{ route('santri.create') }}" class="btn btn-primary" id="add-button">Tambah Santri Baru</a>
             <table id="datatable" class="table table-striped" style="width:100%">
                 <thead>
@@ -24,7 +29,9 @@
 @endsection
 @push('scripts')
     <script>
+        const userRole = "{{ auth()->user()->role }}";
     </script>
+    <script></script>
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
@@ -36,14 +43,30 @@
             data: {!! json_encode($santri->toArray()) !!},
             // membuat tabel dengan title=judul column dan data=data yg ditampilkan
             // yang langsung terhubung dengan option data/statement diatas
-            columns: [
-                { title: 'ID', data: 'id_santri' },
-                { title: 'Nama Lengkap', data: 'nama' },
-                { title: 'Orang Tua', data: 'ortu.nama_lengkap' },
-                { title: 'Sidik Jari', data: 'sidik_jari' },
-                { title: 'Status', data: 'status' },
-                { title: 'Aksi', data: 'id_santri',
-                    render: function (data, type, row) {
+            columns: [{
+                    title: 'ID',
+                    data: 'id_santri'
+                },
+                {
+                    title: 'Nama Lengkap',
+                    data: 'nama'
+                },
+                {
+                    title: 'Orang Tua',
+                    data: 'ortu.nama_lengkap'
+                },
+                {
+                    title: 'Sidik Jari',
+                    data: 'sidik_jari'
+                },
+                {
+                    title: 'Status',
+                    data: 'status'
+                },
+                {
+                    title: 'Aksi',
+                    data: 'id_santri',
+                    render: function(data, type, row) {
                         const test = `
                             <a href="{{ route('santri.edit', ['santri' => '__ID__']) }}" class="btn btn-primary">Edit</a>
                             <a type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal${data}">Hapus</a>
@@ -74,16 +97,33 @@
                 }
             ],
             // detail properti tiap kolom
-            columnDefs: [
-                { targets: 3, orderable: false, searchable: false },
-                { targets: 4, orderable: false },
-                { targets: 5, orderable: false, searchable: false },
+            columnDefs: [{
+                    targets: 3,
+                    orderable: false,
+                    searchable: false
+                },
+                {
+                    targets: 4,
+                    orderable: false
+                },
+                {
+                    targets: 5,
+                    orderable: false,
+                    searchable: false
+                },
             ]
         });
         // function for changes datatable will be display
         function changeMode() {
             var text = document.getElementById('mode').value;
             var addButton = document.getElementById('add-button');
+
+            // jika admin mencoba memilih staf secara manual via devtools
+            if (text === "staf" && userRole !== "superadmin") {
+                alert("Anda tidak memiliki akses ke data staf.");
+                document.getElementById('mode').value = "santri"; // reset kembali
+                return;
+            }
 
             // function for clear table (before reinitialize)
             var tableId = "#datatable";
@@ -102,19 +142,35 @@
                 case "santri":
                     // ganti tombol "tambah"
                     addButton.innerHTML = "Tambah Santri Baru";
-                    addButton.setAttribute('href', '{{ route("santri.create") }}');
+                    addButton.setAttribute('href', '{{ route('santri.create') }}');
 
                     // ganti data dari datatable
                     tableObj = new DataTable('#datatable', {
                         data: {!! json_encode($santri->toArray()) !!},
-                        columns: [
-                            { title: 'ID', data: 'id_santri' },
-                            { title: 'Nama Lengkap', data: 'nama' },
-                            { title: 'Orang Tua', data: 'ortu.nama_lengkap' },
-                            { title: 'Sidik Jari', data: 'sidik_jari' },
-                            { title: 'Status', data: 'status' },
-                            { title: 'Aksi', data: 'id_santri',
-                                render: function (data, type, row) {
+                        columns: [{
+                                title: 'ID',
+                                data: 'id_santri'
+                            },
+                            {
+                                title: 'Nama Lengkap',
+                                data: 'nama'
+                            },
+                            {
+                                title: 'Orang Tua',
+                                data: 'ortu.nama_lengkap'
+                            },
+                            {
+                                title: 'Sidik Jari',
+                                data: 'sidik_jari'
+                            },
+                            {
+                                title: 'Status',
+                                data: 'status'
+                            },
+                            {
+                                title: 'Aksi',
+                                data: 'id_santri',
+                                render: function(data, type, row) {
                                     const test = `
                                         <a href="{{ route('santri.edit', ['santri' => '__ID__']) }}" class="btn btn-primary">Edit</a>
                                         <a type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal${data}">Hapus</a>
@@ -144,29 +200,55 @@
                                 }
                             }
                         ],
-                        columnDefs: [
-                            { targets: 3, orderable: false, searchable: false },
-                            { targets: 4, orderable: false },
-                            { targets: 5, orderable: false, searchable: false },
+                        columnDefs: [{
+                                targets: 3,
+                                orderable: false,
+                                searchable: false
+                            },
+                            {
+                                targets: 4,
+                                orderable: false
+                            },
+                            {
+                                targets: 5,
+                                orderable: false,
+                                searchable: false
+                            },
                         ]
                     });
                     break;
                 case "ortu":
                     // ganti tombol "tambah"
                     addButton.innerHTML = "Tambah Orang Tua Baru";
-                    addButton.setAttribute('href', '{{ route("orangtua.create") }}');
+                    addButton.setAttribute('href', '{{ route('orangtua.create') }}');
 
                     // ganti data dari datatable
                     tableObj = new DataTable('#datatable', {
                         data: {!! json_encode($ortu->toArray()) !!},
-                        columns: [
-                            { title: 'ID', data: 'id_ortu' },
-                            { title: 'Nama Orang Tua', data: 'nama_lengkap' },
-                            { title: 'Alamat', data: 'alamat' },
-                            { title: 'No. Telp', data: 'no_telp' },
-                            { title: 'Nama Santri', data: 'santri[, ].nama' },
-                            { title: 'Aksi', data: 'id_ortu',
-                                render: function (data, type, row) {
+                        columns: [{
+                                title: 'ID',
+                                data: 'id_ortu'
+                            },
+                            {
+                                title: 'Nama Orang Tua',
+                                data: 'nama_lengkap'
+                            },
+                            {
+                                title: 'Alamat',
+                                data: 'alamat'
+                            },
+                            {
+                                title: 'No. Telp',
+                                data: 'no_telp'
+                            },
+                            {
+                                title: 'Nama Santri',
+                                data: 'santri[, ].nama'
+                            },
+                            {
+                                title: 'Aksi',
+                                data: 'id_ortu',
+                                render: function(data, type, row) {
                                     const test = `
                                         <a href="{{ route('orangtua.edit', ['orang_tua' => '__ID__']) }}" class="btn btn-primary">Edit</a>
                                         <a type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal${data}">Hapus</a>
@@ -196,28 +278,50 @@
                                 }
                             }
                         ],
-                        columnDefs: [
-                            { targets: 3, orderable: false },
-                            { targets: 5, orderable: false, searchable: false },
+                        columnDefs: [{
+                                targets: 3,
+                                orderable: false
+                            },
+                            {
+                                targets: 5,
+                                orderable: false,
+                                searchable: false
+                            },
                         ]
                     });
                     break;
                 case 'staf':
                     // ganti tombol "tambah"
                     addButton.innerHTML = "Tambah Staf Baru";
-                    addButton.setAttribute('href', '{{ route("staff.create") }}');
+                    addButton.setAttribute('href', '{{ route('staff.create') }}');
 
                     // ganti data dari datatable
                     tableObj = new DataTable('#datatable', {
                         data: {!! json_encode($staff->toArray()) !!},
-                        columns: [
-                            { title: 'ID', data: 'id_staf' },
-                            { title: 'Nama Lengkap', data: 'nama' },
-                            { title: 'Alamat', data: 'alamat' },
-                            { title: 'No. Telp', data: 'no_telp' },
-                            { title: 'Jabatan', data: 'jabatan' },
-                            { title: 'Aksi', data: 'id_staf',
-                                render: function (data, type, row) {
+                        columns: [{
+                                title: 'ID',
+                                data: 'id_staf'
+                            },
+                            {
+                                title: 'Nama Lengkap',
+                                data: 'nama'
+                            },
+                            {
+                                title: 'Alamat',
+                                data: 'alamat'
+                            },
+                            {
+                                title: 'No. Telp',
+                                data: 'no_telp'
+                            },
+                            {
+                                title: 'Jabatan',
+                                data: 'jabatan'
+                            },
+                            {
+                                title: 'Aksi',
+                                data: 'id_staf',
+                                render: function(data, type, row) {
                                     const test = `
                                         <a href="{{ route('staff.edit', ['staff' => '__ID__']) }}" class="btn btn-primary">Edit</a>
                                         <a type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal${data}">Hapus</a>
@@ -247,9 +351,15 @@
                                 }
                             }
                         ],
-                        columnDefs: [
-                            { targets: 3, orderable: false },
-                            { targets: 5, orderable: false, searchable: false },
+                        columnDefs: [{
+                                targets: 3,
+                                orderable: false
+                            },
+                            {
+                                targets: 5,
+                                orderable: false,
+                                searchable: false
+                            },
                         ]
                     });
                     break;

@@ -8,17 +8,17 @@ use Illuminate\Support\Facades\Auth;
 
 class RoleMiddleware
 {
-    public function handle(Request $request, Closure $next, $role)
-    {
-        if (!Auth::check()) {
-            return redirect('/login'); // Redirect ke login jika belum login
-        }
+    public function handle(Request $request, Closure $next, ...$roles)
+{
+    logger()->info('User hak_akses: ' . Auth::user()->hak_akses);
+    logger()->info('Roles yang diterima middleware:', $roles);
 
-        // Cek apakah user memiliki hak akses yang sesuai
-        if (Auth::user()->hak_akses !== $role) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        return $next($request);
+    if (!in_array(Auth::user()->hak_akses, $roles)) {
+        abort(403, 'Unauthorized.');
     }
+
+    return $next($request);
+}
+
+
 }
