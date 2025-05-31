@@ -160,4 +160,14 @@ class AuthController extends Controller
 
         return redirect('/register')->with('success', 'Superadmin berhasil didaftarkan! Silakan login.');
     }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')->with('success', 'Anda berhasil logout.');
+    }
 }

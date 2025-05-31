@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AkunController;
 use App\Http\Controllers\API\AuthController;
+// use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\Api\MobileDataController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\SantriController;
@@ -24,7 +25,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/attendance', [AttendanceController::class, 'getAttendanceData']);
+// Route::get('/attendance', [AttendanceController::class, 'getAttendanceData']);
+Route::get('/attendance', [AttendanceController::class, 'getAttendanceData'])->name('attendance.data');
 
 Route::get('/akun', [AkunController::class, 'index']); // Ambil semua akun
 Route::post('/akun', [AkunController::class, 'store']); // Tambah akun
@@ -59,6 +61,8 @@ Route::get('/chat/user-info/{session}', function($sessionId) {
         'wali_dari' => $santri ? $santri->nama : null,
     ];
 });
+logger()->info('GetOrCreateSession hit', $request->all());
+
 
 
 // for mobile authentication

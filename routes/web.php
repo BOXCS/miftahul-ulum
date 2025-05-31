@@ -14,6 +14,7 @@ use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\PengumumanController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,8 +53,11 @@ Route::middleware(['auth', 'role:admin,superadmin'])->group(function () {
     Route::resource('announcement', PengumumanController::class)->names('announcement');
     Route::resource('pengumuman', PengumumanController::class)->names('pengumuman');
     Route::resource('attendance', AttendanceController::class)->names('attendance');
+    Route::resource('profile', ProfileController::class)->names('profile');
+
 
     // Tambahan endpoint khusus
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/chat/{id_staf}/{id_ortu}', fn ($id_staf, $id_ortu) => view('chat', compact('id_staf', 'id_ortu')));
     Route::get('/announcement', fn () => view('announcement'))->name('announcement');
     Route::post('/api/chat/send', [ChatController::class, 'store']);

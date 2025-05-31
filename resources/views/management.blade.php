@@ -7,11 +7,12 @@
     <div class="container-fluid">
         <div class="row g-4">
             <h1>Manajemen Data</h1>
+            <p>Role user: {{ auth()->user()->hak_akses }}</p>
             <select class="form-select" aria-label="Default select example" name="mode" id="mode"
                 onchange="changeMode()">
                 <option value="santri">Santri</option>
                 <option value="ortu">Orang Tua</option>
-                @if (auth()->user()->role === 'superadmin')
+                @if (auth()->user()->hak_akses === 'superadmin')
                     <option value="staf">Staf</option>
                 @endif
             </select>
@@ -29,7 +30,7 @@
 @endsection
 @push('scripts')
     <script>
-        const userRole = "{{ auth()->user()->role }}";
+        const userRole = "{{ auth()->user()->hak_akses }}";
     </script>
     <script></script>
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
