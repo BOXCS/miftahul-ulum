@@ -36,11 +36,13 @@ Route::get('/kehadiran-bytime/{id}',[MobileDataController::class, 'kehadiranById
 Route::get('/kehadiran-mingguan/{id}', [MobileDataController::class,'kehadiranSeminggu']);
 Route::get('/perizinan/{id}', [MobileDataController::class, 'perizinanSetahun']);
 Route::get('/ortu/{id}',[MobileDataController::class, 'dataOrtuSantriById']);
+Route::get('/ortu/{id}/santri', [MobileDataController::class, 'getSantriByOrtu']);
 Route::get('/pengumuman', [MobileDataController::class, 'pengumuman']);
 Route::prefix('santri')->group(function () {
     Route::get('/', [SantriController::class, 'apiIndex']);
     Route::get('/{id}', [SantriController::class, 'apiShow']);
     Route::get('/{id}/profile', [SantriController::class, 'apiProfile']);
+    Route::get('/ortu/{id_ortu}', [SantriController::class, 'apiByOrtuId']);
 });
 Route::get('/chat/user-info/{session}', function($sessionId) {
     $session = \App\Models\ChatSession::where('id_session', $sessionId)->first();

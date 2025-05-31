@@ -17,6 +17,39 @@ class SantriController extends Controller
     }
 
     /**
+     * API: Get santri by orang tua ID - HANYA DATA SANTRI
+     */
+    public function apiByOrtuId($id_ortu): JsonResponse
+    {
+        try {
+            $santri = Santri::where('id_ortu', $id_ortu)
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id_santri' => $item->id_santri,
+                        'nama' => $item->nama,
+                        'tahun_angkatan' => $item->tahun_angkatan,
+                        'sidik_jari' => $item->sidik_jari,
+                        'status' => $item->status,
+                        'id_ortu' => $item->id_ortu,
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data santri berhasil diambil berdasarkan ID orang tua',
+                'data' => $santri
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data santri',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * API: Get all santri data
      */
     public function apiIndex(): JsonResponse
@@ -51,7 +84,6 @@ class SantriController extends Controller
             ], 500);
         }
     }
-
 
     /**
      * API: Get specific santri data
@@ -96,51 +128,49 @@ class SantriController extends Controller
         }
     }
 
-
     /**
      * API: Get santri profile for mobile app
      */
     public function apiProfile(string $id): JsonResponse
-{
-    try {
-        $santri = Santri::with('ortu')->find($id);
+    {
+        try {
+            $santri = Santri::with('ortu')->find($id);
 
-        if (!$santri) {
+            if (!$santri) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data santri tidak ditemukan'
+                ], 404);
+            }
+
+            $santriData = [
+                'id' => $santri->id,
+                'id_santri' => $santri->id_santri,
+                'nama' => $santri->nama,
+                'tahun_angkatan' => $santri->tahun_angkatan,
+                'sidik_jari' => $santri->sidik_jari,
+                'status' => $santri->status,
+                'id_ortu' => $santri->id_ortu,
+                'ortu' => $santri->ortu ? [
+                    'nama_lengkap' => $santri->ortu->nama_lengkap,
+                    'alamat' => $santri->ortu->alamat,
+                    'no_telp' => $santri->ortu->no_telp
+                ] : null
+            ];
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data santri berhasil diambil',
+                'data' => $santriData
+            ], 200);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data santri tidak ditemukan'
-            ], 404);
+                'message' => 'Gagal mengambil data santri',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $santriData = [
-            'id' => $santri->id,
-            'id_santri' => $santri->id_santri,
-            'nama' => $santri->nama,
-            'tahun_angkatan' => $santri->tahun_angkatan,
-            'sidik_jari' => $santri->sidik_jari,
-            'status' => $santri->status,
-            'id_ortu' => $santri->id_ortu,
-            'ortu' => $santri->ortu ? [
-                'nama_lengkap' => $santri->ortu->nama_lengkap,
-                'alamat' => $santri->ortu->alamat,
-                'no_telp' => $santri->ortu->no_telp
-            ] : null
-        ];
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Data santri berhasil diambil',
-            'data' => $santriData
-        ], 200);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal mengambil data santri',
-            'error' => $e->getMessage()
-        ], 500);
     }
-}
-
 
     /**
      * Show the form for creating a new resource.
