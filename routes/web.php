@@ -61,3 +61,19 @@ Route::middleware(['auth', 'role:admin,superadmin'])->group(function () {
     Route::get('/laporan-kehadiran/export', [AttendanceController::class, 'export'])->name('attendance.export');
 });
 
+// Reset password routes untuk web
+Route::get('/reset-password', [AuthController::class, 'showResetForm'])
+    ->name('password.reset');
+
+Route::post('/reset-password', [AuthController::class, 'processWebReset'])
+    ->name('password.update');
+
+// Success page setelah reset password
+Route::get('/reset-success', function () {
+    return view('reset-success');
+})->name('reset.success');
+
+// Deep link handler untuk mobile app
+Route::get('/app-redirect', function () {
+    return view('app-redirect');
+})->name('app.redirect');

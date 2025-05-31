@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Akun;
 use Carbon\Carbon;
-// use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -13,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
-class   AuthController extends Controller
+class AuthController extends Controller
 {
     public function login(Request $request)
     {
@@ -44,7 +43,7 @@ class   AuthController extends Controller
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-        return response()->json(['message' => 'Logout succesful']);
+        return response()->json(['message' => 'Logout successful']);
     }
 
     public function sendResetLink(Request $request)
@@ -59,55 +58,154 @@ class   AuthController extends Controller
             return response()->json(['message' => 'Email tidak ditemukan'], 404);
         }
 
-        $token = Str::random(60);
+        // Generate 6 digit token untuk mobile verification
+        $token = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-        // Simpan token ke tabel password_resets
+        // Simpan token ke tabel password_resets dengan expired time
         DB::table('password_resets')->updateOrInsert(
             ['email' => $request->email],
             [
-                'token' => $token,
+                'token' => Hash::make($token), // Hash token untuk keamanan
                 'created_at' => Carbon::now()
             ]
         );
 
-        // Kirim email manual (atau gunakan Mailable jika ingin)
-        Mail::raw("Gunakan token berikut untuk reset password Anda: $token", function ($message) use ($request) {
-            $message->to($request->email)
-                    ->subject('Reset Password');
-        });
+        // Kirim email dengan token 6 digit
+        try {
+            Mail::send('emails.reset-password-mobile', [
+                'nama' => $akun->nama_lengkap ?? 'User', // Nama penerima email
+                'token' => $token, // Token reset password
+                'resetLink' => route('password.reset', ['email' => $request->email, 'token' => $token]) // Link reset password
+            ], function ($message) use ($request) {
+                $message->to($request->email)
+                ->subject('Kode Verifikasi Reset Password - Miftahul Ulum');
+            });
 
-        return response()->json(['message' => 'Token reset telah dikirim ke email.'], 200);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Kode verifikasi telah dikirim ke email Anda.',
+                // 'debug_token' => $token // Hanya untuk testing, hapus di production
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengirim email: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function resetPassword(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
-            'token' => 'required',
-            'password' => 'required|min:6|confirmed'
+            'token' => 'required|string|size:6', // Token 6 digit
+            'password' => 'required|min:8'
         ]);
 
+        // Cari reset token
         $reset = DB::table('password_resets')
             ->where('email', $request->email)
-            ->where('token', $request->token)
             ->first();
 
-        if (!$reset || Carbon::parse($reset->created_at)->addMinutes(60)->isPast()) {
-            return response()->json(['message' => 'Token tidak valid atau kadaluarsa.'], 400);
+        if (!$reset) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token reset tidak ditemukan.'
+            ], 400);
         }
 
+        // Verifikasi token (bandingkan dengan hash)
+        if (!Hash::check($request->token, $reset->token)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kode verifikasi tidak valid.'
+            ], 400);
+        }
+
+        // Cek expired (5 menit untuk mobile token)
+        if (Carbon::parse($reset->created_at)->addMinutes(5)->isPast()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kode verifikasi sudah kedaluwarsa.'
+            ], 400);
+        }
+
+        // Cari user
         $akun = Akun::where('email', $request->email)->first();
 
         if (!$akun) {
-            return response()->json(['message' => 'Email tidak ditemukan'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Email tidak ditemukan'
+            ], 404);
         }
 
+        // Update password
         $akun->password = Hash::make($request->password);
         $akun->save();
 
-        // Hapus token
+        // Hapus token setelah berhasil
         DB::table('password_resets')->where('email', $request->email)->delete();
 
-        return response()->json(['message' => 'Password berhasil direset.'], 200);
+        // Log activity (optional)
+        \Log::info('Password reset successful for email: ' . $request->email);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password berhasil direset.'
+        ], 200);
+    }
+
+    // Method untuk handle verifikasi dari web (ketika user klik link di email)
+    public function showResetForm(Request $request)
+    {
+        $token = $request->query('token');
+        $email = $request->query('email');
+
+        if (!$token || !$email) {
+            return response()->json(['message' => 'Token atau email tidak valid'], 400);
+        }
+
+        // Verifikasi token masih valid
+        $reset = DB::table('password_resets')
+            ->where('email', $email)
+            ->first();
+
+        if (!$reset || Carbon::parse($reset->created_at)->addMinutes(60)->isPast()) {
+            return response()->json(['message' => 'Token tidak valid atau sudah kadaluarsa'], 400);
+        }
+
+        // Return HTML form atau redirect ke mobile app
+        return view('reset-password-form', compact('token', 'email'));
+    }
+
+    // Method untuk proses reset dari web form
+    public function processWebReset(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'token' => 'required',
+            'password' => 'required|min:8|confirmed'
+        ]);
+
+        $result = $this->resetPassword($request);
+
+        if ($result->status() === 200) {
+            return redirect()->route('reset.success')->with('message', 'Password berhasil direset. Silakan login dengan password baru Anda.');
+        } else {
+            return back()->withErrors(['error' => 'Gagal mereset password. Silakan coba lagi.']);
+        }
+    }
+
+    // Method untuk resend token (optional)
+    public function resendToken(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        return $this->sendResetLink($request);
     }
 }

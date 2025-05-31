@@ -67,6 +67,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'sendResetLink']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
+// Web form reset password (untuk handle form dari email)
+Route::post('/web-reset-password', [AuthController::class, 'processWebReset']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'index']);
     Route::post('/logout', [AuthController::class, 'logout']);

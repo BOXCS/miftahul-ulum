@@ -37,11 +37,11 @@ return [
         'smtp' => [
             'transport' => 'smtp',
             'url' => env('MAIL_URL'),
-            'host' => env('MAIL_HOST', 'smtp.mailgun.org'),
-            'port' => env('MAIL_PORT', 587),
-            'encryption' => env('MAIL_ENCRYPTION', 'tls'),
-            'username' => env('MAIL_USERNAME'),
-            'password' => env('MAIL_PASSWORD'),
+            'host' => env('MAIL_HOST', 'smtp.gmail.com'),  // Gmail SMTP Server
+            'port' => env('MAIL_PORT', 587),  // Port for TLS
+            'encryption' => env('MAIL_ENCRYPTION', 'tls'),  // Use TLS encryption
+            'username' => env('MAIL_USERNAME'),  // Gmail username
+            'password' => env('MAIL_PASSWORD'),  // App Password
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN'),
         ],
@@ -52,17 +52,10 @@ return [
 
         'postmark' => [
             'transport' => 'postmark',
-            // 'message_stream_id' => null,
-            // 'client' => [
-            //     'timeout' => 5,
-            // ],
         ],
 
         'mailgun' => [
             'transport' => 'mailgun',
-            // 'client' => [
-            //     'timeout' => 5,
-            // ],
         ],
 
         'sendmail' => [
@@ -108,8 +101,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => env('MAIL_FROM_ADDRESS', 'no-reply@sanmoreee.com'),  // Sesuaikan alamat pengirim
+        'name' => env('MAIL_FROM_NAME', 'sanmoreee'),  // Nama aplikasi
     ],
 
     /*
@@ -125,7 +118,6 @@ return [
 
     'markdown' => [
         'theme' => 'default',
-
         'paths' => [
             resource_path('views/vendor/mail'),
         ],
