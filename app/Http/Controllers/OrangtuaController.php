@@ -65,8 +65,7 @@ class OrangtuaController extends Controller
     public function edit(string $id)
     {
         $orangtua = OrangTua::with('akun')->find($id);
-        $edit = true;
-        return view('management.orangtua.create', compact('orangtua', 'edit'));
+        return view('management.orangtua.create', compact('orangtua'));
     }
 
     /**
@@ -74,7 +73,27 @@ class OrangtuaController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'nama_lengkap' => 'required|string',
+            'alamat' => 'required',
+            'no_telp' => 'required|numeric',
+            'email' => 'required|email',
+            'username' => 'required|string',
+            'password' => 'required|string',
+        ]);
+        $ortu = OrangTua::find($id);
+        $ortu->update([
+            'nama_lengkap' => $request->nama_lengkap,
+            'alamat' => $request->alamat,
+            'no_telp' => $request->no_telp,
+        ]);
+        $ortu->akun()->update([
+            'email' => $request->email,
+            'username' => $request->username,
+            'password' => bcrypt($request->password),
+            'hak_akses' => $request->hak_akses,
+        ]);
+        return redirect()->route('management.index')->with('success', 'Orang tua santri berhasil ditambahkan.');
     }
 
     /**
