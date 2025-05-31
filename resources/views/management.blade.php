@@ -59,55 +59,62 @@
 @section('content')
     <div class="container-fluid">
         <div class="row g-4">
-            <div class="header">
-                <h1 class="main-title">
-                    Manajemen Data <span class="subTitle">Santri</span>
-                </h1>
+<div class="header">
+    <h1 class="main-title">
+        Manajemen Data <span class="subTitle">Santri</span>
+    </h1>
+    <p>Role user: {{ auth()->user()->hak_akses }}</p>
+</div>
+
+<div class="controls">
+    <div class="row g-3 align-items-center">
+        <div class="col-md-3">
+            <select class="form-select" name="mode" id="mode" oninput="changeMode()">
+                <option value="santri">Santri</option>
+                <option value="ortu">Orang Tua</option>
+                @if (auth()->user()->hak_akses === 'superadmin')
+                    <option value="staf">Staf</option>
+                @endif
+            </select>
+        </div>
+        <div class="col-md-6">
+            <div class="input-group p-0">
+                <input type="text" class="form-control" id="myInput" placeholder="Cari...">
+                <span class="input-group-text">
+                    <i class="bi bi-search"></i>
+                </span>
             </div>
-            <div class="controls">
-                <div class="row g-3 align-items-center">
-                    <div class="col-md-3">
-                        <select class="form-select" name="mode" id="mode" oninput="changeMode()">
-                            <option value="santri">Santri</option>
-                            <option value="ortu">Orang Tua</option>
-                            <option value="staf">Staf</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="input-group p-0">
-                            <input type="text" class="form-control" id="myInput" placeholder="Cari...">
-                            <span class="input-group-text">
-                                <i class="bi bi-search"></i>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#TambahSantri" id="add-button">
-                            <i class="bi bi-plus-circle me-1"></i>
-                            Tambah Santri Baru
-                        </button>
-                    </div>
-                </div>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#TambahSantri" id="add-button">
+                <i class="bi bi-plus-circle me-1"></i>
+                Tambah Santri Baru
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="TambahSantri" tabindex="-1" aria-labelledby="Tambah santri">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Konfirmasi Tambah Santri</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal fade" id="TambahSantri" tabindex="-1" aria-labelledby="Tambah santri">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h1 class="modal-title fs-5" id="exampleModalLabel">Konfirmasi Tambah Santri</h1>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p>Apakah siswa yang akan ditambahkan sudah memiliki data orang tua dalam sistem?</p>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                            <a href="{{ route("orangtua.create") }}" class="btn btn-success" style="color:white">Belum</a>
-                            <a href="{{ route("santri.create") }}" class="btn btn-primary">Sudah</a>
-                        </div>
-                    </div>
-                </div>
+            <div class="modal-body">
+                <p>Apakah siswa yang akan ditambahkan sudah memiliki data orang tua dalam sistem?</p>
             </div>
-            <table id="datatable" class="table row-border bg-light">
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <a href="{{ route('orangtua.create') }}" class="btn btn-success" style="color:white">Belum</a>
+                <a href="{{ route('santri.create') }}" class="btn btn-primary">Sudah</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table id="datatable" class="table table-striped bg-light">
+
                 <thead>
                 </thead>
                 <tbody>
@@ -118,7 +125,9 @@
 @endsection
 @push('scripts')
     <script>
+        const userRole = "{{ auth()->user()->hak_akses }}";
     </script>
+    <script></script>
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
@@ -186,6 +195,13 @@
             var text = document.getElementById('mode').value;
             var addButton = document.getElementById('add-button');
             var subTitle = document.getElementsByClassName('subTitle')[0];
+
+            // jika admin mencoba memilih staf secara manual via devtools
+            if (text === "staf" && userRole !== "superadmin") {
+                alert("Anda tidak memiliki akses ke data staf.");
+                document.getElementById('mode').value = "santri"; // reset kembali
+                return;
+            }
 
             // function for clear table (before reinitialize)
             var tableId = "#datatable";
@@ -372,6 +388,7 @@
                             { targets: 0, className: 'dt-center' },
                             { targets: 3, orderable: false },
                             { targets: 5, orderable: false, searchable: false, className: 'dt-center' },
+
                         ]
                     });
                     break;

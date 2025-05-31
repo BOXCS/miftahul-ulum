@@ -14,6 +14,7 @@ use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\PengumumanController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,76 +27,41 @@ use App\Http\Controllers\ChatController;
 |
 */
 
-//Route::get('/', function () {
-//    return view('attendance');
-//});
+Route::get('/', fn () => view('landing'));
 
-// Route::get('/', function () {
-//     return redirect('/attendance');
-// });
-
-// Route::get('/attendance', [AttendanceController::class, 'attendance']);
-
-// Halaman Utama
-Route::get('/', function () {
-    return view('landing');
-});
-
-// Halaman login
+// Login
 Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/', [AuthController::class, 'authenticate'])->name('auth.authenticate');
 
+// Public laporan kehadiran
 Route::get('/laporan-kehadiran', [AttendanceController::class, 'index'])->name('laporan.kehadiran');
 Route::get('/laporan-kehadiran/export', [AttendanceController::class, 'export'])->name('laporan.kehadiran.export');
 
-// Halaman Register
-// Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
-// Route::post('/register', [AuthController::class, 'register']);
-
-// Route::get('/register-superadmin', [AuthController::class, 'showSuperadminForm'])->name('register.superadmin');
-// Route::post('/register-superadmin', [AuthController::class, 'registerSuperadmin']);
-
-
-// Dashboard Admin (akses seperti sebelumnya)
-Route::middleware(['auth', 'role:admin'])->group(function () {
-});
-
-// Dashboard Superadmin (kosongan)
-Route::middleware(['auth', 'role:superadmin'])->group(function () {
-    Route::get('/superadmin/dashboard', [SuperAdminController::class, 'index'])->name('superadmin.dashboard');
-});
-// Halaman Lainnya (Harus Login)
-
-Route::middleware(['auth'])->group(function () {
+// Semua route yang butuh login dan role admin/superadmin
+Route::middleware(['auth', 'role:admin,superadmin'])->group(function () {
+    // Dashboard tunggal
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Resource routes
     Route::resource('management', ManagementController::class)->names('management');
     Route::resource('santri', SantriController::class)->names('santri');
     Route::resource('orang-tua', OrangtuaController::class)->names('orangtua');
     Route::resource('staff', StaffController::class)->names('staff');
-
     Route::resource('report', ReportController::class)->names('report');
-
-    Route::get('/chat/{id_staf}/{id_ortu}', function ($id_staf, $id_ortu) {
-        return view('chat', compact('id_staf', 'id_ortu'));
-    });
-
-    Route::get('/announcement', function () {
-        return view('announcement');
-    })->name('announcement');
     Route::resource('faq', FaqController::class);
-
     Route::resource('chat', ChatController::class)->names('chat');
-    Route::post('/api/chat/send', [App\Http\Controllers\ChatController::class, 'store']);
-    Route::get('/api/chat/session/{id}', [ChatController::class, 'getSessionMessages']);
-
     Route::resource('announcement', PengumumanController::class)->names('announcement');
-
-    // Route::get('/pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
-    // Route::post('/pengumuman', [PengumumanController::class, 'store'])->name('pengumuman.store');
-
     Route::resource('pengumuman', PengumumanController::class)->names('pengumuman');
     Route::resource('attendance', AttendanceController::class)->names('attendance');
+    Route::resource('profile', ProfileController::class)->names('profile');
+
+
+    // Tambahan endpoint khusus
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::get('/chat/{id_staf}/{id_ortu}', fn ($id_staf, $id_ortu) => view('chat', compact('id_staf', 'id_ortu')));
+    Route::get('/announcement', fn () => view('announcement'))->name('announcement');
+    Route::post('/api/chat/send', [ChatController::class, 'store']);
+    Route::get('/api/chat/session/{id}', [ChatController::class, 'getSessionMessages']);
     Route::get('/laporan-kehadiran/export', [AttendanceController::class, 'export'])->name('attendance.export');
 });
 
-// });
