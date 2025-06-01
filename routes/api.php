@@ -61,7 +61,7 @@ Route::get('/chat/user-info/{session}', function($sessionId) {
         'wali_dari' => $santri ? $santri->nama : null,
     ];
 });
-logger()->info('GetOrCreateSession hit', $request->all());
+// logger()->info('GetOrCreateSession hit', $request->all());
 
 
 
