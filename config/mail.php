@@ -37,11 +37,11 @@ return [
         'smtp' => [
             'transport' => 'smtp',
             'url' => env('MAIL_URL'),
-            'host' => env('MAIL_HOST', 'smtp.gmail.com'),  // Gmail SMTP Server
-            'port' => env('MAIL_PORT', 587),  // Port for TLS
-            'encryption' => env('MAIL_ENCRYPTION', 'tls'),  // Use TLS encryption
-            'username' => env('MAIL_USERNAME'),  // Gmail username
-            'password' => env('MAIL_PASSWORD'),  // App Password
+            'host' => env('MAIL_HOST', 'smtp-relay.brevo.com'),  // Brevo SMTP Server
+            'port' => env('MAIL_PORT', 465),  // Port for SSL (sesuai .env)
+            'encryption' => env('MAIL_ENCRYPTION', 'ssl'),  // Use SSL encryption (sesuai .env)
+            'username' => env('MAIL_USERNAME'),  // Brevo email username
+            'password' => env('MAIL_PASSWORD'),  // Brevo SMTP Key
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN'),
         ],
@@ -101,8 +101,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'no-reply@sanmoreee.com'),  // Sesuaikan alamat pengirim
-        'name' => env('MAIL_FROM_NAME', 'sanmoreee'),  // Nama aplikasi
+        'address' => env('MAIL_FROM_ADDRESS', 'sanmoreee@gmail.com'),  // Email yang sudah terverifikasi
+        'name' => env('MAIL_FROM_NAME', 'Miftahul Ulum'),  // Nama aplikasi (sesuai .env)
     ],
 
     /*
