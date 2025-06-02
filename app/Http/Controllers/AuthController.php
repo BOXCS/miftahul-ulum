@@ -22,44 +22,45 @@ class AuthController extends Controller
     }
 
     public function authenticate(Request $request)
-{
-    // Validasi input
-    $validated = $request->validate([
-        'email' => 'required|email',
-        'password' => 'required|min:6',
-    ], [
-        'email.required' => 'Email wajib diisi.',
-        'email.email' => 'Format email tidak valid.',
-        'password.required' => 'Password wajib diisi.',
-        'password.min' => 'Password minimal 6 karakter.',
-    ]);
+    {
+        // Validasi input
+        $validated = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|min:6',
+        ], [
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal 6 karakter.',
+        ]);
 
-    $credentials = $request->only('email', 'password');
+        $credentials = $request->only('email', 'password');
 
-    Log::debug('Autentikasi dimulai', ['data' => $credentials]);
+        Log::debug('Autentikasi dimulai', ['data' => $credentials]);
 
-    // Coba login langsung dengan Auth::attempt
-    if (Auth::attempt($credentials)) {
-        $request->session()->regenerate();
+        // Coba login langsung dengan Auth::attempt
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
 
-        $user = Auth::user();
+            $user = Auth::user();
 
-        if ($user->hak_akses === 'superadmin') {
-            return redirect()->route('superadmin.dashboard');
-        } elseif ($user->hak_akses === 'admin') {
-            return redirect()->route('dashboard');
+            // Superadmin dan admin diarahkan ke halaman yang sama
+            if (in_array($user->hak_akses, ['superadmin', 'admin'])) {
+                return redirect()->route('dashboard');
+            }
+
+            // Ortu atau hak akses lainnya bisa ditangani di sini
+            return redirect('/');
         }
 
-        return redirect('/');
+        // Jika sampai sini berarti login gagal
+        Log::error('Login Error: Kredensial tidak valid', ['email' => $request->email]);
+
+        return back()->withInput()->withErrors([
+            'email' => 'Email atau password salah',
+        ])->with('error', 'Email atau password salah');
     }
 
-    // Jika sampai sini berarti login gagal
-    Log::error('Login Error: Kredensial tidak valid', ['email' => $request->email]);
-    
-    return back()->withInput()->withErrors([
-        'email' => 'Email atau password salah',
-    ])->with('error', 'Email atau password salah');
-}
 
 
 
@@ -158,5 +159,15 @@ class AuthController extends Controller
         ]);
 
         return redirect('/register')->with('success', 'Superadmin berhasil didaftarkan! Silakan login.');
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')->with('success', 'Anda berhasil logout.');
     }
 }

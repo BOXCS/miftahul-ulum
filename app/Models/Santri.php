@@ -35,4 +35,10 @@ class Santri extends Model
     {
         return $this->hasMany(Kehadiran::class, 'id_santri', 'id_santri');
     }
+
+    public function wali()
+{
+    return $this->belongsTo(OrangTua::class, 'id_ortu', 'id_ortu');
+}
+
 }

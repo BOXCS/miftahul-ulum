@@ -37,4 +37,10 @@ class ChatSession extends Model
     {
         return $this->hasMany(ChatMessage::class, 'id_session', 'id_session');
     }
+
+    // app/Models/ChatSession.php
+    public function santri()
+    {
+        return $this->hasMany(Santri::class, 'id_ortu', 'id_ortu');
+    }
 }

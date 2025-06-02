@@ -69,8 +69,7 @@ class StaffController extends Controller
     public function edit(string $id)
     {
         $staff = Staff::with('akun')->find($id);
-        $edit = true;
-        return view('management.staff.create', compact('staff', 'edit'));
+        return view('management.staff.create', compact('staff'));
     }
 
     /**
@@ -78,7 +77,31 @@ class StaffController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'nama' => 'required|string',
+            'alamat' => 'required',
+            'no_telp' => 'required|numeric',
+            'jabatan' => 'required|string',
+            'tgl_bergabung' => 'required',
+            'email' => 'required|email',
+            'username' => 'required|string',
+            'password' => 'required|string',
+        ]);
+        $staff = Staff::find($id);
+        $staff->update([
+            'nama' => $request->nama,
+            'alamat' => $request->alamat,
+            'no_telp' => $request->no_telp,
+            'jabatan' => $request->jabatan,
+            'tgl_bergabung' => $request->tgl_bergabung,
+        ]);
+        $staff->akun()->update([
+            'email' => $request->email,
+            'username' => $request->username,
+            'password' => bcrypt($request->password),
+            'hak_akses' => $request->hak_akses,
+        ]);
+        return redirect()->route('management.index')->with('success', 'Staf berhasil ditambahkan.');
     }
 
     /**

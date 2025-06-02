@@ -6,9 +6,20 @@ document.addEventListener("DOMContentLoaded", function () {
     // Fungsi untuk mengambil data dari server
     async function fetchAttendanceData(filter) {
         try {
-            const response = await fetch(`/api/attendance?filter=${filter}`);
+            // Update this line with the correct path
+            const response = await fetch(`/api/attendance?filter=today`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                throw new Error(`Expected JSON but got: ${text.substring(0, 100)}...`);
+            }
+            
             const data = await response.json();
-            // Simpan dua data: present dan absent
             attendanceData[filter] = {
                 present: data.present,
                 absent: data.absent,
@@ -16,6 +27,7 @@ document.addEventListener("DOMContentLoaded", function () {
             initChart(filter);
         } catch (error) {
             console.error("Error fetching attendance data:", error);
+            // Show error to user if needed
         }
     }
 
