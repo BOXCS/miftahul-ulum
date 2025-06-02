@@ -5,6 +5,7 @@ use App\Http\Controllers\KehadiranController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ManagementController;
 use App\Http\Controllers\OrangtuaController;
+use App\Http\Controllers\PerizinanController;
 use App\Http\Controllers\SantriController;
 use App\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
@@ -54,7 +55,7 @@ Route::middleware(['auth', 'role:admin,superadmin'])->group(function () {
     Route::resource('pengumuman', PengumumanController::class)->names('pengumuman');
     Route::resource('attendance', AttendanceController::class)->names('attendance');
     Route::resource('profile', ProfileController::class)->names('profile');
-
+    Route::resource('perizinan', PerizinanController::class)->names('perizinan');
 
     // Tambahan endpoint khusus
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
