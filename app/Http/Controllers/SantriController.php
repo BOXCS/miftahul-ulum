@@ -19,6 +19,39 @@ class SantriController extends Controller
     }
 
     /**
+     * API: Get santri by orang tua ID - HANYA DATA SANTRI
+     */
+    public function apiByOrtuId($id_ortu): JsonResponse
+    {
+        try {
+            $santri = Santri::where('id_ortu', $id_ortu)
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id_santri' => $item->id_santri,
+                        'nama' => $item->nama,
+                        'tahun_angkatan' => $item->tahun_angkatan,
+                        'sidik_jari' => $item->sidik_jari,
+                        'status' => $item->status,
+                        'id_ortu' => $item->id_ortu,
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data santri berhasil diambil berdasarkan ID orang tua',
+                'data' => $santri
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data santri',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * API: Get all santri data
      */
     public function apiIndex(): JsonResponse
@@ -53,7 +86,6 @@ class SantriController extends Controller
             ], 500);
         }
     }
-
 
     /**
      * API: Get specific santri data
@@ -98,7 +130,6 @@ class SantriController extends Controller
         }
     }
 
-
     /**
      * API: Get santri profile for mobile app
      */
@@ -141,6 +172,7 @@ class SantriController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+
     }
 
     public function apiByOrtuId(string $idOrtu): JsonResponse
@@ -175,7 +207,6 @@ class SantriController extends Controller
             ], 500);
         }
     }
-
 
 
     /**
