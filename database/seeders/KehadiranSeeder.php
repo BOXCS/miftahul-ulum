@@ -37,11 +37,12 @@ class KehadiranSeeder extends Seeder
                         'waktu' => $waktuShalatDate,
                         'jam_masuk' => $hadir ? $this->getJamMasuk($waktuShalatDate) : null,
                         'jam_keluar' => $hadir ? $this->getJamKeluar($waktuShalatDate, $shalat) : null,
-                        'waktu_shalat' => $shalat,
+                        'waktu_shalat' => $hadir ? $shalat : null, // ubah ini
                         'id_santri' => $santri->id_santri,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
+                    
                 }
                 $currentDate->addDay();
             }

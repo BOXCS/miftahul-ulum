@@ -278,7 +278,7 @@
                 case "ortu":
                     // ganti tombol "tambah"
                     addButton.innerHTML = `<i class="bi bi-plus-circle me-1"></i>Tambah Orang Tua Baru`;
-                    addButton.setAttribute('href', '{{ route("orangtua.create") }}');
+                    addButton.addEventListener('click', function() { window.location.href = '{{ route("orangtua.create") }}'; });
                     addButton.removeAttribute("data-bs-toggle");
                     addButton.removeAttribute("data-bs-target");
                     subTitle.innerText = "Orang Tua";

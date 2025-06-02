@@ -37,6 +37,8 @@ Route::delete('/akun/{id}', [AkunController::class, 'destroy']); // Hapus akun
 // API for mobile
 Route::get('/kehadiran-bytime/{id}',[MobileDataController::class, 'kehadiranByIdByTime']);
 Route::get('/kehadiran-mingguan/{id}', [MobileDataController::class,'kehadiranSeminggu']);
+Route::get('/kehadiran-periode/{id}', [MobileDataController::class, 'kehadiranPeriode']);
+Route::get('/kehadiran-tahunan/{id}', [MobileDataController::class, 'kehadiranTahunanPerBulan']);
 Route::get('/perizinan/{id}', [MobileDataController::class, 'perizinanSetahun']);
 Route::get('/ortu/{id}',[MobileDataController::class, 'dataOrtuSantriById']);
 Route::get('/pengumuman', [MobileDataController::class, 'pengumuman']);
@@ -62,6 +64,17 @@ Route::get('/chat/user-info/{session}', function($sessionId) {
     ];
 });
 // logger()->info('GetOrCreateSession hit', $request->all());
+
+// Ambil semua pesan dari session tertentu
+Route::get('/session/{id}', [ChatController::class, 'getSessionMessages']);
+
+// Ambil informasi user berdasarkan session
+Route::get('/user-info/{session}', [ChatController::class, 'getUserInfo']);
+
+// Kirim pesan baru (versi API)
+Route::post('/send-message', [ChatController::class, 'sendMessage']);
+
+Route::post('/get-or-create-session', [ChatController::class, 'getOrCreateSession']);
 
 
 
