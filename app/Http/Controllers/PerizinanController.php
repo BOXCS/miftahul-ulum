@@ -16,7 +16,7 @@ class PerizinanController extends Controller
     public function create()
     {
         $santri = Santri::get(['id_santri', 'nama']);
-        return view('perizinan.create', compact( 'santri'));
+        return view('perizinan.create', compact('santri'));
     }
     public function store(Request $request)
     {
@@ -26,7 +26,13 @@ class PerizinanController extends Controller
             'keterangan' => 'required|string',
             'id_santri' => 'required|string',
         ]);
-        Perizinan::create($request->all());
+        Perizinan::create($request->only([
+            'id_santri',
+            'waktu',
+            'jenis_izin',
+            'keterangan'
+        ]));
+
         return redirect()->route(route: 'perizinan.index')->with('success', 'Izin santri berhasil ditambahkan.');
     }
     public function edit(string $id)
@@ -50,7 +56,13 @@ class PerizinanController extends Controller
             'id_santri' => 'required|string',
         ]);
         $perizinan = Perizinan::find($id);
-        $perizinan->update($request->all());
+        $perizinan->update($request->only([
+            'id_santri',
+            'waktu',
+            'jenis_izin',
+            'keterangan'
+        ]));
+        
         return redirect()->route('perizinan.index')->with('success', 'Izin santri berhasil diupdate');
     }
 }

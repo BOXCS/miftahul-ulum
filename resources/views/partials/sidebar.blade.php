@@ -22,6 +22,7 @@
                 'attendance.index' => ['icon' => 'report.png', 'label' => 'Laporan Kehadiran'],
                 'chat.index' => ['icon' => 'dashboard.png', 'label' => 'Chat'],
                 'pengumuman.index' => ['icon' => 'dashboard.png', 'label' => 'Pengumuman/FAQ'],
+                'perizinan.index' => ['icon' => 'dashboard.png', 'label' => 'Perizinan'],
                 'profile.index' => ['icon' => 'dashboard.png', 'label' => 'Profil'],
             ];
         @endphp
@@ -228,6 +229,15 @@
         }
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.innerWidth >= 768) {
+            document.body.classList.add('sidebar-open');
+        }
+    });
+</script>
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

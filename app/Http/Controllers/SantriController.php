@@ -175,38 +175,52 @@ class SantriController extends Controller
 
     }
 
-    public function apiByOrtuId(string $idOrtu): JsonResponse
-    {
-        try {
-            $santri = Santri::with('ortu')->where('id_ortu', $idOrtu)->get()->map(function ($item) {
-                return [
-                    'id_santri' => $item->id_santri,
-                    'nama' => $item->nama,
-                    'tahun_angkatan' => $item->tahun_angkatan,
-                    'sidik_jari' => $item->sidik_jari,
-                    'status' => $item->status,
-                    'id_ortu' => $item->id_ortu,
-                    'ortu' => $item->ortu ? [
-                        'nama_lengkap' => $item->ortu->nama_lengkap,
-                        'alamat' => $item->ortu->alamat,
-                        'no_telp' => $item->ortu->no_telp,
-                    ] : null,
-                ];
-            });
+    public function search(Request $request)
+{
+    $search = $request->q;
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Data santri berhasil diambil',
-                'data' => $santri
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data santri',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+    $santri = Santri::where('nama', 'like', "%$search%")
+                    ->orWhere('id_santri', 'like', "%$search%")
+                    ->select('id_santri', 'nama')
+                    ->limit(10)
+                    ->get();
+
+    return response()->json($santri);
+}
+
+
+    // public function apiByOrtuId(string $idOrtu): JsonResponse
+    // {
+    //     try {
+    //         $santri = Santri::with('ortu')->where('id_ortu', $idOrtu)->get()->map(function ($item) {
+    //             return [
+    //                 'id_santri' => $item->id_santri,
+    //                 'nama' => $item->nama,
+    //                 'tahun_angkatan' => $item->tahun_angkatan,
+    //                 'sidik_jari' => $item->sidik_jari,
+    //                 'status' => $item->status,
+    //                 'id_ortu' => $item->id_ortu,
+    //                 'ortu' => $item->ortu ? [
+    //                     'nama_lengkap' => $item->ortu->nama_lengkap,
+    //                     'alamat' => $item->ortu->alamat,
+    //                     'no_telp' => $item->ortu->no_telp,
+    //                 ] : null,
+    //             ];
+    //         });
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Data santri berhasil diambil',
+    //             'data' => $santri
+    //         ], 200);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Gagal mengambil data santri',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
 
     /**

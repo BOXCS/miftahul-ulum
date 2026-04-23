@@ -56,6 +56,8 @@ Route::middleware(['auth', 'role:admin,superadmin'])->group(function () {
     Route::resource('attendance', AttendanceController::class)->names('attendance');
     Route::resource('profile', ProfileController::class)->names('profile');
     Route::resource('perizinan', PerizinanController::class)->names('perizinan');
+    Route::get('/santri-search', [SantriController::class, 'search'])->name('santri.search');
+
 
     // Tambahan endpoint khusus
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Pengumuman;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class PengumumanController extends Controller
 {
@@ -28,10 +29,19 @@ class PengumumanController extends Controller
             'foto' => 'nullable|image|mimes:jpg,png,jpeg,gif,svg|max:2048',
         ]);
 
+        $filename = null;
 
-        $pathFoto = null;
         if ($request->hasFile('foto')) {
-            $pathFoto = $request->file('foto')->store('gambar_pengumuman', 'public');
+            $file = $request->file('foto');
+
+            // Buat nama unik
+            $filename = Str::random(40) . '.' . $file->getClientOriginalExtension();
+
+            // Simpan ke storage/app/public/gambar_pengumuman (optional)
+            $file->storeAs('gambar_pengumuman', $filename, 'public');
+
+            // Copy ke public/gambar_pengumuman agar bisa diakses Flutter
+            $file->move(public_path('gambar_pengumuman'), $filename);
         }
 
         Pengumuman::create([
@@ -40,11 +50,10 @@ class PengumumanController extends Controller
             'kategori' => $request->kategori,
             'tgl_mulai' => $request->tgl_mulai,
             'tgl_selesai' => $request->tgl_selesai,
-            'foto' => $pathFoto,
-            'id_akun' => Auth::id(), // pastikan user login
+            'foto' => $filename,
+            'id_akun' => Auth::id(),
         ]);
 
         return redirect()->back()->with('success', 'Pengumuman berhasil disimpan!');
     }
 }
-

@@ -10,13 +10,13 @@
             margin-top: 0 !important;
         }
 
-        .header {
+        /* .header {
             background: rgb(172, 199, 238);
             padding: 2rem;
             border-bottom: 1px solid rgb(235, 243, 255);
             border-top-left-radius: 20px;
             border-top-right-radius: 20px;
-        }
+        } */
 
         .main-title {
             font-size: 2rem;
@@ -60,10 +60,10 @@
     <div class="container-fluid">
         <div class="row g-4">
 <div class="header">
-    <h1 class="main-title">
-        Manajemen Data <span class="subTitle">Santri</span>
-    </h1>
-    <p>Role user: {{ auth()->user()->hak_akses }}</p>
+    <div class="col-12">
+        <h1 class="text-center text-md-start">Manajemen Data</h1>
+    </div>
+    {{-- <p>Role user: {{ auth()->user()->hak_akses }}</p> --}}
 </div>
 
 <div class="controls">
@@ -311,7 +311,7 @@
                                                     </div>
                                                     <div class="modal-footer">
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                        <form action="/orang-tua/${data}" method="POST">
+                                                        <form action="/miftahul-ulum/orang-tua/${data}" method="POST">
                                                             <input type="hidden" name="_method" value="DELETE">
                                                             <input type="hidden" name="_token" value="{{ csrf_token() }}">
                                                             <button type="submit" class="btn btn-danger">Hapus</button>
