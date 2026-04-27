@@ -1,0 +1,18 @@
+{
+    "sourceFile": "app/Models/ChatSession.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1748069516045,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1748069516045,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace App\\Models;\n\nuse Illuminate\\Database\\Eloquent\\Factories\\HasFactory;\nuse Illuminate\\Database\\Eloquent\\Model;\n\nclass ChatSession extends Model\n{\n    use HasFactory;\n\n    protected $table = 'chat_sessions';\n    protected $primaryKey = 'id_session';\n\n    protected $fillable = [\n        'id_staf',\n        'id_ortu',\n        'last_message',\n        'last_message_time',\n        'unread_count',\n    ];\n\n    // Relasi ke staf\n    public function staf()\n    {\n        return $this->belongsTo(Staff::class, 'id_staf', 'id_staf');\n    }\n\n    // Relasi ke orang tua\n    public function orangTua()\n    {\n        return $this->belongsTo(OrangTua::class, 'id_ortu', 'id_ortu');\n    }\n\n    // Relasi ke pesan-pesan\n    public function messages()\n    {\n        return $this->hasMany(ChatMessage::class, 'id_session', 'id_session');\n    }\n\n    // app/Models/ChatSession.php\n    public function santri()\n    {\n        return $this->hasMany(Santri::class, 'id_ortu', 'id_ortu');\n    }\n}\n"
+        }
+    ]
+}

@@ -1,0 +1,22 @@
+{
+    "sourceFile": "database/migrations/2025_03_15_070252_create_kehadiran_table.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1748857444621,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1748857475051,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -12,9 +12,9 @@\n             $table->id('id_kehadiran');\n             $table->date('waktu');\n             $table->timestamp('jam_masuk')->nullable();\n             $table->timestamp('jam_keluar')->nullable();\n-            $table->enum('waktu_shalat', ['Subuh', 'Dzuhur', 'Ashar', 'Maghrib', 'Isya'])->nullable()->change();\n+            $table->enum('waktu_shalat', ['Subuh', 'Dzuhur', 'Ashar', 'Maghrib', 'Isya'])->nullable();\n             $table->String('id_santri')->index();\n             $table->foreign('id_santri')->references('id_santri')->on('santri')->onDelete('cascade');\n             $table->timestamps();\n         });\n"
+                }
+            ],
+            "date": 1748857444621,
+            "name": "Commit-0",
+            "content": "<?php\n\nuse Illuminate\\Database\\Migrations\\Migration;\nuse Illuminate\\Database\\Schema\\Blueprint;\nuse Illuminate\\Support\\Facades\\Schema;\n\nclass CreateKehadiranTable extends Migration\n{\n    public function up()\n    {\n        Schema::create('kehadiran', function (Blueprint $table) {\n            $table->id('id_kehadiran');\n            $table->date('waktu');\n            $table->timestamp('jam_masuk')->nullable();\n            $table->timestamp('jam_keluar')->nullable();\n            $table->enum('waktu_shalat', ['Subuh', 'Dzuhur', 'Ashar', 'Maghrib', 'Isya'])->nullable()->change();\n            $table->String('id_santri')->index();\n            $table->foreign('id_santri')->references('id_santri')->on('santri')->onDelete('cascade');\n            $table->timestamps();\n        });\n    }\n\n    public function down()\n    {\n        Schema::dropIfExists('kehadiran');\n    }\n}\n"
+        }
+    ]
+}

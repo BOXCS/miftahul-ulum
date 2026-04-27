@@ -1,0 +1,30 @@
+{
+    "sourceFile": "app/Http/Controllers/Api/AuthController.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 3,
+            "patches": [
+                {
+                    "date": 1747961545305,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1747964398652,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -7,9 +7,9 @@\n // use Auth;\n use Illuminate\\Http\\Request;\n use Illuminate\\Support\\Facades\\Auth;\n \n-class AuthController extends Controller\n+class   AuthController extends Controller\n {\n     public function login(Request $request)\n     {\n         $request->validate([\n"
+                },
+                {
+                    "date": 1748481299851,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -3,11 +3,14 @@\n namespace App\\Http\\Controllers\\API;\n \n use App\\Http\\Controllers\\Controller;\n use App\\Models\\Akun;\n+use Carbon\\Carbon;\n // use Auth;\n use Illuminate\\Http\\Request;\n+use Illuminate\\Support\\Facades\\Hash;\n use Illuminate\\Support\\Facades\\Auth;\n+use Illuminate\\Support\\Facades\\DB;\n \n class   AuthController extends Controller\n {\n     public function login(Request $request)\n@@ -40,5 +43,37 @@\n     {\n         $request->user()->currentAccessToken()->delete();\n         return response()->json(['message' => 'Logout succesful']);\n     }\n-}\n\\ No newline at end of file\n+\n+    public function resetPassword(Request $request)\n+    {\n+        $request->validate([\n+            'email' => 'required|email',\n+            'token' => 'required',\n+            'password' => 'required|min:6|confirmed'\n+        ]);\n+\n+        $reset = DB::table('password_resets')\n+            ->where('email', $request->email)\n+            ->where('token', $request->token)\n+            ->first();\n+\n+        if (!$reset || Carbon::parse($reset->created_at)->addMinutes(60)->isPast()) {\n+            return response()->json(['message' => 'Token tidak valid atau kadaluarsa.'], 400);\n+        }\n+\n+        $akun = Akun::where('email', $request->email)->first();\n+\n+        if (!$akun) {\n+            return response()->json(['message' => 'Email tidak ditemukan'], 404);\n+        }\n+\n+        $akun->password = Hash::make($request->password);\n+        $akun->save();\n+\n+        // Hapus token\n+        DB::table('password_resets')->where('email', $request->email)->delete();\n+\n+        return response()->json(['message' => 'Password berhasil direset.'], 200);\n+    }\n+}\n"
+                },
+                {
+                    "date": 1748481338733,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -9,8 +9,10 @@\n use Illuminate\\Http\\Request;\n use Illuminate\\Support\\Facades\\Hash;\n use Illuminate\\Support\\Facades\\Auth;\n use Illuminate\\Support\\Facades\\DB;\n+use Illuminate\\Support\\Facades\\Mail;\n+use Illuminate\\Support\\Str;\n \n class   AuthController extends Controller\n {\n     public function login(Request $request)\n@@ -44,8 +46,40 @@\n         $request->user()->currentAccessToken()->delete();\n         return response()->json(['message' => 'Logout succesful']);\n     }\n \n+    public function sendResetLink(Request $request)\n+    {\n+        $request->validate([\n+            'email' => 'required|email'\n+        ]);\n+\n+        $akun = Akun::where('email', $request->email)->first();\n+\n+        if (!$akun) {\n+            return response()->json(['message' => 'Email tidak ditemukan'], 404);\n+        }\n+\n+        $token = Str::random(60);\n+\n+        // Simpan token ke tabel password_resets\n+        DB::table('password_resets')->updateOrInsert(\n+            ['email' => $request->email],\n+            [\n+                'token' => $token,\n+                'created_at' => Carbon::now()\n+            ]\n+        );\n+\n+        // Kirim email manual (atau gunakan Mailable jika ingin)\n+        Mail::raw(\"Gunakan token berikut untuk reset password Anda: $token\", function ($message) use ($request) {\n+            $message->to($request->email)\n+                    ->subject('Reset Password');\n+        });\n+\n+        return response()->json(['message' => 'Token reset telah dikirim ke email.'], 200);\n+    }\n+\n     public function resetPassword(Request $request)\n     {\n         $request->validate([\n             'email' => 'required|email',\n"
+                }
+            ],
+            "date": 1747961545305,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace App\\Http\\Controllers\\API;\n\nuse App\\Http\\Controllers\\Controller;\nuse App\\Models\\Akun;\n// use Auth;\nuse Illuminate\\Http\\Request;\nuse Illuminate\\Support\\Facades\\Auth;\n\nclass AuthController extends Controller\n{\n    public function login(Request $request)\n    {\n        $request->validate([\n            'email' => 'required|email',\n            'password' => 'required',\n        ]);\n\n        if (!Auth::attempt($request->only('email', 'password'))) {\n            return response()->json(['message' => 'Invalid credentials'], 401);\n        }\n\n        $akun = Akun::where('email', $request->email)->first();\n        $token = $akun->createToken('flutter-token')->plainTextToken;\n\n        return response()->json([\n            'message' => 'Login successful',\n            'token' => $token,\n            'akun' => $akun\n        ]);\n    }\n\n    public function index(Request $request)\n    {\n        return response()->json($request->user());\n    }\n\n    public function logout(Request $request)\n    {\n        $request->user()->currentAccessToken()->delete();\n        return response()->json(['message' => 'Logout succesful']);\n    }\n}"
+        }
+    ]
+}

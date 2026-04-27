@@ -1,0 +1,18 @@
+{
+    "sourceFile": "app/Http/Controllers/PengumumanController.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1748902101137,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1748902101137,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace App\\Http\\Controllers;\n\nuse App\\Models\\Pengumuman;\nuse Illuminate\\Http\\Request;\nuse Illuminate\\Support\\Facades\\Auth;\nuse Illuminate\\Support\\Str;\n\nclass PengumumanController extends Controller\n{\n    public function index()\n    {\n        // Ambil semua data pengumuman\n        $pengumumans = Pengumuman::all();\n\n        // Kirim variabel pengumumans ke tampilan\n        return view('pengumuman', compact('pengumumans'));\n    }\n\n    public function store(Request $request)\n    {\n        $request->validate([\n            'judul' => 'required',\n            'isi' => 'required',\n            'kategori' => 'required|in:akademik,administrasi,kegiatan',\n            'tgl_mulai' => 'required|date',\n            'tgl_selesai' => 'required|date',\n            'foto' => 'nullable|image|mimes:jpg,png,jpeg,gif,svg|max:2048',\n        ]);\n\n        $filename = null;\n\n        if ($request->hasFile('foto')) {\n            $file = $request->file('foto');\n\n            // Buat nama unik\n            $filename = Str::random(40) . '.' . $file->getClientOriginalExtension();\n\n            // Simpan ke storage/app/public/gambar_pengumuman (optional)\n            $file->storeAs('gambar_pengumuman', $filename, 'public');\n\n            // Copy ke public/gambar_pengumuman agar bisa diakses Flutter\n            $file->move(public_path('gambar_pengumuman'), $filename);\n        }\n\n        Pengumuman::create([\n            'judul' => $request->judul,\n            'isi' => $request->isi,\n            'kategori' => $request->kategori,\n            'tgl_mulai' => $request->tgl_mulai,\n            'tgl_selesai' => $request->tgl_selesai,\n            'foto' => $filename,\n            'id_akun' => Auth::id(),\n        ]);\n\n        return redirect()->back()->with('success', 'Pengumuman berhasil disimpan!');\n    }\n}\n"
+        }
+    ]
+}

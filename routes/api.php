@@ -6,6 +6,8 @@ use App\Http\Controllers\ApiController;
 Route::post("/login", [ApiController::class, "login"]);
 Route::get("/pengumuman", [ApiController::class, "pengumuman"]);
 Route::get("/santri/ortu/{id}", [ApiController::class, "santriByOrtu"]);
+Route::get("/santri/{id}", [ApiController::class, "santriById"]);
+Route::get("/ortu/{id}", [ApiController::class, "santriByOrtu"]);
 Route::get("/kehadiran-mingguan/{id}", [ApiController::class, "kehadiranMingguan"]);
 Route::get("/kehadiran-bytime/{id}", [ApiController::class, "kehadiranSummary"]);
 Route::get("/perizinan/{id}", [ApiController::class, "perizinan"]);

@@ -1,0 +1,22 @@
+{
+    "sourceFile": "app/Models/Santri.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1747702059622,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1748061053158,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -33,5 +33,11 @@\n     public function kehadiran():HasMany\n     {\n         return $this->hasMany(Kehadiran::class, 'id_santri');\n     }\n+\n+    public function wali()\n+{\n+    return $this->belongsTo(OrangTua::class, 'id_ortu', 'id_ortu');\n+}\n+\n }\n\\ No newline at end of file\n"
+                }
+            ],
+            "date": 1747702059622,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace App\\Models;\n\nuse Illuminate\\Database\\Eloquent\\Factories\\HasFactory;\nuse Illuminate\\Database\\Eloquent\\Model;\nuse Illuminate\\Database\\Eloquent\\Relations\\BelongsTo;\nuse Illuminate\\Database\\Eloquent\\Relations\\HasMany;\n\nclass Santri extends Model\n{\n    use HasFactory;\n\n    protected $table = 'santri'; // Nama tabel\n    protected $primaryKey = 'id_santri';\n    protected $keyType = 'string';\n    protected $fillable = [\n        'nama',\n        'tahun_angkatan',\n        'nama_orang_tua',\n        'status',\n        'sidik_jari',\n    ];\n    protected $casts = [\n        'id' => 'string',\n    ];\n\n    // create relationship one to many (inverse)/Belongs to for santri->ortu\n    public function ortu(): BelongsTo  \n    {\n        return $this->belongsTo(OrangTua::class, 'id_ortu');\n    }\n    public function kehadiran():HasMany\n    {\n        return $this->hasMany(Kehadiran::class, 'id_santri');\n    }\n}"
+        }
+    ]
+}

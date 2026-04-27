@@ -1,0 +1,18 @@
+{
+    "sourceFile": "public/js/landing.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1748904669671,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1748904669671,
+            "name": "Commit-0",
+            "content": "/*!\r\n* Start Bootstrap - Creative v7.0.7 (https://startbootstrap.com/theme/creative)\r\n* Copyright 2013-2023 Start Bootstrap\r\n* Licensed under MIT (https://github.com/StartBootstrap/startbootstrap-creative/blob/master/LICENSE)\r\n*/\r\n//\r\n// Scripts\r\n// \r\n\r\nwindow.addEventListener('DOMContentLoaded', event => {\r\n\r\n    // Navbar shrink function\r\n    var navbarShrink = function () {\r\n        const navbarCollapsible = document.body.querySelector('#mainNav');\r\n        if (!navbarCollapsible) {\r\n            return;\r\n        }\r\n        if (window.scrollY === 0) {\r\n            navbarCollapsible.classList.remove('navbar-shrink')\r\n        } else {\r\n            navbarCollapsible.classList.add('navbar-shrink')\r\n        }\r\n\r\n    };\r\n\r\n    // Shrink the navbar \r\n    navbarShrink();\r\n\r\n    // Shrink the navbar when page is scrolled\r\n    document.addEventListener('scroll', navbarShrink);\r\n\r\n    // Activate Bootstrap scrollspy on the main nav element\r\n    const mainNav = document.body.querySelector('#mainNav');\r\n    if (mainNav) {\r\n        new bootstrap.ScrollSpy(document.body, {\r\n            target: '#mainNav',\r\n            rootMargin: '0px 0px -40%',\r\n        });\r\n    };\r\n\r\n    // Collapse responsive navbar when toggler is visible\r\n    const navbarToggler = document.body.querySelector('.navbar-toggler');\r\n    const responsiveNavItems = [].slice.call(\r\n        document.querySelectorAll('#navbarResponsive .nav-link')\r\n    );\r\n    responsiveNavItems.map(function (responsiveNavItem) {\r\n        responsiveNavItem.addEventListener('click', () => {\r\n            if (window.getComputedStyle(navbarToggler).display !== 'none') {\r\n                navbarToggler.click();\r\n            }\r\n        });\r\n    });\r\n\r\n    // Activate SimpleLightbox plugin for portfolio items\r\n    new SimpleLightbox({\r\n        elements: '#portfolio a.portfolio-box'\r\n    });\r\n\r\n});\r\n"
+        }
+    ]
+}

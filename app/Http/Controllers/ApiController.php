@@ -51,33 +51,102 @@ class ApiController extends Controller
         return response()->json(Announcement::latest()->get());
     }
 
+    public function santriById($id)
+    {
+        $s = Student::find($id);
+
+        if (!$s) {
+            return response()->json([
+                "success" => false,
+                "message" => "Not found",
+                "data" => null,
+            ]);
+        }
+
+        return response()->json([
+            "success" => true,
+            "message" => "OK",
+            "data" => [
+                "id_santri" => (string) $s->id,
+                "nama" => $s->name,
+                "tahun_angkatan" => $s->class,
+                "sidik_jari" => null,
+                "status" => $s->status ?? "aktif",
+                "id_ortu" => (int) ($s->parent_id ?? 0),
+            ],
+        ]);
+    }
+
     public function santriByOrtu($id)
     {
         $students = Student::where("parent_id", $id)
+            ->with("parent") // jika relasi ada
             ->get()
             ->map(function ($s) {
                 return [
                     "id_santri" => (string) $s->id,
-                    "nama_santri" => $s->name,
-                    "kelas" => $s->class,
-                    "nis" => $s->nis,
-                    "foto" => $s->photo,
+                    "nama" => $s->name, // ✅ rename
+                    "tahun_angkatan" => $s->class, // mapping sementara
+                    "sidik_jari" => null, // belum ada alat
+                    "status" => $s->status ?? "aktif", // default
+                    "id_ortu" => (int) $s->parent_id,
+
+                    // optional nested object
+                    "ortu" => $s->parent
+                        ? [
+                            "nama_lengkap" => $s->parent->name,
+                            "alamat" => $s->parent->address,
+                            "no_telp" => $s->parent->phone,
+                        ]
+                        : null,
                 ];
             });
-        return response()->json(["success" => true, "data" => $students]);
+
+        return response()->json([
+            "success" => true,
+            "message" => "Data santri berhasil diambil", // ✅ tambahkan
+            "data" => $students,
+        ]);
     }
 
     public function kehadiranMingguan($id)
     {
-        // Example implementation for weekly attendance
         $attendance = Attendance::where("student_id", $id)
             ->whereBetween("tanggal", [
                 now()->startOfWeek(),
                 now()->endOfWeek(),
             ])
-            ->get();
+            ->get()
+            ->map(function ($a) {
+                return [
+                    "tanggal" => $a->tanggal ?? "",
 
-        return response()->json(["success" => true, "data" => $attendance]);
+                    "jumlah_kehadiran" => $a->jumlah_kehadiran ?? 0,
+
+                    "Subuh" => (int) ($a->Subuh ?? 0),
+                    "Dzuhur" => (int) ($a->Dzuhur ?? 0),
+                    "Ashar" => (int) ($a->Ashar ?? 0),
+                    "Maghrib" => (int) ($a->Maghrib ?? 0),
+                    "Isya" => (int) ($a->Isya ?? 0),
+
+                    "jam_masuk_subuh" => $a->jam_masuk_subuh ?? null,
+                    "jam_keluar_subuh" => $a->jam_keluar_subuh ?? null,
+                    "jam_masuk_dzuhur" => $a->jam_masuk_dzuhur ?? null,
+                    "jam_keluar_dzuhur" => $a->jam_keluar_dzuhur ?? null,
+                    "jam_masuk_ashar" => $a->jam_masuk_ashar ?? null,
+                    "jam_keluar_ashar" => $a->jam_keluar_ashar ?? null,
+                    "jam_masuk_maghrib" => $a->jam_masuk_maghrib ?? null,
+                    "jam_keluar_maghrib" => $a->jam_keluar_maghrib ?? null,
+                    "jam_masuk_isya" => $a->jam_masuk_isya ?? null,
+                    "jam_keluar_isya" => $a->jam_keluar_isya ?? null,
+                ];
+            });
+
+        return response()->json([
+            "success" => true,
+            "message" => "OK",
+            "data" => $attendance,
+        ]);
     }
 
     public function kehadiranSummary($id)

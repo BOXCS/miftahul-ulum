@@ -1,0 +1,18 @@
+{
+    "sourceFile": "app/Http/Controllers/Auth/LoginController.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1747960199406,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1747960199406,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace App\\Http\\Controllers\\Auth;\n\nuse App\\Http\\Controllers\\Controller;\nuse Illuminate\\Foundation\\Auth\\AuthenticatesUsers;\n\nclass LoginController extends Controller\n{\n    // use AuthenticatesUsers;\n\n    /**\n     * Where to redirect users after login.\n     *\n     * @var string\n     */\n    protected $redirectTo = '/dashboard';\n\n    /**\n     * Create a new controller instance.\n     *\n     * @return void\n     */\n    public function __construct()\n    {\n        $this->middleware('guest')->except('logout');\n    }\n}\n"
+        }
+    ]
+}

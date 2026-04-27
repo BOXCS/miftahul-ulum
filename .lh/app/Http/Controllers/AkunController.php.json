@@ -1,0 +1,18 @@
+{
+    "sourceFile": "app/Http/Controllers/AkunController.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1747953800113,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1747953800113,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace App\\Http\\Controllers;\n\nuse App\\Models\\Akun;\nuse Illuminate\\Http\\Request;\nuse Illuminate\\Support\\Facades\\Hash;\n\nclass AkunController extends Controller\n{\n    // GET: Ambil semua akun\n    public function index()\n    {\n        return response()->json(Akun::all(), 200);\n    }\n\n    // POST: Tambah akun baru\n    public function store(Request $request)\n    {\n        $request->validate([\n            'username' => 'required|unique:akun',\n            'password' => 'required|min:6',\n            'hak_akses' => 'required|in:ortu',\n        ]);\n\n        $akun = Akun::create([\n            'username' => $request->username,\n            'password' => Hash::make($request->password), // Simpan password yang sudah di-hash\n            'hak_akses' => $request->hak_akses,\n        ]);\n\n        return response()->json($akun, 201);\n    }\n\n    // GET: Ambil akun berdasarkan ID\n    public function show($id)\n    {\n        $akun = Akun::find($id);\n        return $akun ? response()->json($akun, 200) : response()->json(['message' => 'Akun tidak ditemukan'], 404);\n    }\n\n    // PUT: Update akun\n    public function update(Request $request, $id)\n    {\n        $akun = Akun::find($id);\n        if (!$akun) {\n            return response()->json(['message' => 'Akun tidak ditemukan'], 404);\n        }\n\n        $akun->update($request->only(['username', 'hak_akses']));\n        return response()->json($akun, 200);\n    }\n\n    // DELETE: Hapus akun\n    public function destroy($id)\n    {\n        $akun = Akun::find($id);\n        if (!$akun) {\n            return response()->json(['message' => 'Akun tidak ditemukan'], 404);\n        }\n\n        $akun->delete();\n        return response()->json(['message' => 'Akun berhasil dihapus'], 200);\n    }\n\n    public function loginOrtu(Request $request)\n{\n    $request->validate([\n        'email' => 'required|email',\n        'password' => 'required',\n    ]);\n\n    $akun = Akun::where('email', $request->email)->where('hak_akses', 'ortu')->first();\n\n    if (!$akun || !Hash::check($request->password, $akun->password)) {\n        return response()->json([\n            'message' => 'Email atau password salah',\n        ], 401);\n    }\n\n    // Optional: ambil data orang_tua yang terkait\n    $ortu = $akun->ortu ?? null;\n\n    return response()->json([\n        'message' => 'Login berhasil',\n        'akun' => [\n            'id_akun' => $akun->id_akun,\n            'email' => $akun->email,\n            'username' => $akun->username,\n            'hak_akses' => $akun->hak_akses,\n        ],\n        'orang_tua' => $ortu, // jika pakai relasi Eloquent\n    ]);\n}\n\n}\n"
+        }
+    ]
+}

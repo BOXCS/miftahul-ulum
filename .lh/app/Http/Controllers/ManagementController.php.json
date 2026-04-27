@@ -1,0 +1,18 @@
+{
+    "sourceFile": "app/Http/Controllers/ManagementController.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1747701983910,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1747701983910,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace App\\Http\\Controllers;\n\nuse App\\Models\\OrangTua;\nuse App\\Models\\Santri;\nuse App\\Models\\Staff;\nuse Illuminate\\Http\\Request;\nuse ParagonIE\\Sodium\\Compat;\n\nclass ManagementController extends Controller\n{\n    /**\n     * Display a listing of the resource.\n     */\n    public function index()\n    {\n        $ortu=OrangTua::with('santri')->get();\n        $santri=Santri::with('ortu')->get();\n        $staff=Staff::get();\n        return view('management', compact('ortu', 'santri', 'staff'));\n\n    }\n\n    /**\n     * Show the form for creating a new resource.\n     */\n    public function create()\n    {\n        //\n    }\n\n    /**\n     * Store a newly created resource in storage.\n     */\n    public function store(Request $request)\n    {\n        //\n    }\n\n    /**\n     * Display the specified resource.\n     */\n    public function show(string $id)\n    {\n        //\n    }\n\n    /**\n     * Show the form for editing the specified resource.\n     */\n    public function edit(string $id)\n    {\n        return \"Edit data dengan id ini $id\";\n    }\n\n    /**\n     * Update the specified resource in storage.\n     */\n    public function update(Request $request, string $id)\n    {\n        //\n    }\n\n    /**\n     * Remove the specified resource from storage.\n     */\n    public function destroy(string $id)\n    {\n        return \"Delete data dengan id ini $id\";\n    }\n}"
+        }
+    ]
+}

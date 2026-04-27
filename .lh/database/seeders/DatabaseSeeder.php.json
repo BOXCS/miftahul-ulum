@@ -1,0 +1,18 @@
+{
+    "sourceFile": "database/seeders/DatabaseSeeder.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1776994471837,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1776994471837,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace Database\\Seeders;\n\nuse App\\Models\\User;\nuse Illuminate\\Database\\Console\\Seeds\\WithoutModelEvents;\nuse Illuminate\\Database\\Seeder;\n\nclass DatabaseSeeder extends Seeder\n{\n    use WithoutModelEvents;\n\n    /**\n     * Seed the application's database.\n     */\n    public function run(): void\n    {\n        // User::factory(10)->create();\n        $this->call([\n            DemoDataSeeder::class,\n            ParentUserSeeder::class,\n        ]);\n\n        User::factory()->create([\n            'name' => 'Test User',\n            'email' => 'test@example.com',\n        ]);\n    }\n}\n"
+        }
+    ]
+}

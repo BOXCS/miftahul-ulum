@@ -1,0 +1,22 @@
+{
+    "sourceFile": "app/Models/OrangTua.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1747953893831,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1748077162562,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -4,27 +4,27 @@\n \n use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;\n use Illuminate\\Database\\Eloquent\\Model;\n use Illuminate\\Database\\Eloquent\\Relations\\HasMany;\n+use Illuminate\\Database\\Eloquent\\Relations\\HasOne;\n \n class OrangTua extends Model\n {\n     use HasFactory;\n \n     protected $table = 'orang_tua';\n     protected $primaryKey = 'id_ortu';\n \n-    protected $fillable = ['id_akun', 'alamat', 'no_telp'];\n+    protected $fillable = ['nama_lengkap', 'id_akun', 'alamat', 'no_telp'];\n \n     // create relationship one to many for ortu->santri\n     public function santri(): HasMany\n     {\n-        return $this->hasMany(Santri::class, 'id_ortu');\n+        return $this->hasMany(Santri::class, 'id_ortu', 'id_ortu');\n     }\n+    public function akun(): HasOne\n+    {\n+        return $this->hasOne(Akun::class, 'id_akun', 'id_akun');\n+    }\n \n-    public function akun()\n-{\n-    return $this->belongsTo(Akun::class, 'id_akun', 'id_akun');\n }\n \n-}\n-\n"
+                }
+            ],
+            "date": 1747953893831,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace App\\Models;\n\nuse Illuminate\\Database\\Eloquent\\Factories\\HasFactory;\nuse Illuminate\\Database\\Eloquent\\Model;\nuse Illuminate\\Database\\Eloquent\\Relations\\HasMany;\n\nclass OrangTua extends Model\n{\n    use HasFactory;\n\n    protected $table = 'orang_tua';\n    protected $primaryKey = 'id_ortu';\n\n    protected $fillable = ['id_akun', 'alamat', 'no_telp'];\n\n    // create relationship one to many for ortu->santri\n    public function santri(): HasMany\n    {\n        return $this->hasMany(Santri::class, 'id_ortu');\n    }\n\n    public function akun()\n{\n    return $this->belongsTo(Akun::class, 'id_akun', 'id_akun');\n}\n\n}\n\n"
+        }
+    ]
+}

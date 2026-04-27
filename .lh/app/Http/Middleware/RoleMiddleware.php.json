@@ -1,0 +1,18 @@
+{
+    "sourceFile": "app/Http/Middleware/RoleMiddleware.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1748349611696,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1748349611696,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace App\\Http\\Middleware;\n\nuse Closure;\nuse Illuminate\\Http\\Request;\nuse Illuminate\\Support\\Facades\\Auth;\n\nclass RoleMiddleware\n{\n    public function handle(Request $request, Closure $next, ...$roles)\n{\n    logger()->info('User hak_akses: ' . Auth::user()->hak_akses);\n    logger()->info('Roles yang diterima middleware:', $roles);\n\n    if (!in_array(Auth::user()->hak_akses, $roles)) {\n        abort(403, 'Unauthorized.');\n    }\n\n    return $next($request);\n}\n\n\n}\n"
+        }
+    ]
+}

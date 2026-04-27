@@ -5,6 +5,7 @@ import axios from "axios";
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
 
+console.log('ENV CHECK:', import.meta.env.VITE_PUSHER_APP_KEY);
 window.Pusher = Pusher;
 
 window.Echo = new Echo({

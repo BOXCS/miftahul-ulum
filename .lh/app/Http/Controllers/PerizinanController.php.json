@@ -1,0 +1,38 @@
+{
+    "sourceFile": "app/Http/Controllers/PerizinanController.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 5,
+            "patches": [
+                {
+                    "date": 1748876476427,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1748876519170,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -12,9 +12,11 @@\n     public function index()\n     {\n         $perizinan = Perizinan::with('santri')->get();\n         $listSantri = DB::table('santri')->select('id_santri', 'nama')->get();\n-        return view('perizinan', compact('perizinan'));\n+        return view('perizinan', [\n+            'listSantri' => $listSantri,\n+        ]);\n     }\n     public function create()\n     {\n         $santri = Santri::get(['id_santri', 'nama']);\n"
+                },
+                {
+                    "date": 1748876534336,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -12,11 +12,9 @@\n     public function index()\n     {\n         $perizinan = Perizinan::with('santri')->get();\n         $listSantri = DB::table('santri')->select('id_santri', 'nama')->get();\n-        return view('perizinan', [\n-            'listSantri' => $listSantri,\n-        ]);\n+        return view('perizinan', compact('perizinan'));\n     }\n     public function create()\n     {\n         $santri = Santri::get(['id_santri', 'nama']);\n"
+                },
+                {
+                    "date": 1748876617548,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -4,16 +4,14 @@\n \n use App\\Models\\Perizinan;\n use App\\Models\\Santri;\n use Illuminate\\Http\\Request;\n-use Illuminate\\Support\\Facades\\DB;\n \n class PerizinanController extends Controller\n {\n     public function index()\n     {\n         $perizinan = Perizinan::with('santri')->get();\n-        $listSantri = DB::table('santri')->select('id_santri', 'nama')->get();\n         return view('perizinan', compact('perizinan'));\n     }\n     public function create()\n     {\n"
+                },
+                {
+                    "date": 1748878500469,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -15,9 +15,9 @@\n     }\n     public function create()\n     {\n         $santri = Santri::get(['id_santri', 'nama']);\n-        return view('perizinan.create', compact( 'santri'));\n+        return view('perizinan.create', compact('santri'));\n     }\n     public function store(Request $request)\n     {\n         $request->validate([\n@@ -25,9 +25,15 @@\n             'jenis_izin' => 'required|string',\n             'keterangan' => 'required|string',\n             'id_santri' => 'required|string',\n         ]);\n-        Perizinan::create($request->all());\n+        Perizinan::create($request->only([\n+            'id_santri',\n+            'waktu',\n+            'jenis_izin',\n+            'keterangan'\n+        ]));\n+\n         return redirect()->route(route: 'perizinan.index')->with('success', 'Izin santri berhasil ditambahkan.');\n     }\n     public function edit(string $id)\n     {\n"
+                },
+                {
+                    "date": 1748878512634,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -55,8 +55,14 @@\n             'keterangan' => 'required|string',\n             'id_santri' => 'required|string',\n         ]);\n         $perizinan = Perizinan::find($id);\n-        $perizinan->update($request->all());\n+        $perizinan->update($request->only([\n+            'id_santri',\n+            'waktu',\n+            'jenis_izin',\n+            'keterangan'\n+        ]));\n+        \n         return redirect()->route('perizinan.index')->with('success', 'Izin santri berhasil diupdate');\n     }\n }\n"
+                }
+            ],
+            "date": 1748876476427,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace App\\Http\\Controllers;\n\nuse App\\Models\\Perizinan;\nuse App\\Models\\Santri;\nuse Illuminate\\Http\\Request;\nuse Illuminate\\Support\\Facades\\DB;\n\nclass PerizinanController extends Controller\n{\n    public function index()\n    {\n        $perizinan = Perizinan::with('santri')->get();\n        $listSantri = DB::table('santri')->select('id_santri', 'nama')->get();\n        return view('perizinan', compact('perizinan'));\n    }\n    public function create()\n    {\n        $santri = Santri::get(['id_santri', 'nama']);\n        return view('perizinan.create', compact( 'santri'));\n    }\n    public function store(Request $request)\n    {\n        $request->validate([\n            'waktu' => \"required|date\",\n            'jenis_izin' => 'required|string',\n            'keterangan' => 'required|string',\n            'id_santri' => 'required|string',\n        ]);\n        Perizinan::create($request->all());\n        return redirect()->route(route: 'perizinan.index')->with('success', 'Izin santri berhasil ditambahkan.');\n    }\n    public function edit(string $id)\n    {\n        $perizinan = Perizinan::find($id);\n        $santri = Santri::get(['id_santri', 'nama']);\n        return view('perizinan.create', compact('perizinan', 'santri'));\n    }\n    public function destroy(string $id)\n    {\n        $perizinan = Perizinan::find($id);\n        $perizinan->delete();\n        return redirect()->route('perizinan.index')->with('success', 'Izin santri berhasil dihapus');\n    }\n    public function update(Request $request, string $id)\n    {\n        $request->validate([\n            'waktu' => \"required|date\",\n            'jenis_izin' => 'required|string',\n            'keterangan' => 'required|string',\n            'id_santri' => 'required|string',\n        ]);\n        $perizinan = Perizinan::find($id);\n        $perizinan->update($request->all());\n        return redirect()->route('perizinan.index')->with('success', 'Izin santri berhasil diupdate');\n    }\n}\n"
+        }
+    ]
+}
