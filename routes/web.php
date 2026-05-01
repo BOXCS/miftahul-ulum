@@ -29,6 +29,7 @@ Route::get("/students/{id}/edit", [StudentController::class, "edit"])->name(
 Route::put("/students/{id}", [StudentController::class, "update"])->name(
     "students.update",
 );
+Route::post("/students/{id}/fingerprint", [StudentController::class, "updateFingerprint"])->name("students.fingerprint");
 Route::delete("/students/{id}", [StudentController::class, "destroy"])->name(
     "students.destroy",
 );
@@ -57,6 +58,7 @@ Route::delete("/parents/{id}", [ParentController::class, "destroy"])->name(
 Route::get("/attendance", [AttendanceController::class, "index"])->name(
     "attendance.index",
 );
+Route::post("/attendance/verify", [AttendanceController::class, "verifyFingerprint"])->name("attendance.verify");
 Route::post("/attendance", [AttendanceController::class, "store"])->name(
     "attendance.store",
 );

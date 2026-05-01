@@ -89,6 +89,9 @@ class DemoDataSeeder extends Seeder
                 "address" => "Jl. Mawar No. 12, Bandung",
                 "status" => "aktif",
                 "tahun_angkatan" => "2022",
+                "fingerprint_template" => encrypt("BASE64_TEMPLATE_ahmadfauzi"),
+                "fingerprint_quality" => 95,
+                "scanned_at" => now(),
             ],
             [
                 "parent_id" => $parentModels[1]->id,
@@ -111,6 +114,9 @@ class DemoDataSeeder extends Seeder
                 "address" => "Jl. Anggrek No. 8, Garut",
                 "status" => "aktif",
                 "tahun_angkatan" => "2023",
+                "fingerprint_template" => encrypt("BASE64_TEMPLATE_muhammadhasan"),
+                "fingerprint_quality" => 88,
+                "scanned_at" => now(),
             ],
             [
                 "parent_id" => $parentModels[3]->id,
