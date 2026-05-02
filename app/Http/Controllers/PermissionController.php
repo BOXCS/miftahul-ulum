@@ -23,7 +23,7 @@ class PermissionController extends Controller
                     "kelas" => $p->student?->class ?? "-",
                     "jenis" => $p->jenis,
                     "tanggal" =>
-                        $p->tanggal_mulai->format("d/m/Y") .
+                    $p->tanggal_mulai->format("d/m/Y") .
                         " - " .
                         $p->tanggal_selesai->format("d/m/Y"),
                     "keterangan" => $p->keterangan,
@@ -31,9 +31,9 @@ class PermissionController extends Controller
                     "diajukan" => "Wali", // Default for now
                     "tglAjuan" => $p->created_at->diffForHumans(),
                     "catatan" =>
-                        $p->status != "pending"
-                            ? "Diproses oleh " . $p->approved_by
-                            : null,
+                    $p->status != "pending"
+                        ? "Diproses oleh " . $p->approved_by
+                        : null,
                 ],
             )
             ->toArray();
@@ -94,5 +94,25 @@ class PermissionController extends Controller
         return redirect()
             ->route("permissions.index")
             ->with("success", "Izin ditolak.");
+    }
+    public function edit(int $id): \Illuminate\View\View
+    {
+        $permission = Permission::with('student')->findOrFail($id);
+        $students = Student::where('status', 'aktif')->get();
+        return view('permissions.edit', compact('permission', 'students'));
+    }
+
+    public function update(Request $request, int $id): \Illuminate\Http\RedirectResponse
+    {
+        $permission = Permission::findOrFail($id);
+        $validated = $request->validate([
+            'student_id'      => 'required|exists:students,id',
+            'jenis'           => 'required|in:keluar,pulang,kegiatan,sakit',
+            'tanggal_mulai'   => 'required|date',
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+            'keterangan'      => 'nullable|string',
+        ]);
+        $permission->update($validated);
+        return redirect()->route('permissions.index')->with('success', 'Permintaan izin berhasil diperbarui.');
     }
 }

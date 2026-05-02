@@ -40,8 +40,10 @@ Route::middleware(['auth'])->group(function () {
 
     // Attendance
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('/attendance/create', [AttendanceController::class, 'create'])->name('attendance.create');
     Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
     Route::get('/attendance/report', [AttendanceController::class, 'report'])->name('attendance.report');
+    Route::get('/attendance/{student}/edit', [AttendanceController::class, 'edit'])->name('attendance.edit');
 
     // Chat
     Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
@@ -50,12 +52,17 @@ Route::middleware(['auth'])->group(function () {
 
     // Announcements
     Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
+    Route::get('/announcements/create', [AnnouncementController::class, 'create'])->name('announcements.create');
     Route::post('/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
+    Route::get('/announcements/{id}/edit', [AnnouncementController::class, 'edit'])->name('announcements.edit');
+    Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])->name('announcements.update');
     Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy'])->name('announcements.destroy');
 
     // FAQs
     Route::get('/faqs', [FaqController::class, 'index'])->name('faqs.index');
+    Route::get('/faqs/create', [FaqController::class, 'create'])->name('faqs.create');
     Route::post('/faqs', [FaqController::class, 'store'])->name('faqs.store');
+    Route::get('/faqs/{id}/edit', [FaqController::class, 'edit'])->name('faqs.edit');
     Route::put('/faqs/{id}', [FaqController::class, 'update'])->name('faqs.update');
     Route::delete('/faqs/{id}', [FaqController::class, 'destroy'])->name('faqs.destroy');
 

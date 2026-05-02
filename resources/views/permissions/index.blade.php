@@ -2,1019 +2,1369 @@
 
 @section('title', 'Manajemen Perizinan')
 @section('breadcrumb', 'Perizinan')
+@push('styles')
+<style>
+    :root {
+        --sh-purple: 0 8px 28px rgba(13, 148, 136, .22);
+        --sh-purple-sm: 0 4px 14px rgba(13, 148, 136, .18);
+    }
+
+    .btn-purple {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 20px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #0d9488, #0f766e);
+        color: #fff;
+        font-size: .825rem;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        box-shadow: var(--sh-purple-sm);
+        transition: all .25s ease;
+        font-family: inherit;
+    }
+
+    .btn-purple:hover {
+        background: linear-gradient(135deg, #0f766e, #115e59);
+        transform: translateY(-2px);
+        box-shadow: var(--sh-purple);
+        color: #fff;
+    }
+
+    .btn-secondary-outline {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 16px;
+        border-radius: 12px;
+        background: #fff;
+        color: #475569;
+        font-size: .825rem;
+        font-weight: 700;
+        border: 1.5px solid #e2e8f0;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all .2s;
+        font-family: inherit;
+    }
+
+    .btn-secondary-outline:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #334155;
+    }
+
+    /* stat cards */
+    .st-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, .06);
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        transition: transform .2s, box-shadow .2s;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .st-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(15, 23, 42, .1);
+    }
+
+    .st-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        border-radius: 16px 16px 0 0;
+    }
+
+    .st-card.tc-purple::before {
+        background: linear-gradient(90deg, #0d9488, #2dd4bf);
+    }
+
+    .st-card.tc-amber::before {
+        background: linear-gradient(90deg, #d97706, #fbbf24);
+    }
+
+    .st-card.tc-green::before {
+        background: linear-gradient(90deg, #16a34a, #4ade80);
+    }
+
+    .st-card.tc-red::before {
+        background: linear-gradient(90deg, #dc2626, #f87171);
+    }
+
+    .st-ico {
+        width: 44px;
+        height: 44px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .st-val {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1;
+        letter-spacing: -.04em;
+    }
+
+    .st-lbl {
+        font-size: .68rem;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        margin-top: 3px;
+    }
+
+    /* table card */
+    .tcard {
+        background: #fff;
+        border-radius: 18px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, .06);
+        overflow: hidden;
+    }
+
+    .filter-strip {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 16px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        flex-wrap: wrap;
+    }
+
+    .tab-strip {
+        display: flex;
+        gap: 4px;
+        padding: 14px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        flex-wrap: wrap;
+    }
+
+    .tab-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border-radius: 10px;
+        font-size: .78rem;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        background: transparent;
+        color: #64748b;
+        transition: all .2s;
+        font-family: inherit;
+    }
+
+    .tab-btn:hover {
+        background: #f1f5f9;
+        color: #334155;
+    }
+
+    .tab-btn.active {
+        background: #ccfbf1;
+        color: #0d9488;
+    }
+
+    .tab-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 18px;
+        padding: 0 6px;
+        border-radius: 999px;
+        font-size: .65rem;
+        font-weight: 800;
+    }
+
+    .tab-btn.active .tab-count {
+        background: #0d9488;
+        color: #fff;
+    }
+
+    .tab-btn:not(.active) .tab-count {
+        background: #e2e8f0;
+        color: #64748b;
+    }
+
+    .tab-btn.amber:not(.active) .tab-count {
+        background: #fef3c7;
+        color: #b45309;
+    }
+
+    .filter-search {
+        position: relative;
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .filter-search input {
+        width: 100%;
+        padding: 9px 14px 9px 38px;
+        border-radius: 10px;
+        border: 1.5px solid #e2e8f0;
+        font-size: .8rem;
+        background: #f8fafc;
+        font-family: inherit;
+        outline: none;
+        transition: border .2s, box-shadow .2s;
+        color: #334155;
+    }
+
+    .filter-search input:focus {
+        border-color: #0d9488;
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, .12);
+        background: #fff;
+    }
+
+    .filter-search svg {
+        position: absolute;
+        left: 11px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: #94a3b8;
+    }
+
+    .dt {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .dt thead th {
+        padding: 11px 16px;
+        font-size: .68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .1em;
+        color: #94a3b8;
+        background: #f8fafc;
+        border-bottom: 1px solid #f1f5f9;
+        white-space: nowrap;
+    }
+
+    .dt tbody td {
+        padding: 13px 16px;
+        border-bottom: 1px solid #f8fafc;
+        vertical-align: middle;
+        font-size: .85rem;
+    }
+
+    .dt tbody tr:hover td {
+        background: #faf5ff;
+    }
+
+    .dt tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .ava {
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .65rem;
+        font-weight: 800;
+        flex-shrink: 0;
+        color: #fff;
+    }
+
+    .bdg {
+        display: inline-flex;
+        align-items: center;
+        font-size: .68rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 999px;
+        letter-spacing: .03em;
+    }
+
+    .bdg-purple {
+        background: #ede9fe;
+        color: #6d28d9;
+    }
+
+    .bdg-blue {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .bdg-teal {
+        background: #ccfbf1;
+        color: #0f766e;
+    }
+
+    .bdg-amber {
+        background: #fef3c7;
+        color: #b45309;
+    }
+
+    .bdg-green {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .bdg-red {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .bdg-slate {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .ico-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all .18s;
+        background: transparent;
+        text-decoration: none;
+    }
+
+    .ico-btn:hover {
+        transform: scale(1.08);
+    }
+
+    .ico-btn.edit {
+        background: #f5f3ff;
+        color: #7c3aed;
+    }
+
+    .ico-btn.edit:hover {
+        background: #ede9fe;
+    }
+
+    .ico-btn.del {
+        background: #fff1f2;
+        color: #e11d48;
+    }
+
+    .ico-btn.del:hover {
+        background: #fee2e2;
+    }
+
+    .btn-approve {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: .75rem;
+        font-weight: 700;
+        border: 1px solid #bbf7d0;
+        background: #f0fdf4;
+        color: #16a34a;
+        cursor: pointer;
+        transition: all .18s;
+        font-family: inherit;
+    }
+
+    .btn-approve:hover {
+        background: #dcfce7;
+        border-color: #86efac;
+    }
+
+    .btn-reject {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: .75rem;
+        font-weight: 700;
+        border: 1px solid #fecdd3;
+        background: #fff1f2;
+        color: #e11d48;
+        cursor: pointer;
+        transition: all .18s;
+        font-family: inherit;
+    }
+
+    .btn-reject:hover {
+        background: #fee2e2;
+        border-color: #fca5a5;
+    }
+
+    .btn-detail {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: .75rem;
+        font-weight: 700;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        color: #475569;
+        cursor: pointer;
+        transition: all .18s;
+        font-family: inherit;
+    }
+
+    .btn-detail:hover {
+        background: #f1f5f9;
+    }
+
+    /* alert banner */
+    .alert-pending {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 18px;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 14px;
+        margin-bottom: 20px;
+    }
+
+    /* modals */
+    .smodal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, .5);
+        backdrop-filter: blur(5px);
+        z-index: 9900;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .25s ease;
+    }
+
+    .smodal-overlay.open {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    .smodal-box {
+        background: #fff;
+        border-radius: 22px;
+        width: 100%;
+        box-shadow: 0 24px 64px rgba(15, 23, 42, .18);
+        transform: translateY(22px) scale(.96);
+        transition: transform .28s cubic-bezier(.22, .68, 0, 1.2);
+        overflow: hidden;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .smodal-overlay.open .smodal-box {
+        transform: translateY(0) scale(1);
+    }
+
+    .smodal-hdr {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 24px 14px;
+        border-bottom: 1px solid #f1f5f9;
+        flex-shrink: 0;
+    }
+
+    .smodal-body {
+        overflow-y: auto;
+        flex: 1;
+        padding: 20px 24px;
+    }
+
+    .smodal-ftr {
+        padding: 14px 24px;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+        background: #f8fafc;
+    }
+
+    .smodal-close {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: #f1f5f9;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        transition: all .18s;
+    }
+
+    .smodal-close:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .detail-cell {
+        padding: 12px 14px;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px solid #f1f5f9;
+    }
+
+    .detail-cell-lbl {
+        font-size: .65rem;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        margin-bottom: 5px;
+    }
+
+    /* export dropdown */
+    .export-dropdown {
+        position: relative;
+    }
+
+    .export-menu {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, .12);
+        min-width: 180px;
+        z-index: 100;
+        overflow: hidden;
+        display: none;
+    }
+
+    .export-menu.open {
+        display: block;
+    }
+
+    .export-menu a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 16px;
+        font-size: .82rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background .15s;
+    }
+
+    .export-menu a:hover {
+        background: #f8fafc;
+    }
+
+    .export-menu-divider {
+        height: 1px;
+        background: #f1f5f9;
+        margin: 0 12px;
+    }
+
+    .result-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 20px;
+        background: #f8fafc;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: .72rem;
+        color: #64748b;
+    }
+
+    .result-bar strong {
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .empty-row td {
+        padding: 60px 20px;
+        text-align: center;
+        color: #94a3b8;
+    }
+
+    .empty-ico-wrap {
+        width: 56px;
+        height: 56px;
+        background: #f1f5f9;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-size: 1.5rem;
+    }
+
+    /* toast */
+    .toast-wrap {
+        position: fixed;
+        bottom: 28px;
+        right: 28px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        pointer-events: none;
+    }
+
+    .toast {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: #fff;
+        border-radius: 14px;
+        padding: 14px 18px;
+        box-shadow: 0 8px 30px rgba(15, 23, 42, .14);
+        border-left: 4px solid;
+        min-width: 280px;
+        max-width: 360px;
+        transform: translateX(120%);
+        opacity: 0;
+        transition: transform .35s cubic-bezier(.22, .68, 0, 1.2), opacity .35s ease;
+        pointer-events: all;
+    }
+
+    .toast.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    .toast.success {
+        border-color: #7c3aed;
+    }
+
+    .toast.error {
+        border-color: #e11d48;
+    }
+
+    .toast-ico {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .toast.success .toast-ico {
+        background: #ede9fe;
+        color: #7c3aed;
+    }
+
+    .toast.error .toast-ico {
+        background: #fee2e2;
+        color: #e11d48;
+    }
+
+    .toast-title {
+        font-size: .82rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .toast-msg {
+        font-size: .72rem;
+        color: #64748b;
+        margin-top: 2px;
+    }
+</style>
+@endpush
 
 @section('content')
 
-{{-- ═══════════════════════════════════════════════════════════
-     MAIN PAGE COMPONENT
-════════════════════════════════════════════════════════════ --}}
-<div
-    x-data="{
-        activeTab: 'semua',
-        detailModal: false,
-        approveModal: false,
-        rejectModal: false,
-        selectedItem: null,
-        rejectReason: '',
+<div class="toast-wrap" id="toastWrap"
+    data-success="{{ session('success') }}"
+    data-error="{{ session('error') }}">
+</div>
 
-        permissions: @js($permissions),
-
-        get filtered() {
-            if (this.activeTab === 'semua')     return this.permissions;
-            if (this.activeTab === 'pending')   return this.permissions.filter(p => p.status === 'pending');
-            if (this.activeTab === 'disetujui') return this.permissions.filter(p => p.status === 'disetujui');
-            if (this.activeTab === 'ditolak')   return this.permissions.filter(p => p.status === 'ditolak');
-            return this.permissions;
-        },
-        get pendingCount()   { return this.permissions.filter(p => p.status === 'pending').length; },
-        get approvedCount()  { return this.permissions.filter(p => p.status === 'disetujui').length; },
-        get rejectedCount()  { return this.permissions.filter(p => p.status === 'ditolak').length; },
-
-        openDetail(item) {
-            this.selectedItem = item;
-            this.detailModal  = true;
-        },
-        openApprove(item) {
-            this.selectedItem = item;
-            this.approveModal = true;
-        },
-        openReject(item) {
-            this.selectedItem  = item;
-            this.rejectReason  = '';
-            this.rejectModal   = true;
-        },
-        confirmApprove() {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `{{ url('/permissions') }}/${this.selectedItem.id}/approve`;
-            
-            const csrfToken = document.querySelector('meta[name="csrf-token"]');
-            if (csrfToken) {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = '_token';
-                input.value = csrfToken.getAttribute('content');
-                form.appendChild(input);
-            }
-            
-            const approvedByInput = document.createElement('input');
-            approvedByInput.type = 'hidden';
-            approvedByInput.name = 'approved_by';
-            approvedByInput.value = 'Admin';
-            form.appendChild(approvedByInput);
-            
-            document.body.appendChild(form);
-            form.submit();
-        },
-        confirmReject() {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `{{ url('/permissions') }}/${this.selectedItem.id}/reject`;
-            
-            const csrfToken = document.querySelector('meta[name="csrf-token"]');
-            if (csrfToken) {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = '_token';
-                input.value = csrfToken.getAttribute('content');
-                form.appendChild(input);
-            }
-            
-            const approvedByInput = document.createElement('input');
-            approvedByInput.type = 'hidden';
-            approvedByInput.name = 'approved_by';
-            approvedByInput.value = 'Admin';
-            form.appendChild(approvedByInput);
-            
-            document.body.appendChild(form);
-            form.submit();
-        },
-
-        jenisColor(j) {
-            const map = { Pulang: 'badge-purple', Sakit: 'badge-blue', Kegiatan: 'badge-teal', Keluar: 'badge-amber' };
-            return map[j] || 'badge-gray';
-        },
-        jenisIcon(j) {
-            const icons = {
-                Pulang:   'home',
-                Sakit:    'heart',
-                Kegiatan: 'star',
-                Keluar:   'log-out',
-            };
-            return icons[j] || 'file';
-        },
-        statusColor(s) {
-            if (s === 'Pending')   return 'badge-amber';
-            if (s === 'Disetujui') return 'badge-green';
-            if (s === 'Ditolak')   return 'badge-red';
-            return 'badge-gray';
-        },
-        avatarBg(s) {
-            if (s === 'Pending')   return 'background:linear-gradient(135deg,#d97706,#fbbf24)';
-            if (s === 'Disetujui') return 'background:linear-gradient(135deg,#16a34a,#4ade80)';
-            if (s === 'Ditolak')   return 'background:linear-gradient(135deg,#dc2626,#f87171)';
-            return 'background:linear-gradient(135deg,#64748b,#94a3b8)';
-        },
-        pengajuColor(p) {
-            if (p === 'Wali')    return 'badge-blue';
-            if (p === 'Guru')    return 'badge-purple';
-            if (p === 'Petugas') return 'badge-teal';
-            return 'badge-gray';
-        },
-    }"
->
-
-{{-- ══════════════════════════════════════════════════════════
-     PAGE HEADER
-══════════════════════════════════════════════════════════ --}}
-<div class="page-header animate-fade-in">
+{{-- PAGE HEADER --}}
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
     <div>
-        {{-- Breadcrumb --}}
-        <nav class="breadcrumb" aria-label="breadcrumb">
-            <a href="{{ url('/dashboard') }}" class="breadcrumb-item">
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                     class="inline -mt-0.5 mr-0.5">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    <polyline points="9 22 9 12 15 12 15 22"/>
-                </svg>
-                Dashboard
-            </a>
-            <span class="breadcrumb-sep">/</span>
-            <span class="breadcrumb-item active">Perizinan</span>
-        </nav>
-        <h1 class="page-title">Manajemen Perizinan</h1>
-        <p class="page-subtitle">Kelola permohonan izin santri dengan cepat dan transparan</p>
+        <h1 style="font-size:1.75rem;font-weight:800;color:#0f172a;letter-spacing:-.04em;line-height:1;">Manajemen Perizinan</h1>
+        <p style="font-size:.85rem;color:#64748b;margin-top:4px;">Kelola permohonan izin santri Pondok Pesantren Miftahul Ulum</p>
     </div>
-
-    <div class="flex items-center gap-3 shrink-0">
-        <button class="btn btn-secondary btn-lg gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Export
-        </button>
-        <button class="btn btn-primary btn-lg gap-2" onclick="location.href='{{ route('permissions.create') }}'">
-            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    <div style="display:flex;align-items:center;gap:10px;">
+        {{-- Export Dropdown --}}
+        <div class="export-dropdown" id="exportDropdown">
+            <button class="btn-secondary-outline" onclick="toggleExport()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Export
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                </svg>
+            </button>
+            <div class="export-menu" id="exportMenu">
+                <a href="{{ route('permissions.index') }}?export=pdf" style="color:#dc2626;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                    Export PDF
+                </a>
+                <div class="export-menu-divider"></div>
+                <a href="{{ route('permissions.index') }}?export=excel" style="color:#16a34a;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <path d="M3 9h18M3 15h18M9 3v18" />
+                    </svg>
+                    Export Excel
+                </a>
+            </div>
+        </div>
+        <a href="{{ route('permissions.create') }}" class="btn-purple">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
             Tambah Izin
-        </button>
+        </a>
     </div>
 </div>
 
-
-{{-- ══════════════════════════════════════════════════════════
-     STATS CARDS
-══════════════════════════════════════════════════════════ --}}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5 animate-fade-in stagger-1">
-
-    {{-- Total Izin --}}
-    <div class="stat-card purple">
-        <div class="stat-icon purple">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/>
-                <line x1="16" y1="17" x2="8" y2="17"/>
-                <polyline points="10 9 9 9 8 9"/>
+{{-- STAT CARDS --}}
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;">
+    <div class="st-card tc-purple">
+        <div class="st-ico" style="background:#ccfbf1;color:#0d9488;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
             </svg>
         </div>
-        <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-slate-500 mb-0.5">Total Izin</p>
-            <p class="text-3xl font-bold text-slate-800" x-text="permissions.length">8</p>
-            <p class="text-xs text-slate-400 mt-1">Semua permohonan</p>
+        <div>
+            <div class="st-val" id="statTotal">{{ count($permissions) }}</div>
+            <div class="st-lbl">Total Izin</div>
         </div>
     </div>
-
-    {{-- Menunggu Persetujuan (amber, highlighted) --}}
-    <div class="stat-card amber" style="box-shadow:0 0 0 2px #fbbf24, 0 10px 15px -3px rgb(0 0 0/0.08);">
-        <div class="stat-icon amber">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="12"/>
-                <line x1="12" y1="16" x2="12.01" y2="16"/>
+    <div class="st-card tc-amber">
+        <div class="st-ico" style="background:#fef3c7;color:#b45309;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
         </div>
-        <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-slate-500 mb-0.5">Menunggu</p>
-            <div class="flex items-end gap-2">
-                <p class="text-3xl font-bold text-amber-600" x-text="pendingCount">3</p>
-                <span class="mb-1 inline-flex items-center gap-1 text-xs font-semibold text-amber-600 animate-pulse">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                    Perlu tindakan
-                </span>
-            </div>
+        <div>
+            <div class="st-val" id="statPending">{{ collect($permissions)->where('status','Pending')->count() }}</div>
+            <div class="st-lbl">Menunggu</div>
         </div>
     </div>
-
-    {{-- Disetujui --}}
-    <div class="stat-card green">
-        <div class="stat-icon green">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                <polyline points="22 4 12 14.01 9 11.01"/>
+    <div class="st-card tc-green">
+        <div class="st-ico" style="background:#dcfce7;color:#15803d;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
             </svg>
         </div>
-        <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-slate-500 mb-0.5">Disetujui</p>
-            <p class="text-3xl font-bold text-slate-800" x-text="approvedCount">4</p>
-            <p class="text-xs text-slate-400 mt-1">Izin dikabulkan</p>
+        <div>
+            <div class="st-val">{{ collect($permissions)->where('status','Disetujui')->count() }}</div>
+            <div class="st-lbl">Disetujui</div>
         </div>
     </div>
-
-    {{-- Ditolak --}}
-    <div class="stat-card red">
-        <div class="stat-icon red">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="15" y1="9" x2="9" y2="15"/>
-                <line x1="9" y1="9" x2="15" y2="15"/>
+    <div class="st-card tc-red">
+        <div class="st-ico" style="background:#fee2e2;color:#dc2626;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
             </svg>
         </div>
-        <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-slate-500 mb-0.5">Ditolak</p>
-            <p class="text-3xl font-bold text-slate-800" x-text="rejectedCount">1</p>
-            <p class="text-xs text-slate-400 mt-1">Permohonan ditolak</p>
+        <div>
+            <div class="st-val">{{ collect($permissions)->where('status','Ditolak')->count() }}</div>
+            <div class="st-lbl">Ditolak</div>
         </div>
-    </div>
-
-</div>
-
-
-{{-- ══════════════════════════════════════════════════════════
-     FILTER TABS
-══════════════════════════════════════════════════════════ --}}
-<div class="card px-6 py-4 mb-5 animate-fade-in stagger-2">
-    <div class="tab-list">
-
-        {{-- Semua --}}
-        <button
-            @click="activeTab = 'semua'"
-            :class="activeTab === 'semua' ? 'tab-item active' : 'tab-item'"
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="8" y1="6" x2="21" y2="6"/>
-                <line x1="8" y1="12" x2="21" y2="12"/>
-                <line x1="8" y1="18" x2="21" y2="18"/>
-                <line x1="3" y1="6" x2="3.01" y2="6"/>
-                <line x1="3" y1="12" x2="3.01" y2="12"/>
-                <line x1="3" y1="18" x2="3.01" y2="18"/>
-            </svg>
-            Semua
-            <span
-                class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold"
-                :class="activeTab === 'semua' ? 'bg-green-600 text-white' : 'bg-slate-200 text-slate-600'"
-                x-text="permissions.length"
-            ></span>
-        </button>
-
-        {{-- Pending --}}
-        <button
-            @click="activeTab = 'pending'"
-            :class="activeTab === 'pending' ? 'tab-item active' : 'tab-item'"
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-            </svg>
-            Pending
-            <span
-                class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold"
-                :class="activeTab === 'pending' ? 'bg-green-600 text-white' : 'bg-amber-100 text-amber-700'"
-                x-text="pendingCount"
-            ></span>
-        </button>
-
-        {{-- Disetujui --}}
-        <button
-            @click="activeTab = 'disetujui'"
-            :class="activeTab === 'disetujui' ? 'tab-item active' : 'tab-item'"
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
-            Disetujui
-            <span
-                class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold"
-                :class="activeTab === 'disetujui' ? 'bg-green-600 text-white' : 'bg-slate-200 text-slate-600'"
-                x-text="approvedCount"
-            ></span>
-        </button>
-
-        {{-- Ditolak --}}
-        <button
-            @click="activeTab = 'ditolak'"
-            :class="activeTab === 'ditolak' ? 'tab-item active' : 'tab-item'"
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="15" y1="9" x2="9" y2="15"/>
-                <line x1="9" y1="9" x2="15" y2="15"/>
-            </svg>
-            Ditolak
-            <span
-                class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold"
-                :class="activeTab === 'ditolak' ? 'bg-green-600 text-white' : 'bg-slate-200 text-slate-600'"
-                x-text="rejectedCount"
-            ></span>
-        </button>
-
     </div>
 </div>
 
+{{-- MAIN TABLE CARD --}}
+<div class="tcard" x-data="{
+    activeTab: 'semua',
+    search: '',
+    detailModal: false,
+    approveModal: false,
+    rejectModal: false,
+    selectedItem: null,
+    rejectReason: '',
+    permissions: @js($permissions),
+    get filtered() {
+        return this.permissions.filter(p => {
+            const q = this.search.toLowerCase();
+            const matchS = !q || p.santri.toLowerCase().includes(q) || p.jenis.toLowerCase().includes(q);
+            const matchT = this.activeTab === 'semua'
+                || (this.activeTab === 'pending'   && p.status === 'Pending')
+                || (this.activeTab === 'disetujui' && p.status === 'Disetujui')
+                || (this.activeTab === 'ditolak'   && p.status === 'Ditolak');
+            return matchS && matchT;
+        });
+    },
+    get pendingCount()   { return this.permissions.filter(p => p.status === 'Pending').length; },
+    get approvedCount()  { return this.permissions.filter(p => p.status === 'Disetujui').length; },
+    get rejectedCount()  { return this.permissions.filter(p => p.status === 'Ditolak').length; },
+openDetail(item) {
+    openDetailModal(item);
+},
+openApprove(item) {
+    openApproveModal(item);
+},
+openReject(item) {
+    openRejectModal(item);
+},
+    confirmApprove() {
+        const f = document.createElement('form');
+        f.method = 'POST';
+        f.action = '/permissions/' + this.selectedItem.id + '/approve';
+        const t = document.createElement('input'); t.type='hidden'; t.name='_token'; t.value=document.querySelector('meta[name=csrf-token]').content; f.appendChild(t);
+        const a = document.createElement('input'); a.type='hidden'; a.name='approved_by'; a.value='Admin'; f.appendChild(a);
+        document.body.appendChild(f); f.submit();
+    },
+    confirmReject() {
+        const f = document.createElement('form');
+        f.method = 'POST';
+        f.action = '/permissions/' + this.selectedItem.id + '/reject';
+        const t = document.createElement('input'); t.type='hidden'; t.name='_token'; t.value=document.querySelector('meta[name=csrf-token]').content; f.appendChild(t);
+        const a = document.createElement('input'); a.type='hidden'; a.name='approved_by'; a.value='Admin'; f.appendChild(a);
+        const r = document.createElement('input'); r.type='hidden'; r.name='reason'; r.value=this.rejectReason; f.appendChild(r);
+        document.body.appendChild(f); f.submit();
+    },
+    jenisColor(j) {
+        const m = { Pulang:'bdg-blue', Sakit:'bdg-red', Kegiatan:'bdg-teal', Keluar:'bdg-amber' };
+        return m[j] || 'bdg-slate';
+    },
+    statusColor(s) {
+        if (s==='Pending')   return 'bdg-amber';
+        if (s==='Disetujui') return 'bdg-green';
+        if (s==='Ditolak')   return 'bdg-red';
+        return 'bdg-slate';
+    },
+    avatarColor(s) {
+        if (s==='Pending')   return 'background:linear-gradient(135deg,#d97706,#fbbf24)';
+        if (s==='Disetujui') return 'background:linear-gradient(135deg,#16a34a,#4ade80)';
+        if (s==='Ditolak')   return 'background:linear-gradient(135deg,#dc2626,#f87171)';
+        return 'background:linear-gradient(135deg,#7c3aed,#a78bfa)';
+    },
+}">
 
-{{-- ══════════════════════════════════════════════════════════
-     PENDING ALERT BANNER
-══════════════════════════════════════════════════════════ --}}
-<div
-    x-show="pendingCount > 0 && activeTab !== 'ditolak'"
-    x-transition:enter="transition ease-out duration-300"
-    x-transition:enter-start="opacity-0 -translate-y-2"
-    x-transition:enter-end="opacity-100 translate-y-0"
-    class="flex items-start gap-3 p-4 mb-5 bg-amber-50 border border-amber-200 rounded-2xl animate-fade-in"
->
-    <div class="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-             stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-    </div>
-    <div class="flex-1 min-w-0">
-        <p class="text-sm font-semibold text-amber-800">
-            Ada <span x-text="pendingCount" class="font-bold"></span> permohonan izin yang menunggu persetujuan Anda
-        </p>
-        <p class="text-xs text-amber-600 mt-0.5">
-            Harap segera ditindaklanjuti agar santri mendapatkan kepastian izin tepat waktu.
-        </p>
-    </div>
-    <button
-        @click="activeTab = 'pending'"
-        class="btn btn-sm shrink-0"
-        style="background:#d97706; color:#fff; border:none;"
-    >
-        Tinjau Sekarang
-    </button>
-</div>
-
-
-{{-- ══════════════════════════════════════════════════════════
-     DATA TABLE CARD
-══════════════════════════════════════════════════════════ --}}
-<div class="card animate-fade-in stagger-3">
-
-    {{-- Card Header --}}
-    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-3">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-purple-100 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                     stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="16" y1="13" x2="8" y2="13"/>
-                    <line x1="16" y1="17" x2="8" y2="17"/>
-                </svg>
-            </div>
-            <div>
-                <h2 class="text-base font-semibold text-slate-800">Daftar Permohonan Izin</h2>
-                <p class="text-xs text-slate-500">
-                    Menampilkan
-                    <span class="font-semibold text-slate-700" x-text="filtered.length"></span>
-                    permohonan
-                    <span x-show="activeTab !== 'semua'" class="capitalize" x-text="'— ' + activeTab"></span>
-                </p>
-            </div>
+    {{-- Alert pending --}}
+    <div class="alert-pending" x-show="pendingCount > 0" style="margin:16px 20px 0;">
+        <div style="width:32px;height:32px;border-radius:10px;background:#fde68a;color:#92400e;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
         </div>
+        <div style="flex:1;">
+            <p style="font-size:.82rem;font-weight:700;color:#92400e;">
+                Ada <span x-text="pendingCount"></span> permohonan izin menunggu persetujuan
+            </p>
+            <p style="font-size:.72rem;color:#b45309;margin-top:2px;">Segera ditindaklanjuti agar santri mendapat kepastian tepat waktu.</p>
+        </div>
+        <button @click="activeTab='pending'"
+            style="padding:6px 14px;border-radius:9px;background:#d97706;color:#fff;font-size:.75rem;font-weight:700;border:none;cursor:pointer;white-space:nowrap;font-family:inherit;">
+            Tinjau
+        </button>
+    </div>
+
+    {{-- Tab strip --}}
+    <div class="tab-strip">
+        <button class="tab-btn" :class="activeTab==='semua' ? 'active' : ''" @click="activeTab='semua'">
+            Semua <span class="tab-count" x-text="permissions.length"></span>
+        </button>
+        <button class="tab-btn amber" :class="activeTab==='pending' ? 'active' : ''" @click="activeTab='pending'">
+            Pending <span class="tab-count" x-text="pendingCount"></span>
+        </button>
+        <button class="tab-btn" :class="activeTab==='disetujui' ? 'active' : ''" @click="activeTab='disetujui'">
+            Disetujui <span class="tab-count" x-text="approvedCount"></span>
+        </button>
+        <button class="tab-btn" :class="activeTab==='ditolak' ? 'active' : ''" @click="activeTab='ditolak'">
+            Ditolak <span class="tab-count" x-text="rejectedCount"></span>
+        </button>
 
         {{-- Search --}}
-        <div class="relative">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-            </span>
-            <input
-                type="text"
-                placeholder="Cari santri…"
-                class="form-control pl-9"
-                style="width:220px;"
-            >
+        <div class="filter-search" style="margin-left:auto;max-width:240px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input type="search" placeholder="Cari santri, jenis…" x-model="search" autocomplete="off">
         </div>
     </div>
 
-    {{-- Table --}}
-    <div class="table-wrapper">
-        <table class="data-table">
+    <div class="result-bar">
+        <span>Menampilkan <strong x-text="filtered.length"></strong> dari <strong x-text="permissions.length"></strong> permohonan</span>
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table class="dt">
             <thead>
                 <tr>
-                    <th style="width:50px;">No</th>
+                    <th style="width:48px;text-align:center;">No</th>
                     <th>Santri</th>
-                    <th>Kelas</th>
-                    <th>Jenis Izin</th>
+                    <th style="text-align:center;">Kelas</th>
+                    <th style="text-align:center;">Jenis</th>
                     <th>Tanggal</th>
                     <th>Keterangan</th>
-                    <th>Status</th>
-                    <th>Diajukan</th>
-                    <th style="width:180px;">Aksi</th>
+                    <th style="text-align:center;">Status</th>
+                    <th style="text-align:center;width:180px;">Aksi</th>
                 </tr>
             </thead>
             <tbody>
-
-                {{-- Empty state --}}
-                <template x-if="filtered.length === 0">
+                <tr class="empty-row" x-show="filtered.length === 0">
+                    <td colspan="8">
+                        <div class="empty-ico-wrap">📋</div>
+                        <p style="font-size:.82rem;font-weight:600;">Tidak ada permohonan ditemukan</p>
+                    </td>
+                </tr>
+                <template x-for="(item, idx) in filtered" :key="item.id">
                     <tr>
-                        <td colspan="9" class="py-16 text-center">
-                            <div class="flex flex-col items-center gap-3">
-                                <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
-                                         fill="none" stroke="#94a3b8" stroke-width="1.5"
-                                         stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <line x1="12" y1="8" x2="12" y2="12"/>
-                                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                                    </svg>
+                        <td style="text-align:center;">
+                            <span style="font-size:.75rem;color:#94a3b8;font-weight:600;" x-text="idx+1"></span>
+                        </td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <div class="ava" :style="avatarColor(item.status)">
+                                    <span style="font-size:.65rem;" x-text="item.avatar"></span>
                                 </div>
                                 <div>
-                                    <p class="font-semibold text-slate-600">Tidak ada permohonan ditemukan</p>
-                                    <p class="text-sm text-slate-400 mt-1">Belum ada izin dalam kategori ini</p>
+                                    <span style="font-size:.85rem;font-weight:700;color:#1e293b;display:block;" x-text="item.santri"></span>
+                                    <span style="font-size:.72rem;color:#94a3b8;" x-text="'Kelas ' + item.kelas"></span>
                                 </div>
                             </div>
                         </td>
-                    </tr>
-                </template>
-
-                <template x-for="(item, index) in filtered" :key="item.id">
-                    <tr :class="item.status === 'Pending' ? 'bg-amber-50/30' : ''">
-
-                        {{-- No --}}
-                        <td>
-                            <span class="text-slate-400 text-sm font-medium" x-text="index + 1"></span>
+                        <td style="text-align:center;">
+                            <span style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:26px;border-radius:8px;background:#f1f5f9;color:#475569;font-size:.75rem;font-weight:800;" x-text="item.kelas"></span>
                         </td>
-
-                        {{-- Santri --}}
-                        <td>
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="avatar avatar-sm shrink-0"
-                                    :style="avatarBg(item.status)"
-                                >
-                                    <span class="text-white text-xs font-bold" x-text="item.avatar"></span>
-                                </div>
-                                <div>
-                                    <p class="font-semibold text-slate-800 text-sm" x-text="item.santri"></p>
-                                    <p class="text-xs text-slate-400">NIS: 2024<span x-text="item.id.toString().padStart(3,'0')"></span></p>
-                                </div>
-                            </div>
+                        <td style="text-align:center;">
+                            <span class="bdg" :class="jenisColor(item.jenis)" x-text="item.jenis"></span>
                         </td>
-
-                        {{-- Kelas --}}
                         <td>
-                            <span
-                                class="inline-flex items-center justify-center w-10 h-7 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold"
-                                x-text="item.kelas"
-                            ></span>
+                            <span style="font-size:.8rem;color:#475569;white-space:nowrap;" x-text="item.tanggal"></span>
                         </td>
-
-                        {{-- Jenis Izin --}}
                         <td>
-                            <span class="badge" :class="jenisColor(item.jenis)" x-text="item.jenis"></span>
+                            <span style="font-size:.8rem;color:#64748b;display:block;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" :title="item.keterangan" x-text="item.keterangan || '—'"></span>
                         </td>
-
-                        {{-- Tanggal --}}
-                        <td>
-                            <div class="flex items-center gap-1.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
-                                     fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                    <line x1="16" y1="2" x2="16" y2="6"/>
-                                    <line x1="8" y1="2" x2="8" y2="6"/>
-                                    <line x1="3" y1="10" x2="21" y2="10"/>
-                                </svg>
-                                <span class="text-sm text-slate-600 whitespace-nowrap" x-text="item.tanggal"></span>
-                            </div>
-                        </td>
-
-                        {{-- Keterangan --}}
-                        <td>
-                            <p
-                                class="text-sm text-slate-600 max-w-[200px] truncate"
-                                :title="item.keterangan"
-                                x-text="item.keterangan"
-                            ></p>
-                        </td>
-
-                        {{-- Status --}}
-                        <td>
-                            <div class="flex items-center gap-1.5">
+                        <td style="text-align:center;">
+                            <div style="display:flex;align-items:center;justify-content:center;gap:5px;">
                                 <template x-if="item.status === 'Pending'">
-                                    <span class="relative flex h-2 w-2">
-                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                    <span style="position:relative;display:inline-flex;">
+                                        <span style="position:absolute;display:inline-flex;width:100%;height:100%;border-radius:50%;background:#fbbf24;opacity:.75;animation:ping 1s cubic-bezier(0,0,.2,1) infinite;"></span>
+                                        <span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-flex;"></span>
                                     </span>
                                 </template>
-                                <span class="badge" :class="statusColor(item.status)" x-text="item.status"></span>
+                                <span class="bdg" :class="statusColor(item.status)" x-text="item.status"></span>
                             </div>
                         </td>
-
-                        {{-- Diajukan --}}
                         <td>
-                            <div class="flex flex-col gap-1">
-                                <span class="badge" :class="pengajuColor(item.diajukan)" x-text="item.diajukan"></span>
-                                <span class="text-xs text-slate-400" x-text="item.tglAjuan"></span>
-                            </div>
-                        </td>
-
-                        {{-- Aksi --}}
-                        <td>
-                            <div class="flex items-center gap-1.5">
-                                {{-- Pending actions: Setujui + Tolak --}}
+                            <div style="display:flex;align-items:center;justify-content:center;gap:6px;">
                                 <template x-if="item.status === 'Pending'">
-                                    <div class="flex items-center gap-1.5">
-                                        {{-- Setujui --}}
-                                        <button
-                                            @click="openApprove(item)"
-                                            class="btn btn-sm gap-1"
-                                            style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0;"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                                                 fill="none" stroke="currentColor" stroke-width="2.5"
-                                                 stroke-linecap="round" stroke-linejoin="round">
-                                                <polyline points="20 6 9 17 4 12"/>
+                                    <div style="display:flex;gap:5px;">
+                                        <button class="btn-approve" @click="openApprove(item)">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="20 6 9 17 4 12" />
                                             </svg>
                                             Setujui
                                         </button>
-
-                                        {{-- Tolak --}}
-                                        <button
-                                            @click="openReject(item)"
-                                            class="btn btn-sm gap-1"
-                                            style="background:#fff1f2; color:#e11d48; border:1px solid #fecdd3;"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                                                 fill="none" stroke="currentColor" stroke-width="2.5"
-                                                 stroke-linecap="round" stroke-linejoin="round">
-                                                <line x1="18" y1="6" x2="6" y2="18"/>
-                                                <line x1="6" y1="6" x2="18" y2="18"/>
+                                        <button class="btn-reject" @click="openReject(item)">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="18" y1="6" x2="6" y2="18" />
+                                                <line x1="6" y1="6" x2="18" y2="18" />
                                             </svg>
                                             Tolak
                                         </button>
                                     </div>
                                 </template>
-
-                                {{-- Non-pending: Detail button --}}
                                 <template x-if="item.status !== 'Pending'">
-                                    <button
-                                        @click="openDetail(item)"
-                                        class="btn btn-sm gap-1.5"
-                                        style="background:#f8fafc; color:#475569; border:1px solid #e2e8f0;"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                                             fill="none" stroke="currentColor" stroke-width="2.5"
-                                             stroke-linecap="round" stroke-linejoin="round">
-                                            <circle cx="11" cy="11" r="8"/>
-                                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                                        </svg>
-                                        Detail
-                                    </button>
+                                    <div style="display:flex;gap:5px;">
+                                        <button class="btn-detail" @click="openDetail(item)">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="11" cy="11" r="8" />
+                                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                            </svg>
+                                            Detail
+                                        </button>
+                                        <a :href="`/permissions/${item.id}/edit`" class="ico-btn edit" title="Edit">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                            </svg>
+                                        </a>
+                                    </div>
                                 </template>
                             </div>
                         </td>
                     </tr>
                 </template>
-
             </tbody>
         </table>
     </div>
 
-    {{-- Table Footer --}}
-    <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between flex-wrap gap-3">
-        <p class="text-sm text-slate-500">
-            Menampilkan
-            <span class="font-semibold text-slate-700" x-text="filtered.length"></span>
-            dari
-            <span class="font-semibold text-slate-700" x-text="permissions.length"></span>
-            permohonan izin
-        </p>
-        <div class="flex items-center gap-1">
-            <button class="btn btn-ghost btn-sm btn-icon opacity-40" disabled>
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="15 18 9 12 15 6"/>
-                </svg>
-            </button>
-            <button class="btn btn-primary btn-sm px-3">1</button>
-            <button class="btn btn-ghost btn-sm btn-icon opacity-40" disabled>
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="9 18 15 12 9 6"/>
-                </svg>
-            </button>
-        </div>
+    {{-- Table footer --}}
+    <div style="padding:12px 20px;border-top:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:.75rem;color:#64748b;">
+            Menampilkan <strong x-text="filtered.length" style="color:#0f172a;"></strong>
+            dari <strong x-text="permissions.length" style="color:#0f172a;"></strong> permohonan
+        </span>
     </div>
-</div>
 
-
-{{-- ═══════════════════════════════════════════════════════════
-     MODAL: DETAIL PERIZINAN
-════════════════════════════════════════════════════════════ --}}
-<div
-    x-show="detailModal"
-    x-transition:enter="transition ease-out duration-300"
-    x-transition:enter-start="opacity-0"
-    x-transition:enter-end="opacity-100"
-    x-transition:leave="transition ease-in duration-200"
-    x-transition:leave-start="opacity-100"
-    x-transition:leave-end="opacity-0"
-    class="modal-overlay"
-    @keydown.escape.window="detailModal = false"
-    @click.self="detailModal = false"
->
-    <div
-        x-show="detailModal"
-        x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 scale-95 translate-y-4"
-        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-        x-transition:leave="transition ease-in duration-200"
-        x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-        x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-        @click.stop
-        class="modal-box"
-        style="max-width:560px;"
-    >
-        {{-- Header --}}
-        <div class="modal-header">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="#475569" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="font-semibold text-slate-800">Detail Permohonan Izin</h3>
-                    <p class="text-xs text-slate-500" x-text="selectedItem ? 'ID #' + selectedItem.id.toString().padStart(4,'0') : ''"></p>
-                </div>
-            </div>
-            <button
-                @click="detailModal = false"
-                class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-            </button>
-        </div>
-
-        {{-- Body --}}
-        <div class="modal-body space-y-5" x-show="selectedItem">
-
-            {{-- Student info header --}}
-            <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                <div
-                    class="avatar avatar-lg shrink-0"
-                    :style="selectedItem ? avatarBg(selectedItem.status) : ''"
-                >
-                    <span class="text-white text-base font-bold" x-text="selectedItem ? selectedItem.avatar : ''"></span>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-lg font-bold text-slate-800" x-text="selectedItem ? selectedItem.santri : ''"></p>
-                    <p class="text-sm text-slate-500">
-                        Kelas <span class="font-semibold" x-text="selectedItem ? selectedItem.kelas : ''"></span>
-                        &bull; NIS: 2024<span x-text="selectedItem ? selectedItem.id.toString().padStart(3,'0') : ''"></span>
-                    </p>
-                </div>
-                <div>
-                    <span class="badge text-sm px-3 py-1.5" :class="selectedItem ? statusColor(selectedItem.status) : ''" x-text="selectedItem ? selectedItem.status : ''"></span>
-                </div>
-            </div>
-
-            {{-- Detail grid --}}
-            <div class="grid grid-cols-2 gap-4">
-                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1.5">Jenis Izin</p>
-                    <span class="badge text-sm" :class="selectedItem ? jenisColor(selectedItem.jenis) : ''" x-text="selectedItem ? selectedItem.jenis : ''"></span>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1.5">Tanggal</p>
-                    <p class="text-sm font-semibold text-slate-700" x-text="selectedItem ? selectedItem.tanggal : ''"></p>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1.5">Diajukan Oleh</p>
-                    <span class="badge" :class="selectedItem ? pengajuColor(selectedItem.diajukan) : ''" x-text="selectedItem ? selectedItem.diajukan : ''"></span>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1.5">Tanggal Ajuan</p>
-                    <p class="text-sm font-semibold text-slate-700" x-text="selectedItem ? selectedItem.tglAjuan : ''"></p>
-                </div>
-            </div>
-
-            {{-- Keterangan --}}
-            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                <p class="text-xs font-medium text-slate-400 uppercase tracking-wide mb-2">Keterangan / Alasan</p>
-                <p class="text-sm text-slate-700 leading-relaxed" x-text="selectedItem ? selectedItem.keterangan : ''"></p>
-            </div>
-
-            {{-- Catatan (if any) --}}
-            <template x-if="selectedItem && selectedItem.catatan">
-                <div
-                    class="p-4 rounded-xl border"
-                    :class="selectedItem.status === 'Disetujui' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'"
-                >
-                    <div class="flex items-center gap-2 mb-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                             :stroke="selectedItem.status === 'Disetujui' ? '#16a34a' : '#dc2626'"
-                             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"/>
-                            <line x1="12" y1="16" x2="12" y2="12"/>
-                            <line x1="12" y1="8" x2="12.01" y2="8"/>
+    {{-- MODAL DETAIL --}}
+    <div class="smodal-overlay" id="detailModal">
+        <div class="smodal-box" style="max-width:520px;">
+            <div class="smodal-hdr">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:36px;height:36px;border-radius:11px;background:#ede9fe;color:#7c3aed;display:flex;align-items:center;justify-content:center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
                         </svg>
-                        <p
-                            class="text-xs font-semibold uppercase tracking-wide"
-                            :class="selectedItem.status === 'Disetujui' ? 'text-green-700' : 'text-red-700'"
-                        >Catatan Admin</p>
                     </div>
-                    <p
-                        class="text-sm leading-relaxed"
-                        :class="selectedItem.status === 'Disetujui' ? 'text-green-800' : 'text-red-800'"
-                        x-text="selectedItem.catatan"
-                    ></p>
+                    <div>
+                        <div style="font-size:1rem;font-weight:800;color:#0f172a;">Detail Permohonan Izin</div>
+                        <div style="font-size:.72rem;color:#94a3b8;" id="detailId"></div>
+                    </div>
                 </div>
-            </template>
-
-        </div>
-
-        {{-- Footer --}}
-        <div class="modal-footer">
-            <button @click="detailModal = false" class="btn btn-secondary flex-1">Tutup</button>
-            <template x-if="selectedItem && selectedItem.status === 'Disetujui'">
-                <button class="btn btn-ghost btn-sm gap-1.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                    Unduh Surat
+                <button class="smodal-close" onclick="closeModal('detailModal')">✕</button>
+            </div>
+            <div class="smodal-body">
+                <div style="display:flex;align-items:center;gap:14px;padding:14px;background:#f8fafc;border-radius:14px;border:1px solid #e2e8f0;margin-bottom:16px;">
+                    <div class="ava" style="width:46px;height:46px;border-radius:13px;" id="detailAva"></div>
+                    <div>
+                        <div style="font-size:.95rem;font-weight:800;color:#0f172a;" id="detailName"></div>
+                        <div style="font-size:.75rem;color:#64748b;margin-top:2px;" id="detailSub"></div>
+                    </div>
+                    <div style="margin-left:auto;" id="detailStatusBdg"></div>
+                </div>
+                <div class="detail-grid">
+                    <div class="detail-cell">
+                        <div class="detail-cell-lbl">Jenis Izin</div>
+                        <div id="detailJenis"></div>
+                    </div>
+                    <div class="detail-cell">
+                        <div class="detail-cell-lbl">Tanggal</div>
+                        <div style="font-size:.83rem;font-weight:600;color:#334155;" id="detailTanggal"></div>
+                    </div>
+                    <div class="detail-cell">
+                        <div class="detail-cell-lbl">Diajukan</div>
+                        <div id="detailDiajukan"></div>
+                    </div>
+                    <div class="detail-cell">
+                        <div class="detail-cell-lbl">Tgl Ajuan</div>
+                        <div style="font-size:.83rem;font-weight:600;color:#334155;" id="detailTglAjuan"></div>
+                    </div>
+                </div>
+                <div style="padding:12px 14px;background:#f8fafc;border-radius:12px;border:1px solid #f1f5f9;">
+                    <div class="detail-cell-lbl" style="margin-bottom:6px;">Keterangan</div>
+                    <div style="font-size:.83rem;color:#475569;line-height:1.6;" id="detailKeterangan"></div>
+                </div>
+                <div id="detailCatatan" style="display:none;margin-top:12px;padding:12px 14px;border-radius:12px;border:1px solid;">
+                    <div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;" id="detailCatatanLbl"></div>
+                    <div style="font-size:.83rem;line-height:1.6;" id="detailCatatanText"></div>
+                </div>
+            </div>
+            <div class="smodal-ftr">
+                <button onclick="closeModal('detailModal')"
+                    style="padding:8px 18px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;font-size:.8rem;font-weight:700;color:#475569;cursor:pointer;font-family:inherit;">
+                    Tutup
                 </button>
-            </template>
+            </div>
         </div>
     </div>
-</div>
 
-
-{{-- ═══════════════════════════════════════════════════════════
-     MODAL: KONFIRMASI SETUJUI
-════════════════════════════════════════════════════════════ --}}
-<div
-    x-show="approveModal"
-    x-transition:enter="transition ease-out duration-300"
-    x-transition:enter-start="opacity-0"
-    x-transition:enter-end="opacity-100"
-    x-transition:leave="transition ease-in duration-200"
-    x-transition:leave-start="opacity-100"
-    x-transition:leave-end="opacity-0"
-    class="modal-overlay"
-    @keydown.escape.window="approveModal = false"
-    @click.self="approveModal = false"
->
-    <div
-        x-show="approveModal"
-        x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 scale-95 translate-y-4"
-        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-        x-transition:leave="transition ease-in duration-200"
-        x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-        x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-        @click.stop
-        class="modal-box"
-        style="max-width:440px;"
-    >
-        <div class="modal-body text-center py-8">
-            {{-- Success icon --}}
-            <div class="w-16 h-16 rounded-2xl bg-green-100 flex items-center justify-center mx-auto mb-5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
-                     stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                    <polyline points="22 4 12 14.01 9 11.01"/>
-                </svg>
-            </div>
-
-            <h3 class="text-xl font-bold text-slate-800 mb-2">Setujui Permohonan?</h3>
-            <p class="text-sm text-slate-500 mb-3">
-                Anda akan menyetujui permohonan izin santri:
-            </p>
-
-            {{-- Student info box --}}
-            <div class="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-200 text-left mb-5" x-show="selectedItem">
-                <div
-                    class="avatar avatar-md shrink-0"
-                    :style="selectedItem ? avatarBg(selectedItem.status) : ''"
-                >
-                    <span class="text-white text-sm font-bold" x-text="selectedItem ? selectedItem.avatar : ''"></span>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="font-bold text-slate-800 text-sm" x-text="selectedItem ? selectedItem.santri : ''"></p>
-                    <p class="text-xs text-slate-500">
-                        <span class="badge" :class="selectedItem ? jenisColor(selectedItem.jenis) : ''" x-text="selectedItem ? selectedItem.jenis : ''"></span>
-                        &nbsp;
-                        <span x-text="selectedItem ? selectedItem.tanggal : ''"></span>
-                    </p>
-                </div>
-            </div>
-
-            {{-- Optional note --}}
-            <div class="text-left">
-                <label class="form-label">Catatan Persetujuan (opsional)</label>
-                <textarea
-                    rows="2"
-                    placeholder="Tambahkan catatan untuk santri/wali…"
-                    class="form-control"
-                ></textarea>
-            </div>
-        </div>
-
-        <div class="modal-footer">
-            <button @click="approveModal = false" class="btn btn-secondary flex-1">Batal</button>
-            <button
-                @click="confirmApprove()"
-                class="btn flex-1"
-                style="background:linear-gradient(135deg,#16a34a,#15803d); color:#fff; border:none;"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                Ya, Setujui
-            </button>
-        </div>
-    </div>
-</div>
-
-
-{{-- ═══════════════════════════════════════════════════════════
-     MODAL: KONFIRMASI TOLAK
-════════════════════════════════════════════════════════════ --}}
-<div
-    x-show="rejectModal"
-    x-transition:enter="transition ease-out duration-300"
-    x-transition:enter-start="opacity-0"
-    x-transition:enter-end="opacity-100"
-    x-transition:leave="transition ease-in duration-200"
-    x-transition:leave-start="opacity-100"
-    x-transition:leave-end="opacity-0"
-    class="modal-overlay"
-    @keydown.escape.window="rejectModal = false"
-    @click.self="rejectModal = false"
->
-    <div
-        x-show="rejectModal"
-        x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 scale-95 translate-y-4"
-        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-        x-transition:leave="transition ease-in duration-200"
-        x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-        x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-        @click.stop
-        class="modal-box"
-        style="max-width:460px;"
-    >
-        <div class="modal-header">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="15" y1="9" x2="9" y2="15"/>
-                        <line x1="9" y1="9" x2="15" y2="15"/>
+    {{-- MODAL SETUJUI --}}
+    <div class="smodal-overlay" id="approveModal">
+        <div class="smodal-box" style="max-width:420px;">
+            <div class="smodal-body" style="text-align:center;padding:32px 24px 20px;">
+                <div style="width:60px;height:60px;border-radius:18px;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                        <polyline points="22 4 12 14.01 9 11.01" />
                     </svg>
                 </div>
-                <div>
-                    <h3 class="font-semibold text-slate-800">Tolak Permohonan Izin</h3>
-                    <p class="text-xs text-slate-500" x-text="selectedItem ? selectedItem.santri + ' — ' + selectedItem.jenis : ''"></p>
+                <div style="font-size:1.1rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Setujui Permohonan?</div>
+                <p style="font-size:.82rem;color:#64748b;margin-bottom:14px;">Anda akan menyetujui permohonan izin:</p>
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f0fdf4;border-radius:12px;border:1px solid #bbf7d0;text-align:left;margin-bottom:16px;">
+                    <div class="ava" style="width:40px;height:40px;border-radius:11px;" id="approveName2"></div>
+                    <div>
+                        <div style="font-size:.85rem;font-weight:700;color:#0f172a;" id="approveName"></div>
+                        <div style="font-size:.75rem;color:#64748b;" id="approveDetail"></div>
+                    </div>
                 </div>
             </div>
-            <button
-                @click="rejectModal = false"
-                class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-            </button>
+            <div class="smodal-ftr">
+                <button onclick="closeModal('approveModal')"
+                    style="padding:8px 18px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;font-size:.8rem;font-weight:700;color:#475569;cursor:pointer;font-family:inherit;">
+                    Batal
+                </button>
+                <button type="button" onclick="document.getElementById('approveForm').submit()"
+                    style="padding:8px 20px;border-radius:10px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;font-size:.8rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Ya, Setujui
+                </button>
+            </div>
         </div>
+    </div>
+    <form id="approveForm" method="POST" style="display:none;">
+        @csrf
+        <input type="hidden" name="approved_by" value="Admin">
+    </form>
 
-        <div class="modal-body space-y-4">
-            {{-- Warning --}}
-            <div class="flex items-start gap-3 p-3.5 bg-red-50 rounded-xl border border-red-200">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                     stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                     class="shrink-0 mt-0.5">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
-                <p class="text-sm text-red-700">
-                    Penolakan izin akan diberitahukan kepada santri dan wali. Pastikan Anda mengisi alasan penolakan dengan jelas.
-                </p>
+    {{-- MODAL TOLAK --}}
+    <div class="smodal-overlay" id="rejectModal">
+        <div class="smodal-box" style="max-width:460px;">
+            <div class="smodal-hdr">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:36px;height:36px;border-radius:11px;background:#fee2e2;color:#dc2626;display:flex;align-items:center;justify-content:center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="15" y1="9" x2="9" y2="15" />
+                            <line x1="9" y1="9" x2="15" y2="15" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div style="font-size:1rem;font-weight:800;color:#dc2626;">Tolak Permohonan</div>
+                        <div style="font-size:.72rem;color:#94a3b8;" id="rejectSubtitle"></div>
+                    </div>
+                </div>
+                <button class="smodal-close" onclick="closeModal('rejectModal')">✕</button>
             </div>
-
-            {{-- Request summary --}}
-            <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2" x-show="selectedItem">
-                <div class="flex items-center justify-between text-sm">
-                    <span class="text-slate-500">Santri</span>
-                    <span class="font-semibold text-slate-800" x-text="selectedItem ? selectedItem.santri : ''"></span>
+            <div class="smodal-body">
+                <div style="padding:12px 14px;background:#fff7f7;border:1px solid #fecaca;border-radius:12px;margin-bottom:14px;font-size:.8rem;color:#7f1d1d;line-height:1.6;">
+                    Penolakan akan diberitahukan ke santri dan wali. Isi alasan dengan jelas.
                 </div>
-                <div class="flex items-center justify-between text-sm">
-                    <span class="text-slate-500">Jenis</span>
-                    <span class="badge" :class="selectedItem ? jenisColor(selectedItem.jenis) : ''" x-text="selectedItem ? selectedItem.jenis : ''"></span>
-                </div>
-                <div class="flex items-center justify-between text-sm">
-                    <span class="text-slate-500">Tanggal</span>
-                    <span class="font-medium text-slate-700" x-text="selectedItem ? selectedItem.tanggal : ''"></span>
-                </div>
-            </div>
-
-            {{-- Reject reason --}}
-            <div>
-                <label class="form-label">
-                    Alasan Penolakan <span class="text-red-500">*</span>
+                <label style="display:block;font-size:.72rem;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;">
+                    Alasan Penolakan <span style="color:#e11d48;">*</span>
                 </label>
-                <textarea
-                    x-model="rejectReason"
-                    rows="3"
-                    placeholder="Tuliskan alasan penolakan yang jelas untuk santri dan wali…"
-                    class="form-control"
-                    :class="rejectReason.length === 0 ? '' : 'border-red-300'"
-                ></textarea>
-                <p class="text-xs text-slate-400 mt-1.5">Minimal 10 karakter</p>
-            </div>
-
-            {{-- Quick reason templates --}}
-            <div>
-                <p class="text-xs font-medium text-slate-500 mb-2">Pilih alasan cepat:</p>
-                <div class="flex flex-wrap gap-2">
-                    <button
-                        @click="rejectReason = 'Tidak sesuai jadwal kepulangan yang telah ditentukan pondok'"
-                        class="px-3 py-1.5 rounded-full text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 transition-all border border-slate-200"
-                    >
+                <textarea id="rejectReasonInput" rows="3"
+                    style="width:100%;padding:10px 14px;border-radius:11px;border:1.5px solid #e2e8f0;font-size:.83rem;font-family:inherit;color:#1e293b;background:#f8fafc;outline:none;resize:vertical;box-sizing:border-box;"
+                    placeholder="Tuliskan alasan penolakan..."></textarea>
+                <p style="font-size:.7rem;color:#94a3b8;margin-top:5px;">Minimal 10 karakter</p>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">
+                    <button onclick="document.getElementById('rejectReasonInput').value='Tidak sesuai jadwal kepulangan pondok'"
+                        style="padding:5px 12px;border-radius:999px;font-size:.72rem;background:#f1f5f9;border:1px solid #e2e8f0;color:#475569;cursor:pointer;font-family:inherit;">
                         Tidak sesuai jadwal
                     </button>
-                    <button
-                        @click="rejectReason = 'Dokumen pendukung tidak lengkap atau tidak valid'"
-                        class="px-3 py-1.5 rounded-full text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 transition-all border border-slate-200"
-                    >
+                    <button onclick="document.getElementById('rejectReasonInput').value='Dokumen pendukung tidak lengkap'"
+                        style="padding:5px 12px;border-radius:999px;font-size:.72rem;background:#f1f5f9;border:1px solid #e2e8f0;color:#475569;cursor:pointer;font-family:inherit;">
                         Dokumen tidak lengkap
                     </button>
-                    <button
-                        @click="rejectReason = 'Santri sedang memiliki tanggungan kegiatan pondok yang tidak dapat ditinggalkan'"
-                        class="px-3 py-1.5 rounded-full text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 transition-all border border-slate-200"
-                    >
+                    <button onclick="document.getElementById('rejectReasonInput').value='Santri memiliki kegiatan pondok yang tidak dapat ditinggalkan'"
+                        style="padding:5px 12px;border-radius:999px;font-size:.72rem;background:#f1f5f9;border:1px solid #e2e8f0;color:#475569;cursor:pointer;font-family:inherit;">
                         Ada kegiatan pondok
                     </button>
                 </div>
             </div>
-        </div>
-
-        <div class="modal-footer">
-            <button @click="rejectModal = false" class="btn btn-secondary">Batal</button>
-            <button
-                @click="confirmReject()"
-                class="btn btn-danger"
-                :disabled="rejectReason.length < 10"
-                :class="rejectReason.length < 10 ? 'opacity-50 cursor-not-allowed' : ''"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="15" y1="9" x2="9" y2="15"/>
-                    <line x1="9" y1="9" x2="15" y2="15"/>
-                </svg>
-                Tolak Izin
-            </button>
+            <div class="smodal-ftr">
+                <button onclick="closeModal('rejectModal')"
+                    style="padding:8px 18px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;font-size:.8rem;font-weight:700;color:#475569;cursor:pointer;font-family:inherit;">
+                    Batal
+                </button>
+                <button type="button" onclick="submitReject()"
+                    style="padding:8px 20px;border-radius:10px;background:#e11d48;color:#fff;font-size:.8rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="15" y1="9" x2="9" y2="15" />
+                        <line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                    Tolak Izin
+                </button>
+            </div>
         </div>
     </div>
-</div>
+    <form id="rejectForm" method="POST" style="display:none;">
+        @csrf
+        <input type="hidden" name="approved_by" value="Admin">
+        <input type="hidden" name="reason" id="rejectReasonHidden">
+    </form>
 
-
-</div>{{-- END: x-data wrapper --}}
+</div>{{-- end tcard / x-data --}}
 
 @endsection
+
+@push('scripts')
+<style>
+    @keyframes ping {
+
+        75%,
+        100% {
+            transform: scale(2);
+            opacity: 0;
+        }
+    }
+</style>
+<script>
+    // Toast
+    function showToast(type, title, msg, duration = 4000) {
+        const wrap = document.getElementById('toastWrap');
+        const icons = {
+            success: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+            error: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`
+        };
+        const t = document.createElement('div');
+        t.className = `toast ${type}`;
+        t.innerHTML = `<div class="toast-ico">${icons[type]||icons.success}</div><div><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div>`;
+        wrap.appendChild(t);
+        requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+        setTimeout(() => {
+            t.classList.remove('show');
+            setTimeout(() => t.remove(), 400);
+        }, duration);
+    }
+    (function() {
+        const w = document.getElementById('toastWrap');
+        if (!w) return;
+        if (w.dataset.success) showToast('success', 'Berhasil!', w.dataset.success);
+        if (w.dataset.error) showToast('error', 'Gagal!', w.dataset.error);
+    })();
+
+    // Export dropdown
+    function toggleExport() {
+        document.getElementById('exportMenu').classList.toggle('open');
+    }
+    document.addEventListener('click', e => {
+        if (!document.getElementById('exportDropdown').contains(e.target))
+            document.getElementById('exportMenu').classList.remove('open');
+    });
+
+    // Modal helpers
+    function openModal(id) {
+        document.getElementById(id).classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('open');
+        document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') document.querySelectorAll('.smodal-overlay.open').forEach(m => m.classList.remove('open'));
+    });
+    document.querySelectorAll('.smodal-overlay').forEach(m => m.addEventListener('click', function(e) {
+        if (e.target === this) closeModal(this.id);
+    }));
+
+    // Detail modal
+    function openDetailModal(item) {
+        const statusColors = {
+            Pending: 'background:#fef3c7;color:#b45309',
+            Disetujui: 'background:#dcfce7;color:#15803d',
+            Ditolak: 'background:#fee2e2;color:#dc2626'
+        };
+        const jenisColors = {
+            Pulang: 'background:#dbeafe;color:#1d4ed8',
+            Sakit: 'background:#fee2e2;color:#dc2626',
+            Kegiatan: 'background:#ccfbf1;color:#0f766e',
+            Keluar: 'background:#fef3c7;color:#b45309'
+        };
+        const avatarColors = {
+            Pending: 'background:linear-gradient(135deg,#d97706,#fbbf24)',
+            Disetujui: 'background:linear-gradient(135deg,#16a34a,#4ade80)',
+            Ditolak: 'background:linear-gradient(135deg,#dc2626,#f87171)'
+        };
+
+        document.getElementById('detailId').textContent = 'ID #' + String(item.id).padStart(4, '0');
+        document.getElementById('detailAva').style.cssText = (avatarColors[item.status] || 'background:linear-gradient(135deg,#7c3aed,#a78bfa)') + ';display:flex;align-items:center;justify-content:center;color:#fff;font-size:.7rem;font-weight:800;';
+        document.getElementById('detailAva').textContent = item.avatar;
+        document.getElementById('detailName').textContent = item.santri;
+        document.getElementById('detailSub').textContent = 'Kelas ' + item.kelas;
+        document.getElementById('detailStatusBdg').innerHTML = `<span style="font-size:.72rem;font-weight:700;padding:4px 12px;border-radius:999px;${statusColors[item.status]||''}">${item.status}</span>`;
+        document.getElementById('detailJenis').innerHTML = `<span style="font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:999px;${jenisColors[item.jenis]||'background:#f1f5f9;color:#475569'}">${item.jenis}</span>`;
+        document.getElementById('detailTanggal').textContent = item.tanggal;
+        document.getElementById('detailDiajukan').innerHTML = `<span style="font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:999px;background:#dbeafe;color:#1d4ed8">${item.diajukan}</span>`;
+        document.getElementById('detailTglAjuan').textContent = item.tglAjuan;
+        document.getElementById('detailKeterangan').textContent = item.keterangan || '—';
+
+        const catatanEl = document.getElementById('detailCatatan');
+        if (item.catatan) {
+            catatanEl.style.display = 'block';
+            catatanEl.style.borderColor = item.status === 'Disetujui' ? '#bbf7d0' : '#fecaca';
+            catatanEl.style.background = item.status === 'Disetujui' ? '#f0fdf4' : '#fff7f7';
+            document.getElementById('detailCatatanLbl').style.color = item.status === 'Disetujui' ? '#15803d' : '#dc2626';
+            document.getElementById('detailCatatanLbl').textContent = 'Catatan Admin';
+            document.getElementById('detailCatatanText').style.color = item.status === 'Disetujui' ? '#166534' : '#7f1d1d';
+            document.getElementById('detailCatatanText').textContent = item.catatan;
+        } else {
+            catatanEl.style.display = 'none';
+        }
+        openModal('detailModal');
+    }
+
+    // Approve modal
+    let approveTargetId = null;
+
+    function openApproveModal(item) {
+        approveTargetId = item.id;
+        const avatarColors = {
+            Pending: 'background:linear-gradient(135deg,#d97706,#fbbf24)',
+            Disetujui: 'background:linear-gradient(135deg,#16a34a,#4ade80)',
+            Ditolak: 'background:linear-gradient(135deg,#dc2626,#f87171)'
+        };
+        document.getElementById('approveName').textContent = item.santri;
+        document.getElementById('approveDetail').textContent = item.jenis + ' · ' + item.tanggal;
+        const ava2 = document.getElementById('approveName2');
+        ava2.style.cssText = (avatarColors[item.status] || 'background:#7c3aed') + ';display:flex;align-items:center;justify-content:center;color:#fff;font-size:.65rem;font-weight:800;';
+        ava2.textContent = item.avatar;
+        document.getElementById('approveForm').action = '/permissions/' + item.id + '/approve';
+        openModal('approveModal');
+    }
+
+    // Reject modal
+    let rejectTargetId = null;
+
+    function openRejectModal(item) {
+        rejectTargetId = item.id;
+        document.getElementById('rejectSubtitle').textContent = item.santri + ' — ' + item.jenis;
+        document.getElementById('rejectReasonInput').value = '';
+        document.getElementById('rejectForm').action = '/permissions/' + item.id + '/reject';
+        openModal('rejectModal');
+    }
+
+    function submitReject() {
+        const reason = document.getElementById('rejectReasonInput').value;
+        if (reason.length < 10) {
+            alert('Alasan minimal 10 karakter');
+            return;
+        }
+        document.getElementById('rejectReasonHidden').value = reason;
+        document.getElementById('rejectForm').submit();
+    }
+</script>
+@endpush
