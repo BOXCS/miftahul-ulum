@@ -132,4 +132,29 @@ class StudentController extends Controller
             ->route("students.index")
             ->with("success", "Data santri berhasil dihapus.");
     }
+
+    public function updateFingerprint(
+        Request $request,
+        int $id,
+    ): \Illuminate\Http\JsonResponse {
+        $student = Student::findOrFail($id);
+
+        $validated = $request->validate([
+            "fingerprint_template" => "required|string",
+            "fingerprint_quality" => "required|integer|min:0|max:100",
+        ]);
+
+        $student->update([
+            "fingerprint_template" => encrypt(
+                $validated["fingerprint_template"],
+            ),
+            "fingerprint_quality" => $validated["fingerprint_quality"],
+            "scanned_at" => now(),
+        ]);
+
+        return response()->json([
+            "success" => true,
+            "message" => "Data sidik jari berhasil disimpan.",
+        ]);
+    }
 }
