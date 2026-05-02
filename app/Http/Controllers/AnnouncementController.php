@@ -69,4 +69,41 @@ class AnnouncementController extends Controller
         return redirect()->route('announcements.index')
             ->with('success', 'Pengumuman berhasil dihapus.');
     }
+    public function create(): \Illuminate\View\View
+    {
+        return view('announcements.create');
+    }
+
+    public function edit(int $id): \Illuminate\View\View
+    {
+        $announcement = Announcement::findOrFail($id);
+        return view('announcements.edit', compact('announcement'));
+    }
+
+    public function update(Request $request, int $id): \Illuminate\Http\RedirectResponse
+    {
+        $announcement = Announcement::findOrFail($id);
+
+        $validated = $request->validate([
+            'judul'    => 'required|string|max:255',
+            'konten'   => 'required|string',
+            'kategori' => 'required|in:umum,kegiatan,akademik,darurat',
+        ]);
+
+        $published = $request->has('publish');
+        $validated['is_published'] = $published;
+
+        if ($published && !$announcement->is_published) {
+            // Baru dipublish sekarang
+            $validated['published_at'] = now();
+        } elseif (!$published) {
+            // Dikembalikan ke draft
+            $validated['published_at'] = null;
+        }
+
+        $announcement->update($validated);
+
+        return redirect()->route('announcements.index')
+            ->with('success', 'Pengumuman berhasil diperbarui.');
+    }
 }

@@ -64,6 +64,13 @@ Route::get("/attendance/report", [AttendanceController::class, "report"])->name(
     "attendance.report",
 );
 
+Route::get('/attendance/create', [AttendanceController::class, 'create'])->name(
+    'attendance.create'
+);
+Route::get('/attendance/{student}/edit', [AttendanceController::class, 'edit'])->name(
+    'attendance.edit'
+);
+
 // Chat
 Route::get("/chat", [ChatController::class, "index"])->name("chat.index");
 Route::get("/chat/{parentId}", [ChatController::class, "show"])->name(
@@ -74,24 +81,20 @@ Route::post("/chat/{parentId}", [ChatController::class, "send"])->name(
 );
 
 // Announcements
-Route::get("/announcements", [AnnouncementController::class, "index"])->name(
-    "announcements.index",
-);
-Route::post("/announcements", [AnnouncementController::class, "store"])->name(
-    "announcements.store",
-);
-Route::delete("/announcements/{id}", [
-    AnnouncementController::class,
-    "destroy",
-])->name("announcements.destroy");
+Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
+Route::get('/announcements/create', [AnnouncementController::class, 'create'])->name('announcements.create');
+Route::post('/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
+Route::get('/announcements/{id}/edit', [AnnouncementController::class, 'edit'])->name('announcements.edit');
+Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])->name('announcements.update');
+Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy'])->name('announcements.destroy');
 
 // FAQs
-Route::get("/faqs", [FaqController::class, "index"])->name("faqs.index");
-Route::post("/faqs", [FaqController::class, "store"])->name("faqs.store");
-Route::put("/faqs/{id}", [FaqController::class, "update"])->name("faqs.update");
-Route::delete("/faqs/{id}", [FaqController::class, "destroy"])->name(
-    "faqs.destroy",
-);
+Route::get('/faqs',           [FaqController::class, 'index'])->name('faqs.index');
+Route::get('/faqs/create',    [FaqController::class, 'create'])->name('faqs.create');
+Route::post('/faqs',          [FaqController::class, 'store'])->name('faqs.store');
+Route::get('/faqs/{id}/edit', [FaqController::class, 'edit'])->name('faqs.edit');
+Route::put('/faqs/{id}',      [FaqController::class, 'update'])->name('faqs.update');
+Route::delete('/faqs/{id}',   [FaqController::class, 'destroy'])->name('faqs.destroy');
 
 // Permissions / Izin
 Route::get("/permissions", [PermissionController::class, "index"])->name(

@@ -12,39 +12,58 @@ class AttendanceController extends Controller
 {
     public function index(Request $request)
     {
-        $today = $request->input("tanggal", Carbon::today()->toDateString());
-        $waktu_shalat = $request->input("waktu_shalat", "Subuh");
+        $today        = Carbon::parse($request->input('tanggal', Carbon::today()))->toDateString();
+        $waktu_shalat = $request->input('waktu_shalat', 'Subuh');
 
-        $students = Student::where("status", "aktif")->get();
+        $students = Student::where('status', 'aktif')->get();
 
-        $attendances = Attendance::where("tanggal", $today)
-            ->where("waktu_shalat", $waktu_shalat)
-            ->get()
-            ->keyBy("student_id");
+        // Semua absensi hari ini (semua waktu shalat)
+        $rawAttendances = Attendance::whereDate('tanggal', $today)->get();
+
+        // Untuk stat cards — tetap filter per waktu yang aktif
+        $attendances = $rawAttendances->where('waktu_shalat', $waktu_shalat)->keyBy('student_id');
+
+        // Untuk tabel 5 kolom — format: ['studentId_Subuh' => att, ...]
+        $allAttendances = [];
+        foreach ($rawAttendances as $att) {
+            $key = $att->student_id . '_' . $att->waktu_shalat;
+            $allAttendances[$key] = [
+                'status'     => $att->status,
+                'keterangan' => $att->keterangan,
+                'jam_masuk'  => $att->jam_masuk,
+            ];
+        }
 
         $stats = [
-            "hadir" => $attendances->where("status", "hadir")->count(),
-            "terlambat" => $attendances->where("status", "terlambat")->count(),
-            "izin" => $attendances->where("status", "izin")->count(),
-            "sakit" => $attendances->where("status", "sakit")->count(),
-            "alpha" => $students->count() - $attendances->count(),
+            'hadir'    => $attendances->where('status', 'hadir')->count(),
+            'terlambat' => $attendances->where('status', 'terlambat')->count(),
+            'izin'     => $attendances->where('status', 'izin')->count(),
+            'sakit'    => $attendances->where('status', 'sakit')->count(),
+            'alpha'    => $attendances->where('status', 'alpha')->count()
+                + ($students->count() - $attendances->count()),
         ];
 
-        $prayers = ["Subuh", "Dzuhur", "Ashar", "Maghrib", "Isya"];
+        $prayers = ['Subuh', 'Dzuhur', 'Ashar', 'Maghrib', 'Isya'];
 
-        return view(
-            "attendance.index",
-            compact(
-                "students",
-                "attendances",
-                "today",
-                "waktu_shalat",
-                "stats",
-                "prayers",
-            ),
-        );
+        return view('attendance.index', compact(
+            'students',
+            'attendances',
+            'allAttendances',
+            'today',
+            'waktu_shalat',
+            'stats',
+            'prayers'
+        ));
     }
+    public function create(Request $request)
+    {
+        $today        = Carbon::parse($request->input('tanggal', Carbon::today()))->toDateString();
+        $waktu_shalat = $request->input('waktu_shalat', 'Subuh');
+        $students     = Student::where('status', 'aktif')->orderBy('name')->get();
+        $prayers      = ['Subuh', 'Dzuhur', 'Ashar', 'Maghrib', 'Isya'];
 
+        return view('attendance.create', compact('students', 'today', 'waktu_shalat', 'prayers'));
+    }
     public function report(Request $request)
     {
         $bulan = $request->input("bulan", date("m"));
@@ -92,9 +111,9 @@ class AttendanceController extends Controller
         $summary = [
             "total_hari_efektif" => Attendance::distinct("tanggal")->count(),
             "rata_kehadiran" =>
-                $totalEntries > 0
-                    ? round(($totalHadir / $totalEntries) * 100, 1)
-                    : 0,
+            $totalEntries > 0
+                ? round(($totalHadir / $totalEntries) * 100, 1)
+                : 0,
             "total_santri" => Student::where("status", "aktif")->count(),
         ];
 
@@ -112,25 +131,41 @@ class AttendanceController extends Controller
             "attendances" => "required|array",
         ]);
 
-        $tanggal = Carbon::parse($request->tanggal)->toDateString();
+        $tanggalView = Carbon::parse($request->tanggal)->toDateString();
+        $tanggalDb = Carbon::parse($request->tanggal)->startOfDay();
 
         foreach ($request->attendances as $student_id => $data) {
-            Attendance::updateOrCreate(
-                [
-                    "student_id" => $student_id,
-                    "tanggal" => $tanggal,
-                    "waktu_shalat" => $request->waktu_shalat,
-                ],
-                [
-                    "status" => $data["status"],
-                    "keterangan" => $data["keterangan"] ?? null,
-                    "jam_masuk" => $data["status"] == "hadir" ? now() : null,
-                ],
-            );
+            $status = $data["status"] ?? "alpha";
+
+            $attendance = Attendance::where("student_id", $student_id)
+                ->whereDate("tanggal", $tanggalView)
+                ->where("waktu_shalat", $request->waktu_shalat)
+                ->first();
+
+            if (!$attendance) {
+                $attendance = new Attendance();
+                $attendance->student_id = $student_id;
+                $attendance->tanggal = $tanggalDb;
+                $attendance->waktu_shalat = $request->waktu_shalat;
+            }
+
+            $attendance->status = $status;
+            $attendance->keterangan = $data["keterangan"] ?? null;
+
+            if (in_array($status, ["hadir", "terlambat"])) {
+                $attendance->jam_masuk = $attendance->jam_masuk ?? now();
+            } else {
+                $attendance->jam_masuk = null;
+            }
+
+            $attendance->save();
         }
 
         return redirect()
-            ->back()
+            ->route("attendance.index", [
+                "tanggal" => $tanggalView,
+                "waktu_shalat" => $request->waktu_shalat,
+            ])
             ->with("success", "Data presensi berhasil disimpan.");
     }
 }
