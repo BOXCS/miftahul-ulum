@@ -13,6 +13,10 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StaffController;
 
+Route::get('/landing', function () {
+    return view('welcome');
+});
+
 // Login
 Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate'])->name('login.post');
