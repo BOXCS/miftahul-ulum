@@ -168,4 +168,49 @@ class AttendanceController extends Controller
             ])
             ->with("success", "Data presensi berhasil disimpan.");
     }
+
+    public function verifyFingerprint(Request $request)
+    {
+        $request->validate([
+            "fingerprint_template" => "required|string",
+        ]);
+
+        $inputTemplate = $request->input("fingerprint_template");
+
+        // Dalam implementasi nyata, matching 1:N sebaiknya dilakukan
+        // menggunakan SDK dari perangkat fingerprint atau algoritma biometrik.
+        // Simulasi ini membandingkan hasil dekripsi template.
+        $students = Student::whereNotNull("fingerprint_template")
+            ->where("status", "aktif")
+            ->get();
+
+        foreach ($students as $student) {
+            try {
+                $savedTemplate = decrypt($student->fingerprint_template);
+                // Matching sederhana untuk keperluan simulasi
+                if ($savedTemplate === $inputTemplate) {
+                    return response()->json([
+                        "success" => true,
+                        "student" => [
+                            "id" => $student->id,
+                            "name" => $student->name,
+                            "nis" => $student->nis,
+                            "class" => $student->class,
+                        ],
+                        "message" => "Verifikasi berhasil.",
+                    ]);
+                }
+            } catch (\Exception $e) {
+                continue;
+            }
+        }
+
+        return response()->json(
+            [
+                "success" => false,
+                "message" => "Sidik jari tidak dikenali.",
+            ],
+            404,
+        );
+    }
 }

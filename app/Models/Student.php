@@ -19,12 +19,16 @@ class Student extends Model
         "address",
         "status",
         "foto",
+        "fingerprint_template",
+        "fingerprint_quality",
+        "scanned_at",
     ];
 
     protected $casts = [
         "tanggal_lahir" => "date",
         "created_at" => "datetime",
         "updated_at" => "datetime",
+        "scanned_at" => "datetime",
     ];
 
     public function parent()
