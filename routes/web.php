@@ -10,6 +10,10 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\PermissionController;
 
+// Landing Page
+Route::get('/landing', function () {
+    return view('landing');
+})->name('landing');
 // Dashboard
 Route::get("/", [DashboardController::class, "index"])->name("dashboard");
 
