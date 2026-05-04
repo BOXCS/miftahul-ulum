@@ -13,9 +13,12 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StaffController;
 
+// Landing Page
 Route::get('/landing', function () {
-    return view('welcome');
-});
+    return view('landing');
+})->name('landing');
+// Dashboard
+Route::get("/", [DashboardController::class, "index"])->name("dashboard");
 
 // Login
 Route::get('/login', [AuthController::class, 'login'])->name('login');
@@ -91,5 +94,4 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
     Route::put('/staff/{id}', [StaffController::class, 'update'])->name('staff.update');
     Route::delete('/staff/{id}', [StaffController::class, 'destroy'])->name('staff.destroy');
-
 });
