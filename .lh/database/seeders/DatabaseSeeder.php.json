@@ -3,11 +3,15 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 0,
+            "activePatchIndex": 1,
             "patches": [
                 {
                     "date": 1776994471837,
                     "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1777744058763,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -18,8 +18,9 @@\n         // User::factory(10)->create();\n         $this->call([\n             DemoDataSeeder::class,\n             ParentUserSeeder::class,\n+            StaffSeeder::class,\n         ]);\n \n         User::factory()->create([\n             'name' => 'Test User',\n"
                 }
             ],
             "date": 1776994471837,
