@@ -10,7 +10,15 @@ class ChatController extends Controller
 {
     public function index(Request $request)
     {
-        $parents = ParentModel::with("students")->get();
+
+        // Ambil hanya orang tua yang pernah chat, urutkan berdasarkan waktu chat terakhir
+        $parents = ParentModel::whereHas('messages')
+            ->with('students')
+            ->get()
+            ->sortByDesc(function($p) {
+                return optional($p->messages()->latest()->first())->created_at;
+            })
+            ->values();
 
         $parentsArray = $parents
             ->map(function ($p) {
@@ -44,6 +52,21 @@ class ChatController extends Controller
         $total_unread = array_sum(array_column($parentsArray, "unread"));
         $activeParentId = $request->query("active");
 
+        // Ambil semua orang tua (untuk modal pesan baru)
+        $allParents = ParentModel::with('students')
+            ->get()
+            ->map(function ($p) {
+                $studentNames = $p->students->pluck("name")->implode(", ");
+                $studentClass = $p->students->first()?->class ?? "-";
+                return [
+                    "id" => $p->id,
+                    "name" => $p->name,
+                    "child" => $studentNames ?: "N/A",
+                    "kelas" => $studentClass,
+                ];
+            })
+            ->toArray();
+
         $messages = [];
         $activeParent = null;
 
@@ -74,6 +97,7 @@ class ChatController extends Controller
                 "activeParent",
                 "activeParentId",
                 "messages",
+                "allParents",
             ),
         );
     }
