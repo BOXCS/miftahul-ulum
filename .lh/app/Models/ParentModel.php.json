@@ -1,0 +1,18 @@
+{
+    "sourceFile": "app/Models/ParentModel.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1778147734968,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1778147734968,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace App\\Models;\n\nuse Illuminate\\Database\\Eloquent\\Model;\n\nclass ParentModel extends Model\n{\n    protected $table = \"parents\";\n\n    protected $fillable = [\n        \"user_id\",\n        \"name\",\n        \"relationship\",\n        \"phone\",\n        \"email\",\n        \"address\",\n        \"password\",  // Menambahkan password ke $fillable\n        \"role\",      // Menambahkan role ke $fillable\n    ];\n\n    // Relasi ke User\n    public function user()\n    {\n        return $this->belongsTo(User::class);\n    }\n\n    // Relasi ke Students\n    public function students()\n    {\n        return $this->hasMany(Student::class, \"parent_id\");\n    }\n\n    // Relasi ke ChatMessage\n    public function messages()\n    {\n        return $this->hasMany(ChatMessage::class, \"parent_id\");\n    }\n}"
+        }
+    ]
+}

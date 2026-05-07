@@ -17,32 +17,33 @@ class ApiController extends Controller
 {
     public function login(Request $request)
     {
+        // Validasi input
         $credentials = $request->validate([
             "email" => "required|email",
             "password" => "required",
         ]);
 
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-            $parent = ParentModel::where("user_id", $user->id)->first();
+        // Cari Parent berdasarkan email
+        $parent = ParentModel::where("email", $credentials["email"])->first();
 
-            if ($parent) {
-                return response()->json([
-                    "success" => true,
-                    "token" => "dummy-token-" . $user->id,
-                    "akun" => [
-                        "id_akun" => $parent->id,
-                        "email" => $user->email,
-                        "username" => $user->name,
-                        "hak_akses" => "orang_tua",
-                    ],
-                ]);
-            }
+        if ($parent && Hash::check($credentials["password"], $parent->password)) {
+            // Jika password cocok, buat token atau responkan data
+            return response()->json([
+                "success" => true,
+                "token" => "dummy-token-" . $parent->id, // Atau menggunakan JWT token jika perlu
+                "akun" => [
+                    "id_akun" => $parent->id,
+                    "email" => $parent->email,
+                    "username" => $parent->name,
+                    "hak_akses" => "orang_tua",
+                ],
+            ]);
         }
 
+        // Jika login gagal
         return response()->json(
             ["success" => false, "message" => "Email atau password salah."],
-            401,
+            401
         );
     }
 
