@@ -37,7 +37,7 @@ class ParentController extends Controller
             "phone" => "required|string|max:20",
             "email" => "nullable|email|max:255",
             "address" => "required|string",
-            "password" => "required|string|min:8",
+            "password" => "required|string|min:8|confirmed",
         ]);
 
         $validated["password"] = Hash::make($validated["password"]);
@@ -70,7 +70,7 @@ class ParentController extends Controller
             "phone" => "required|string|max:20",
             "email" => "nullable|email|max:255",
             "address" => "required|string",
-            "password" => "nullable|string|min:8",
+            "password" => "nullable|string|min:8|confirmed",
         ]);
 
         if (!empty($validated["password"])) {
