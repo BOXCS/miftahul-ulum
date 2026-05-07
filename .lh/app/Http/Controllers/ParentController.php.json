@@ -1,0 +1,18 @@
+{
+    "sourceFile": "app/Http/Controllers/ParentController.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1778146579391,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1778146579391,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace App\\Http\\Controllers;\n\nuse App\\Models\\ParentModel;\nuse App\\Models\\Student;\nuse Illuminate\\Http\\Request;\nuse Illuminate\\Support\\Facades\\Hash;\n\nclass ParentController extends Controller\n{\n    public function index(): \\Illuminate\\View\\View\n    {\n        $parents = ParentModel::with(\"students\")->get();\n\n        $stats = [\n            \"total\" => ParentModel::count(),\n            \"terhubung\" => Student::whereNotNull(\"parent_id\")\n                ->distinct(\"parent_id\")\n                ->count(),\n        ];\n\n        return view(\"parents.index\", compact(\"parents\", \"stats\"));\n    }\n\n    public function create(): \\Illuminate\\View\\View\n    {\n        $hubunganOptions = [\"ayah\", \"ibu\", \"wali\"];\n        return view(\"parents.create\", compact(\"hubunganOptions\"));\n    }\n\n    public function store(Request $request): \\Illuminate\\Http\\RedirectResponse\n    {\n        $validated = $request->validate([\n            \"name\" => \"required|string|max:255\",\n            \"relationship\" => \"required|in:ayah,ibu,wali\",\n            \"phone\" => \"required|string|max:20\",\n            \"email\" => \"nullable|email|max:255\",\n            \"address\" => \"required|string\",\n            \"password\" => \"required|string|min:8\",\n        ]);\n\n        $validated[\"password\"] = Hash::make($validated[\"password\"]);\n        $validated[\"role\"] = \"ortu\";\n\n        ParentModel::create($validated);\n\n        return redirect()\n            ->route(\"parents.index\")\n            ->with(\"success\", \"Data wali santri berhasil ditambahkan.\");\n    }\n\n    public function edit(int $id): \\Illuminate\\View\\View\n    {\n        $parent = ParentModel::findOrFail($id);\n        $hubunganOptions = [\"ayah\", \"ibu\", \"wali\"];\n\n        return view(\"parents.edit\", compact(\"parent\", \"hubunganOptions\"));\n    }\n\n    public function update(\n        Request $request,\n        int $id,\n    ): \\Illuminate\\Http\\RedirectResponse {\n        $parent = ParentModel::findOrFail($id);\n\n        $validated = $request->validate([\n            \"name\" => \"required|string|max:255\",\n            \"relationship\" => \"required|in:ayah,ibu,wali\",\n            \"phone\" => \"required|string|max:20\",\n            \"email\" => \"nullable|email|max:255\",\n            \"address\" => \"required|string\",\n            \"password\" => \"nullable|string|min:8\",\n        ]);\n\n        if (!empty($validated[\"password\"])) {\n            $validated[\"password\"] = Hash::make($validated[\"password\"]);\n        } else {\n            unset($validated[\"password\"]);\n        }\n\n        $validated[\"role\"] = \"ortu\";\n\n        $parent->update($validated);\n\n        return redirect()\n            ->route(\"parents.index\")\n            ->with(\"success\", \"Data wali santri berhasil diperbarui.\");\n    }\n\n    public function destroy(int $id): \\Illuminate\\Http\\RedirectResponse\n    {\n        $parent = ParentModel::findOrFail($id);\n        $parent->delete();\n\n        return redirect()\n            ->route(\"parents.index\")\n            ->with(\"success\", \"Data wali santri berhasil dihapus.\");\n    }\n}\n"
+        }
+    ]
+}

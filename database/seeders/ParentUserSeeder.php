@@ -38,7 +38,7 @@ class ParentUserSeeder extends Seeder
             $user = User::create([
                 "name" => $item["name"],
                 "email" => $item["email"],
-                "password" => Hash::make("password123"),
+                "password" => Hash::make("password123"), // Default password
             ]);
 
             // Create Parent entry linked to User
@@ -49,6 +49,8 @@ class ParentUserSeeder extends Seeder
                 "phone" => $item["phone"],
                 "relationship" => $item["relationship"],
                 "address" => $item["address"],
+                "password" => Hash::make("password123"), // Default password for Parent
+                "role" => "ortu", // Explicitly set the role
             ]);
 
             // Create a dummy student for each parent so they have data
@@ -56,9 +58,8 @@ class ParentUserSeeder extends Seeder
                 "parent_id" => $parent->id,
                 "name" => "Ananda " . $item["name"],
                 "nis" => "NIS" . rand(1000, 9999),
-                "gender" =>
-                    $item["relationship"] == "ayah" ? "Laki-laki" : "Perempuan",
-                "tanggal_lahir" => "2015-05-15",
+                "gender" => $item["relationship"] == "ayah" ? "Laki-laki" : "Perempuan",
+                "tanggal_lahir" => "2015-05-15", // Date of birth
                 "class" => "7A",
                 "status" => "aktif",
                 "tahun_angkatan" => "2024",
