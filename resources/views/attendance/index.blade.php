@@ -572,17 +572,6 @@
                     </svg>
                     Scan Absensi
                 </button>
-                <form action="{{ route('attendance.index') }}" method="GET" class="flex items-center gap-2">
-                    <input type="date" name="tanggal" x-model="tanggal" class="form-control form-control-sm"
-                        onchange="this.form.submit()">
-                    <select name="waktu_shalat" x-model="waktu_shalat" class="form-select form-select-sm"
-                        onchange="this.form.submit()">
-                        @foreach ($prayers as $p)
-                            <option value="{{ $p }}" {{ $waktu_shalat == $p ? 'selected' : '' }}>
-                                {{ $p }}</option>
-                        @endforeach
-                    </select>
-                </form>
             </div>
         </div>
 
