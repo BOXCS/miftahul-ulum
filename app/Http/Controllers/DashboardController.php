@@ -48,7 +48,7 @@ class DashboardController extends Controller
             function () use ($today) {
                 try {
                     // Default to Jakarta (ID 1301 for MyQuran or search by city)
-                    $response = Http::get(
+                    $response = Http::withoutVerifying()->get(
                         "https://api.myquran.com/v2/sholat/jadwal/1301/" .
                             date("Y/m/d"),
                     );
