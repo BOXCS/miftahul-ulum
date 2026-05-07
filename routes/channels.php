@@ -11,3 +11,4 @@ Broadcast::channel("chat.{parentId}", function ($user, $parentId) {
     // In production, check if user is admin or the parent.
     return true;
 });
+

@@ -545,7 +545,11 @@
 <div
     class="chat-layout"
     x-data="{
-        activeChat: @js($activeParentId ?? 1),
+        activeChat: (() => {
+            const urlParam = new URLSearchParams(window.location.search).get('active');
+            return urlParam ? parseInt(urlParam) : @js($activeParentId ?? null);
+        })(),
+        isSending: false,
         message: '',
         searchQuery: '',
         conversations: @js($parentsArray),
@@ -599,22 +603,106 @@
             this.attachedFile = null;
             document.getElementById('fileInput').value = '';
         },
-        sendMessage() {
+        async switchChat(id) {
+            if (this.activeChat === id) return;
+            this.activeChat = id;
+            window.history.pushState({}, '', `/chat?active=${id}`);
+            await this.fetchMessages(id);
+        },
+        async fetchMessages(parentId) {
+            try {
+                const res = await fetch(`/chat/messages/${parentId}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? ''
+                    }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    this.messages = data.messages ?? [];
+                    if (data.activeParent) this.activeParent = data.activeParent;
+                    this.scrollToBottom();
+                    this.listenForMessages();
+                }
+            } catch(e) {
+                console.error('Failed to fetch messages', e);
+            }
+        },
+        async sendMessage() {
             if (!this.message.trim() && !this.attachedFile) return;
-            document.getElementById('messageForm').action = `/chat/${this.activeChat}`;
-            document.getElementById('messageForm').submit();
+            if (this.isSending) return;
+            this.isSending = true;
+
+            const pesan = this.message;
+            const csrf = document.querySelector('meta[name=csrf-token]')?.content ?? '';
+
+            // Optimistic update — tampilkan langsung di UI
+            const tempMsg = {
+                id: 'temp_' + Date.now(),
+                pesan: pesan,
+                is_from_admin: true,
+                time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                is_read: true
+            };
+            this.messages.push(tempMsg);
+            this.message = '';
+            this.$nextTick(() => {
+                const ta = document.getElementById('msgTextarea');
+                if (ta) { ta.style.height = 'auto'; }
+                this.scrollToBottom();
+            });
+
+            try {
+                const formData = new FormData();
+                formData.append('pesan', pesan);
+                formData.append('_token', csrf);
+
+                const res = await fetch(`/chat/${this.activeChat}`, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    body: formData
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    // Ganti temp msg dengan data asli dari server
+                    const idx = this.messages.findIndex(m => m.id === tempMsg.id);
+                    if (idx !== -1) this.messages.splice(idx, 1, data.message);
+                } else {
+                    // Gagal — hapus optimistic msg
+                    this.messages = this.messages.filter(m => m.id !== tempMsg.id);
+                    this.message = pesan;
+                    console.error('Gagal mengirim pesan');
+                }
+            } catch(e) {
+                this.messages = this.messages.filter(m => m.id !== tempMsg.id);
+                this.message = pesan;
+                console.error('Error kirim pesan:', e);
+            } finally {
+                this.isSending = false;
+            }
         },
         listenForMessages() {
-            if (!this.activeChat) return;
+            if (!this.activeChat || !window.Echo) return;
             window.Echo.leave(`chat.${this.activeChat}`);
             window.Echo.private(`chat.${this.activeChat}`)
-                .listen('MessageSent', (e) => {
-                    this.messages.push({ id: e.id, pesan: e.pesan, is_from_admin: e.is_from_admin, time: e.time });
-                    this.scrollToBottom();
+                .listen('.MessageSent', (e) => {
+                    // Hindari duplikat jika pesan sudah ada (dari optimistic update)
+                    const exists = this.messages.some(m => m.id === e.id);
+                    if (!exists) {
+                        this.messages.push({
+                            id: e.id,
+                            pesan: e.pesan,
+                            is_from_admin: e.is_from_admin,
+                            time: e.time
+                        });
+                        this.scrollToBottom();
+                    }
                 });
         }
     }"
-    x-init="scrollToBottom(); $watch('activeChat', () => listenForMessages()); listenForMessages();"
+    x-init="scrollToBottom(); listenForMessages(); $watch('activeChat', val => { if(val) listenForMessages(); });"
     @click.outside="showEmoji = false"
 >
 
@@ -643,10 +731,9 @@
         {{-- List --}}
         <div class="chat-list-scroll">
             <template x-for="conv in filtered" :key="conv.id">
-                <div
-                    class="conv-item"
+                <div class="conv-item"
                     :class="{ 'active': activeChat === conv.id }"
-                    @click="window.location.href = `/chat?active=${conv.id}`"
+                    @click="switchChat(conv.id)"
                 >
                     <div class="conv-avatar-wrap">
                         <div class="conv-avatar" :class="conv.av" x-text="conv.initials"></div>
@@ -779,15 +866,7 @@
                     </button>
 
                     <div class="msg-input-box">
-                        <textarea
-                            id="msgTextarea"
-                            name="pesan"
-                            x-model="message"
-                            @input="autoResize($el)"
-                            @keydown.enter.prevent.exact="sendMessage()"
-                            placeholder="Ketik pesan…"
-                            rows="1"
-                        ></textarea>
+                        <textarea id="msgTextarea" name="pesan" x-model="message" @input="autoResize($el)" @keydown.enter.prevent.exact="sendMessage()" placeholder="Ketik pesan…" rows="1"></textarea>
                     </div>
                 </form>
 
