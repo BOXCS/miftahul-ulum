@@ -29,12 +29,23 @@ class StaffController extends Controller
     {
         $this->authorizeSuperAdmin();
 
+        $messages = [
+            'password.confirmed' => 'Password dan Konfirmasi Password tidak cocok!',
+            'password.min'       => 'Password terlalu pendek, minimal 8 karakter.',
+        ];
+
+        // Cek apakah email sudah terdaftar (agar muncul pop-up error spesifik)
+        $existingEmail = User::where('email', $request->email)->first();
+        if ($existingEmail) {
+            return back()->with('error', 'Gagal menambahkan! Email tersebut sudah terdaftar di sistem.');
+        }
+
         $request->validate([
             'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
+            'email'    => 'required|email',
             'password' => 'required|string|min:8|confirmed',
             'role'     => 'required|in:superadmin,admin',
-        ]);
+        ], $messages);
 
         User::create([
             'name'     => $request->name,
@@ -55,23 +66,33 @@ class StaffController extends Controller
 
         // Superadmin tidak boleh mengubah role dirinya sendiri
         if ($user->id === Auth::id()) {
-            return back()->withErrors(['error' => 'Tidak dapat mengubah data akun sendiri di sini. Gunakan halaman Profil.']);
+            return back()->with('error', 'Tidak dapat mengubah data akun sendiri di sini. Gunakan halaman Profil.');
         }
 
-        $request->validate([
-            'name'  => 'required|string|max:255',
-            'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
-            'role'  => 'required|in:superadmin,admin',
-        ]);
-
-        $user->name  = $request->name;
-        $user->email = $request->email;
-        $user->role  = $request->role;
-
-        if ($request->filled('password')) {
-            $request->validate(['password' => 'min:8|confirmed']);
-            $user->password = bcrypt($request->password);
+        // Cek apakah email sudah terdaftar pada user lain
+        $existingEmail = User::where('email', $request->email)->where('id', '!=', $user->id)->first();
+        if ($existingEmail) {
+            return back()->with('error', 'Gagal memperbarui! Email tersebut sudah digunakan oleh staff lain.');
         }
+
+        $rules = [
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email',
+            'role'     => 'required|in:superadmin,admin',
+            'password' => 'required|string|min:8|confirmed',
+        ];
+
+        $messages = [
+            'password.confirmed' => 'Password Baru dan Konfirmasi Password tidak cocok!',
+            'password.min'       => 'Password Baru terlalu pendek, minimal 8 karakter.',
+        ];
+
+        $request->validate($rules, $messages);
+
+        $user->name     = $request->name;
+        $user->email    = $request->email;
+        $user->role     = $request->role;
+        $user->password = bcrypt($request->password);
 
         $user->save();
 
@@ -86,7 +107,7 @@ class StaffController extends Controller
         $user = User::findOrFail($id);
 
         if ($user->id === Auth::id()) {
-            return back()->withErrors(['error' => 'Tidak dapat menghapus akun sendiri.']);
+            return back()->with('error', 'Tidak dapat menghapus akun sendiri.');
         }
 
         $user->delete();
