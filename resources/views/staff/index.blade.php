@@ -630,7 +630,8 @@
 <div class="toast-wrap"
     id="toastWrap"
     data-success="{{ session('success') }}"
-    data-error="{{ session('error') }}">
+    data-error="{{ session('error') }}"
+    data-validation="{{ $errors->first() }}">
 </div>
 
 
@@ -864,7 +865,7 @@
             <button type="button" class="smodal-close" onclick="closeAddModal()">✕</button>
         </div>
 
-        <form action="{{ route('staff.store') }}" method="POST">
+        <form action="{{ route('staff.store') }}" method="POST" id="addForm" novalidate>
             @csrf
             <div class="smodal-body">
                 <div class="form-group">
@@ -884,11 +885,12 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Password</label>
-                    <input type="password" name="password" class="finput" required minlength="8" placeholder="Minimal 8 karakter">
+                    <input type="password" name="password" id="add_pwd" class="finput" required minlength="8" placeholder="Minimal 8 karakter">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Konfirmasi Password</label>
-                    <input type="password" name="password_confirmation" class="finput" required minlength="8">
+                    <input type="password" name="password_confirmation" id="add_pwd_confirm" class="finput" required minlength="8">
+                    <div id="add_pwd_error" style="color:#e11d48;font-size:0.75rem;font-weight:600;display:none;margin-top:6px;">Sandi tidak cocok!</div>
                 </div>
             </div>
             <div class="smodal-ftr">
@@ -896,7 +898,7 @@
                     style="padding:8px 18px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;font-size:.8rem;font-weight:700;color:#475569;cursor:pointer;font-family:inherit;">
                     Batal
                 </button>
-                <button type="submit" class="btn-teal" style="padding:8.5px 18px;font-size:.8rem;border-radius:10px;">
+                <button type="submit" id="add_submit_btn" class="btn-teal" style="padding:8.5px 18px;font-size:.8rem;border-radius:10px;transition:all .2s;">
                     Simpan
                 </button>
             </div>
@@ -925,7 +927,7 @@
             <button type="button" class="smodal-close" onclick="closeEditModal()">✕</button>
         </div>
 
-        <form id="editForm" method="POST">
+        <form id="editForm" method="POST" novalidate>
             @csrf
             @method('PUT')
             <div class="smodal-body">
@@ -945,12 +947,13 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Password Baru <span style="font-weight:400;color:#94a3b8;font-size:0.7rem;">(kosongkan jika tidak diubah)</span></label>
-                    <input type="password" name="password" class="finput" minlength="8" placeholder="Minimal 8 karakter">
+                    <label class="form-label">Password Baru</label>
+                    <input type="password" name="password" id="edit_pwd" class="finput" required minlength="8" placeholder="Minimal 8 karakter">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Konfirmasi Password Baru</label>
-                    <input type="password" name="password_confirmation" class="finput">
+                    <input type="password" name="password_confirmation" id="edit_pwd_confirm" class="finput" required minlength="8">
+                    <div id="edit_pwd_error" style="color:#e11d48;font-size:0.75rem;font-weight:600;display:none;margin-top:6px;">Sandi tidak cocok!</div>
                 </div>
             </div>
             <div class="smodal-ftr">
@@ -958,7 +961,7 @@
                     style="padding:8px 18px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;font-size:.8rem;font-weight:700;color:#475569;cursor:pointer;font-family:inherit;">
                     Batal
                 </button>
-                <button type="submit" class="btn-teal" style="padding:8.5px 18px;font-size:.8rem;border-radius:10px;">
+                <button type="submit" id="edit_submit_btn" class="btn-teal" style="padding:8.5px 18px;font-size:.8rem;border-radius:10px;transition:all .2s;">
                     Simpan Perubahan
                 </button>
             </div>
@@ -1052,6 +1055,7 @@
 
         const successMsg = wrap.dataset.success || '';
         const errorMsg = wrap.dataset.error || '';
+        const validationMsg = wrap.dataset.validation || '';
 
         if (successMsg) {
             showToast('success', 'Berhasil!', successMsg);
@@ -1059,6 +1063,10 @@
 
         if (errorMsg) {
             showToast('error', 'Gagal!', errorMsg);
+        }
+
+        if (validationMsg) {
+            showToast('warning', 'Peringatan Validasi!', validationMsg);
         }
     }
 
@@ -1092,7 +1100,83 @@
     function closeEditModal() {
         document.getElementById('editModal').classList.remove('open');
         document.body.style.overflow = '';
+        
+        // Reset form to avoid showing errors on next open
+        document.getElementById('edit_pwd').value = '';
+        document.getElementById('edit_pwd_confirm').value = '';
+        document.getElementById('edit_pwd_error').style.display = 'none';
+        document.getElementById('edit_submit_btn').disabled = false;
+        document.getElementById('edit_submit_btn').style.opacity = '1';
+        document.getElementById('edit_submit_btn').style.cursor = 'pointer';
     }
+
+    // ── LIVE PASSWORD VALIDATION ─────────────────────
+    function checkPasswordMatch(pwdId, confirmId, errorId, btnId) {
+        const pwd = document.getElementById(pwdId).value;
+        const confirm = document.getElementById(confirmId).value;
+        const errorMsg = document.getElementById(errorId);
+        const submitBtn = document.getElementById(btnId);
+
+        if (confirm.length > 0 && pwd !== confirm) {
+            errorMsg.style.display = 'block';
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.5';
+            submitBtn.style.cursor = 'not-allowed';
+        } else {
+            errorMsg.style.display = 'none';
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+            submitBtn.style.cursor = 'pointer';
+        }
+    }
+
+    document.getElementById('add_pwd').addEventListener('input', () => checkPasswordMatch('add_pwd', 'add_pwd_confirm', 'add_pwd_error', 'add_submit_btn'));
+    document.getElementById('add_pwd_confirm').addEventListener('input', () => checkPasswordMatch('add_pwd', 'add_pwd_confirm', 'add_pwd_error', 'add_submit_btn'));
+
+    document.getElementById('edit_pwd').addEventListener('input', () => checkPasswordMatch('edit_pwd', 'edit_pwd_confirm', 'edit_pwd_error', 'edit_submit_btn'));
+    document.getElementById('edit_pwd_confirm').addEventListener('input', () => checkPasswordMatch('edit_pwd', 'edit_pwd_confirm', 'edit_pwd_error', 'edit_submit_btn'));
+
+    // ── CUSTOM FORM VALIDATION (MENGGANTI DEFAULT BROWSER) ──
+    function customFormValidation(e) {
+        const form = e.target;
+        const requiredInputs = form.querySelectorAll('[required]');
+        
+        for (let input of requiredInputs) {
+            // Check empty
+            if (!input.value.trim()) {
+                e.preventDefault();
+                let labelText = input.previousElementSibling ? input.previousElementSibling.innerText : 'Bidang ini';
+                showToast('warning', 'Peringatan Validasi!', `Kolom "${labelText}" wajib diisi dan tidak boleh kosong.`);
+                input.focus();
+                return false;
+            }
+            
+            // Check minlength
+            if (input.minLength && input.value.length < input.minLength) {
+                e.preventDefault();
+                let labelText = input.previousElementSibling ? input.previousElementSibling.innerText : 'Bidang ini';
+                showToast('warning', 'Peringatan Validasi!', `Kolom "${labelText}" harus terdiri dari minimal ${input.minLength} karakter.`);
+                input.focus();
+                return false;
+            }
+        }
+        
+        // Cek kecocokan password jika ini form add/edit
+        const pwd = form.querySelector('input[name="password"]');
+        const confirm = form.querySelector('input[name="password_confirmation"]');
+        if (pwd && confirm && pwd.value !== confirm.value) {
+            e.preventDefault();
+            showToast('error', 'Gagal Simpan!', 'Sandi dan Konfirmasi Sandi tidak cocok. Harap periksa kembali.');
+            confirm.focus();
+            return false;
+        }
+    }
+
+    const addForm = document.getElementById('addForm');
+    if (addForm) addForm.addEventListener('submit', customFormValidation);
+
+    const editForm = document.getElementById('editForm');
+    if (editForm) editForm.addEventListener('submit', customFormValidation);
 
     // ── DELETE MODAL ─────────────────────────────────
     let deleteTargetUrl = null;
