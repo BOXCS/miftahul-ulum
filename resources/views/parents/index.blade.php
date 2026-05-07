@@ -576,6 +576,7 @@
         'relationship' => $p->relationship,
         'phone'        => $p->phone,
         'email'        => $p->email,
+        'has_password' => !empty($p->password),
         'address'      => $p->address,
         'students'     => $p->students->map(fn($s) => ['id' => $s->id, 'name' => $s->name])->values(),
     ])->values()),
@@ -627,13 +628,14 @@
                     <th style="text-align:center;">Hubungan</th>
                     <th>No. HP</th>
                     <th>Email</th>
+                    <th style="text-align:center;">Akun</th>
                     <th>Santri</th>
                     <th style="text-align:center;width:90px;">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 <tr class="empty-row" x-show="filtered.length === 0">
-                    <td colspan="7">
+                    <td colspan="8">
                         <div class="empty-ico-wrap">👨‍👩‍👧</div>
                         <p style="font-size:.82rem;font-weight:600;">Tidak ada data wali ditemukan</p>
                     </td>
@@ -659,6 +661,10 @@
                         </td>
                         <td><span style="font-size:.8rem;color:#475569;" x-text="p.phone || '-'"></span></td>
                         <td><span style="font-size:.78rem;color:#64748b;" x-text="p.email || '-'"></span></td>
+                        <td style="text-align:center;">
+                            <span class="bdg" :class="p.has_password ? 'bdg-teal' : 'bdg-amber'"
+                                x-text="p.has_password ? 'Aktif' : 'Belum'"></span>
+                        </td>
                         <td>
                             <template x-if="p.students && p.students.length">
                                 <div>

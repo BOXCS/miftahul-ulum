@@ -371,7 +371,26 @@
                         @enderror
                     </div>
                 </div>
+                <div class="form-divider"></div>
+                <div class="form-section-label">Akun & Keamanan</div>
 
+                <div class="fg fg-2">
+                    <div>
+                        <label for="password" class="flabel">Password <span class="req">*</span></label>
+                        <input type="password" id="password" name="password"
+                            class="finput @error('password') is-invalid @enderror"
+                            placeholder="Min. 8 karakter" required>
+                        @error('password')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div>
+                        <label for="password_confirmation" class="flabel">Konfirmasi Password <span class="req">*</span></label>
+                        <input type="password" id="password_confirmation" name="password_confirmation"
+                            class="finput"
+                            placeholder="Ulangi password" required>
+                    </div>
+                </div>
                 <div class="form-divider"></div>
                 <div class="form-section-label">Alamat</div>
 

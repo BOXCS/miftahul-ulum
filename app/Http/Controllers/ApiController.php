@@ -26,26 +26,29 @@ class ApiController extends Controller
         // Cari Parent berdasarkan email
         $parent = ParentModel::where("email", $credentials["email"])->first();
 
-        if ($parent && Hash::check($credentials["password"], $parent->password)) {
-            // Jika password cocok, buat token atau responkan data
+        if (!$parent || !Hash::check($credentials["password"], $parent->password)) {
             return response()->json([
-                "success" => true,
-                "token" => "dummy-token-" . $parent->id, // Atau menggunakan JWT token jika perlu
-                "akun" => [
-                    "id_akun" => $parent->id,
-                    "email" => $parent->email,
-                    "username" => $parent->name,
-                    "hak_akses" => "orang_tua",
-                ],
-            ]);
+                "success" => false,
+                "message" => "Email atau password salah.",
+            ], 401);
         }
 
-        // Jika login gagal
-        return response()->json(
-            ["success" => false, "message" => "Email atau password salah."],
-            401
-        );
+        return response()->json([
+            "success" => true,
+            "token"   => "dummy-token-" . $parent->id,
+            "akun" => [
+                "id_akun"      => $parent->id,
+                "email"        => $parent->email,
+                "username"     => $parent->name,
+                "relationship" => $parent->relationship,
+                "phone"        => $parent->phone,
+                "address"      => $parent->address ?? "",
+                "hak_akses"    => $parent->role ?? "ortu",
+            ],
+        ]);
     }
+
+
 
     public function pengumuman()
     {

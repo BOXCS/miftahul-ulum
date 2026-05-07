@@ -18,7 +18,14 @@ class ParentModel extends Model
         "password",  // Menambahkan password ke $fillable
         "role",      // Menambahkan role ke $fillable
     ];
+    protected $hidden = [
+        "password",
+        "remember_token",
+    ];
 
+    protected $casts = [
+        "password" => "hashed",
+    ];
     // Relasi ke User
     public function user()
     {
