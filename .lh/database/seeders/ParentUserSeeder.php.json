@@ -1,0 +1,22 @@
+{
+    "sourceFile": "database/seeders/ParentUserSeeder.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1778146839483,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1778146886706,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -48,8 +48,9 @@\n                 \"email\" => $item[\"email\"],\n                 \"phone\" => $item[\"phone\"],\n                 \"relationship\" => $item[\"relationship\"],\n                 \"address\" => $item[\"address\"],\n+                \"password\" => Hash::make(\"password123\"), // Default password for Parent\n                 \"role\" => \"ortu\", // Explicitly set the role\n             ]);\n \n             // Create a dummy student for each parent so they have data\n"
+                }
+            ],
+            "date": 1778146839483,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace Database\\Seeders;\n\nuse App\\Models\\User;\nuse App\\Models\\ParentModel;\nuse App\\Models\\Student;\nuse Illuminate\\Database\\Seeder;\nuse Illuminate\\Support\\Facades\\Hash;\n\nclass ParentUserSeeder extends Seeder\n{\n    /**\n     * Run the database seeds.\n     */\n    public function run(): void\n    {\n        // 1. Create Parent Accounts\n        $data = [\n            [\n                \"name\" => \"Budi Santoso\",\n                \"email\" => \"budi@example.com\",\n                \"phone\" => \"081234567890\",\n                \"relationship\" => \"ayah\",\n                \"address\" => \"Jl. Merdeka No. 10, Jakarta\",\n            ],\n            [\n                \"name\" => \"Siti Aminah\",\n                \"email\" => \"siti@example.com\",\n                \"phone\" => \"081298765432\",\n                \"relationship\" => \"ibu\",\n                \"address\" => \"Jl. Bahagia No. 5, Bandung\",\n            ],\n        ];\n\n        foreach ($data as $item) {\n            // Create User entry\n            $user = User::create([\n                \"name\" => $item[\"name\"],\n                \"email\" => $item[\"email\"],\n                \"password\" => Hash::make(\"password123\"), // Default password\n            ]);\n\n            // Create Parent entry linked to User\n            $parent = ParentModel::create([\n                \"user_id\" => $user->id,\n                \"name\" => $item[\"name\"],\n                \"email\" => $item[\"email\"],\n                \"phone\" => $item[\"phone\"],\n                \"relationship\" => $item[\"relationship\"],\n                \"address\" => $item[\"address\"],\n                \"role\" => \"ortu\", // Explicitly set the role\n            ]);\n\n            // Create a dummy student for each parent so they have data\n            Student::create([\n                \"parent_id\" => $parent->id,\n                \"name\" => \"Ananda \" . $item[\"name\"],\n                \"nis\" => \"NIS\" . rand(1000, 9999),\n                \"gender\" => $item[\"relationship\"] == \"ayah\" ? \"Laki-laki\" : \"Perempuan\",\n                \"tanggal_lahir\" => \"2015-05-15\", // Date of birth\n                \"class\" => \"7A\",\n                \"status\" => \"aktif\",\n                \"tahun_angkatan\" => \"2024\",\n                \"address\" => $item[\"address\"],\n            ]);\n        }\n    }\n}"
+        }
+    ]
+}

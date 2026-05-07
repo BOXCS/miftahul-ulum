@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ParentModel;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class ParentController extends Controller
 {
@@ -36,7 +37,11 @@ class ParentController extends Controller
             "phone" => "required|string|max:20",
             "email" => "nullable|email|max:255",
             "address" => "required|string",
+            "password" => "required|string|min:8",
         ]);
+
+        $validated["password"] = Hash::make($validated["password"]);
+        $validated["role"] = "ortu";
 
         ParentModel::create($validated);
 
@@ -65,7 +70,16 @@ class ParentController extends Controller
             "phone" => "required|string|max:20",
             "email" => "nullable|email|max:255",
             "address" => "required|string",
+            "password" => "nullable|string|min:8",
         ]);
+
+        if (!empty($validated["password"])) {
+            $validated["password"] = Hash::make($validated["password"]);
+        } else {
+            unset($validated["password"]);
+        }
+
+        $validated["role"] = "ortu";
 
         $parent->update($validated);
 

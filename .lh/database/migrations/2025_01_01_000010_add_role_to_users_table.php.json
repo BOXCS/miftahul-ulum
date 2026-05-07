@@ -1,0 +1,18 @@
+{
+    "sourceFile": "database/migrations/2025_01_01_000010_add_role_to_users_table.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1778146137795,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1778146137795,
+            "name": "Commit-0",
+            "content": "<?php\n\nuse Illuminate\\Database\\Migrations\\Migration;\nuse Illuminate\\Database\\Schema\\Blueprint;\nuse Illuminate\\Support\\Facades\\Schema;\n\nreturn new class extends Migration\n{\n    public function up(): void\n    {\n        Schema::table('users', function (Blueprint $table) {\n            $table->enum('role', ['superadmin', 'admin', 'ortu'])->default('admin')->after('email');\n        });\n    }\n\n    public function down(): void\n    {\n        Schema::table('users', function (Blueprint $table) {\n            $table->dropColumn('role');\n        });\n    }\n};\n"
+        }
+    ]
+}

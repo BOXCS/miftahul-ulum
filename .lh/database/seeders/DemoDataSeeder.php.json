@@ -1,0 +1,18 @@
+{
+    "sourceFile": "database/seeders/DemoDataSeeder.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1778146947801,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1778146947801,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace Database\\Seeders;\n\nuse App\\Models\\User;\nuse App\\Models\\ParentModel;\nuse App\\Models\\Student;\nuse Illuminate\\Database\\Seeder;\nuse Illuminate\\Support\\Facades\\Hash;\n\nclass DemoDataSeeder extends Seeder\n{\n    /**\n     * Run the database seeds.\n     */\n    public function run(): void\n    {\n        // Seed Parents First\n        $parents = [\n            [\n                \"name\" => \"Bapak Ahmad Basri\",\n                \"relationship\" => \"ayah\",\n                \"phone\" => \"081234567890\",\n                \"email\" => \"ahmad.basri@email.com\",\n                \"address\" => \"Jl. Melati No. 12, Surabaya\",\n            ],\n            [\n                \"name\" => \"Ibu Siti Rahmawati\",\n                \"relationship\" => \"ibu\",\n                \"phone\" => \"082345678901\",\n                \"email\" => \"siti.rahmawati@email.com\",\n                \"address\" => \"Jl. Mawar No. 5, Malang\",\n            ]\n        ];\n\n        foreach ($parents as $parentData) {\n            // Create User entry with password\n            $user = User::create([\n                \"name\" => $parentData[\"name\"],\n                \"email\" => $parentData[\"email\"],\n                \"password\" => Hash::make(\"password123\"), // Password added here\n            ]);\n\n            // Create Parent entry linked to User\n            $parent = ParentModel::create([\n                \"user_id\" => $user->id,\n                \"name\" => $parentData[\"name\"],\n                \"email\" => $parentData[\"email\"],\n                \"phone\" => $parentData[\"phone\"],\n                \"relationship\" => $parentData[\"relationship\"],\n                \"address\" => $parentData[\"address\"],\n                \"password\" => Hash::make(\"password123\"), // Password added here for Parent model\n                \"role\" => \"ortu\", // Set the role explicitly\n            ]);\n\n            // Create a dummy student for each parent\n            Student::create([\n                \"parent_id\" => $parent->id,\n                \"name\" => \"Ananda \" . $parentData[\"name\"],\n                \"nis\" => \"NIS\" . rand(1000, 9999),\n                \"gender\" => $parentData[\"relationship\"] == \"ayah\" ? \"Laki-laki\" : \"Perempuan\",\n                \"tanggal_lahir\" => \"2015-05-15\", // Date of birth\n                \"class\" => \"7A\",\n                \"status\" => \"aktif\",\n                \"tahun_angkatan\" => \"2024\",\n                \"address\" => $parentData[\"address\"],\n            ]);\n        }\n    }\n}"
+        }
+    ]
+}
