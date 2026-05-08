@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\ApiController;
@@ -16,9 +17,9 @@ Route::get('/perizinan/{id}', [ApiController::class, 'perizinan']);
 
 // Protected routes — butuh token
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/broadcasting/auth', function (Request $request) {
+        return Broadcast::auth($request);
+    });
     Route::get('/chat/{parentId}/history', [ApiController::class, 'chatHistory']);
     Route::post('/chat/{parentId}/send-api', [ApiController::class, 'sendMessage']);
-});
-Route::middleware('auth:sanctum')->post('/broadcasting/auth', function (Illuminate\Http\Request $request) {
-    return Broadcast::auth($request);
 });

@@ -102,11 +102,6 @@ class ChatController extends Controller
         );
     }
 
-    public function show(int $parentId)
-    {
-        ParentModel::findOrFail($parentId);
-        return redirect()->route("chat.index", ["active" => $parentId]);
-    }
 
     public function getMessages(int $parentId)
     {
