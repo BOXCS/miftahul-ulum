@@ -30,7 +30,10 @@ class FaqController extends Controller
             ->pluck('kategori')
             ->toArray();
 
-        return view('faqs.create', compact('kategoris'));
+        // Auto next position = max urutan + 1
+        $nextUrutan = (Faq::max('urutan') ?? 0) + 1;
+
+        return view('faqs.create', compact('kategoris', 'nextUrutan'));
     }
 
     public function store(Request $request): \Illuminate\Http\RedirectResponse
@@ -44,6 +47,17 @@ class FaqController extends Controller
         ]);
 
         $validated['is_active'] = $request->boolean('is_active');
+
+        // Resolve urutan conflict: if the chosen position already exists, shift others down
+        $urutan = $validated['urutan'] ?? (Faq::max('urutan') + 1);
+        $validated['urutan'] = $urutan;
+
+        if (Faq::where('urutan', $urutan)->exists()) {
+            // Shift all FAQs with urutan >= chosen value down by 1
+            Faq::where('urutan', '>=', $urutan)->orderBy('urutan', 'desc')->each(function ($faq) {
+                $faq->update(['urutan' => $faq->urutan + 1]);
+            });
+        }
 
         Faq::create($validated);
 
@@ -77,6 +91,18 @@ class FaqController extends Controller
         ]);
 
         $validated['is_active'] = $request->boolean('is_active');
+
+        // Resolve conflict only if urutan changed
+        $newUrutan = $validated['urutan'] ?? $faq->urutan;
+        if ($newUrutan != $faq->urutan && Faq::where('urutan', $newUrutan)->where('id', '!=', $id)->exists()) {
+            Faq::where('urutan', '>=', $newUrutan)
+                ->where('id', '!=', $id)
+                ->orderBy('urutan', 'desc')
+                ->each(function ($f) {
+                    $f->update(['urutan' => $f->urutan + 1]);
+                });
+        }
+        $validated['urutan'] = $newUrutan;
 
         $faq->update($validated);
 
