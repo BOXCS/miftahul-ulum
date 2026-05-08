@@ -146,12 +146,15 @@ class ApiController extends Controller
             "success" => true,
             "message" => "OK",
             "data" => [
-                "id_santri" => (string) $s->id,
-                "nama" => $s->name,
+                "id_santri"      => (string) $s->id,
+                "nis"            => $s->nis ?? '',
+                "nama"           => $s->name,
+                "kelas"          => $s->class ?? null,
+                "kamar"          => $s->kamar ?? null,
                 "tahun_angkatan" => $s->class,
-                "sidik_jari" => null,
-                "status" => $s->status ?? "aktif",
-                "id_ortu" => (int) ($s->parent_id ?? 0),
+                "sidik_jari"     => null,
+                "status"         => $s->status ?? "aktif",
+                "id_ortu"        => (int) ($s->parent_id ?? 0),
             ],
         ]);
     }
@@ -163,21 +166,20 @@ class ApiController extends Controller
             ->get()
             ->map(function ($s) {
                 return [
-                    "id_santri" => (string) $s->id,
-                    "nama" => $s->name, // ✅ rename
-                    "tahun_angkatan" => $s->class, // mapping sementara
-                    "sidik_jari" => null, // belum ada alat
-                    "status" => $s->status ?? "aktif", // default
-                    "id_ortu" => (int) $s->parent_id,
-
-                    // optional nested object
-                    "ortu" => $s->parent
-                        ? [
-                            "nama_lengkap" => $s->parent->name,
-                            "alamat" => $s->parent->address,
-                            "no_telp" => $s->parent->phone,
-                        ]
-                        : null,
+                    "id_santri"      => (string) $s->id,
+                    "nis"            => $s->nis ?? '',        // ← tambah
+                    "nama"           => $s->name,
+                    "kelas"          => $s->class ?? null,    // ← tambah
+                    "kamar"          => $s->kamar ?? null,    // ← tambah
+                    "tahun_angkatan" => $s->tahun_angkatan ?? $s->class,
+                    "sidik_jari"     => null,
+                    "status"         => $s->status ?? "aktif",
+                    "id_ortu"        => (int) $s->parent_id,
+                    "ortu"           => $s->parent ? [
+                        "nama_lengkap" => $s->parent->name,
+                        "alamat"       => $s->parent->address,
+                        "no_telp"      => $s->parent->phone,
+                    ] : null,
                 ];
             });
 
@@ -228,20 +230,75 @@ class ApiController extends Controller
         ]);
     }
 
+    // Ganti seluruh function kehadiranSummary:
     public function kehadiranSummary($id)
     {
-        $totalHadir = Attendance::where("student_id", $id)
-            ->where("status", "hadir")
-            ->count();
-        $totalIzin = Attendance::where("student_id", $id)
-            ->where("status", "izin")
-            ->count();
+        $now = now();
+
+        // === SEMINGGU ===
+        $semingguStart = $now->copy()->startOfWeek();
+        $semingguEnd   = $now->copy()->endOfWeek();
+        $semingguRows  = Attendance::where('student_id', $id)
+            ->whereBetween('tanggal', [$semingguStart, $semingguEnd])
+            ->get();
+        $semingguTotal  = $semingguRows->count() * 5; // 5 shalat per hari
+        $semingguHadir  = $semingguRows->sum(function ($a) {
+            return ($a->Subuh ?? 0) + ($a->Dzuhur ?? 0) + ($a->Ashar ?? 0)
+                + ($a->Maghrib ?? 0) + ($a->Isya ?? 0);
+        });
+        $semingguPersen = $semingguTotal > 0
+            ? round(($semingguHadir / $semingguTotal) * 100, 1)
+            : 0;
+
+        // === SEBULAN ===
+        $sebulanStart = $now->copy()->startOfMonth();
+        $sebulanEnd   = $now->copy()->endOfMonth();
+        $sebulanRows  = Attendance::where('student_id', $id)
+            ->whereBetween('tanggal', [$sebulanStart, $sebulanEnd])
+            ->get();
+        $sebulanTotal  = $sebulanRows->count() * 5;
+        $sebulanHadir  = $sebulanRows->sum(function ($a) {
+            return ($a->Subuh ?? 0) + ($a->Dzuhur ?? 0) + ($a->Ashar ?? 0)
+                + ($a->Maghrib ?? 0) + ($a->Isya ?? 0);
+        });
+        $sebulanPersen = $sebulanTotal > 0
+            ? round(($sebulanHadir / $sebulanTotal) * 100, 1)
+            : 0;
+
+        // === SETAHUN ===
+        $setahunStart = $now->copy()->startOfYear();
+        $setahunEnd   = $now->copy()->endOfYear();
+        $setahunRows  = Attendance::where('student_id', $id)
+            ->whereBetween('tanggal', [$setahunStart, $setahunEnd])
+            ->get();
+        $setahunTotal  = $setahunRows->count() * 5;
+        $setahunHadir  = $setahunRows->sum(function ($a) {
+            return ($a->Subuh ?? 0) + ($a->Dzuhur ?? 0) + ($a->Ashar ?? 0)
+                + ($a->Maghrib ?? 0) + ($a->Isya ?? 0);
+        });
+        $setahunPersen = $setahunTotal > 0
+            ? round(($setahunHadir / $setahunTotal) * 100, 1)
+            : 0;
 
         return response()->json([
-            "success" => true,
-            "data" => [
-                "hadir" => $totalHadir,
-                "izin" => $totalIzin,
+            'success' => true,
+            'message' => 'OK',
+            'data' => [
+                'seminggu' => [
+                    'total_hadir'  => $semingguHadir,
+                    'total_shalat' => $semingguTotal,
+                    'persentase'   => $semingguPersen,
+                ],
+                'sebulan' => [
+                    'total_hadir'  => $sebulanHadir,
+                    'total_shalat' => $sebulanTotal,
+                    'persentase'   => $sebulanPersen,
+                ],
+                'setahun' => [
+                    'total_hadir'  => $setahunHadir,
+                    'total_shalat' => $setahunTotal,
+                    'persentase'   => $setahunPersen,
+                ],
             ],
         ]);
     }
