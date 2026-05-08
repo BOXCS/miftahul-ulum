@@ -637,7 +637,6 @@
             const pesan = this.message;
             const csrf = document.querySelector('meta[name=csrf-token]')?.content ?? '';
 
-            // Optimistic update — tampilkan langsung di UI
             const tempMsg = {
                 id: 'temp_' + Date.now(),
                 pesan: pesan,
@@ -660,35 +659,77 @@
 
                 const res = await fetch(`/chat/${this.activeChat}`, {
                     method: 'POST',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest', 
+                        'Accept': 'application/json',
+                        'X-Socket-ID': window.Echo?.socketId() ?? ''  // ← tambah ini
+                    },
                     body: formData
                 });
 
+                // ↓↓↓ TAMBAH INI ↓↓↓
+                console.log('📤 Status:', res.status);
+                const data = await res.json();
+                console.log('📦 Response:', data);
+                // ↑↑↑ SAMPAI SINI ↑↑↑
+
                 if (res.ok) {
-                    const data = await res.json();
-                    // Ganti temp msg dengan data asli dari server
                     const idx = this.messages.findIndex(m => m.id === tempMsg.id);
                     if (idx !== -1) this.messages.splice(idx, 1, data.message);
                 } else {
-                    // Gagal — hapus optimistic msg
                     this.messages = this.messages.filter(m => m.id !== tempMsg.id);
                     this.message = pesan;
-                    console.error('Gagal mengirim pesan');
+                    console.error('❌ Gagal mengirim pesan, status:', res.status);
                 }
             } catch(e) {
                 this.messages = this.messages.filter(m => m.id !== tempMsg.id);
                 this.message = pesan;
-                console.error('Error kirim pesan:', e);
+                console.error('💥 Error kirim pesan:', e);
             } finally {
                 this.isSending = false;
             }
+        },
+        listenAllConversations() {
+            if (!window.Echo) return;
+            this.conversations.forEach(conv => {
+                window.Echo.private(`chat.${conv.id}`)
+                    .listen('.MessageSent', (e) => {
+                        const convIdx = this.conversations.findIndex(c => c.id === e.parent_id);
+                        if (convIdx !== -1) {
+                            const c = this.conversations[convIdx];
+                            c.lastMessage = e.pesan.substring(0, 40) + (e.pesan.length > 40 ? '...' : '');
+                            c.time = e.time;
+
+                            if (!e.is_from_admin && this.activeChat !== e.parent_id) {
+                                c.unread = (c.unread || 0) + 1;
+                            }
+
+                            // Pesan masuk ke active chat juga di-push ke messages
+                            if (this.activeChat === e.parent_id) {
+                                const exists = this.messages.some(m => m.id === e.id);
+                                if (!exists) {
+                                    this.messages.push({
+                                        id: e.id,
+                                        pesan: e.pesan,
+                                        is_from_admin: e.is_from_admin,
+                                        time: e.time
+                                    });
+                                    this.scrollToBottom();
+                                }
+                            }
+
+                            this.conversations.splice(convIdx, 1);
+                            this.conversations.unshift(c);
+                        }
+                    });
+            });
         },
         listenForMessages() {
             if (!this.activeChat || !window.Echo) return;
             window.Echo.leave(`chat.${this.activeChat}`);
             window.Echo.private(`chat.${this.activeChat}`)
                 .listen('.MessageSent', (e) => {
-                    // Hindari duplikat jika pesan sudah ada (dari optimistic update)
+                    // Pesan masuk ke chat area
                     const exists = this.messages.some(m => m.id === e.id);
                     if (!exists) {
                         this.messages.push({
@@ -699,10 +740,29 @@
                         });
                         this.scrollToBottom();
                     }
+
+                    // ↓↓↓ TAMBAH INI — update sidebar conversation list ↓↓↓
+                    const convIdx = this.conversations.findIndex(c => c.id === e.parent_id);
+                    if (convIdx !== -1) {
+                        const conv = this.conversations[convIdx];
+                        conv.lastMessage = e.pesan.substring(0, 40) + (e.pesan.length > 40 ? '...' : '');
+                        conv.time = e.time;
+
+                        // Tambah unread badge hanya kalau bukan pesan dari admin
+                        // dan bukan chat yang sedang aktif
+                        if (!e.is_from_admin && this.activeChat !== e.parent_id) {
+                            conv.unread = (conv.unread || 0) + 1;
+                        }
+
+                        // Pindahkan conversation ini ke paling atas
+                        this.conversations.splice(convIdx, 1);
+                        this.conversations.unshift(conv);
+                    }
+                    // ↑↑↑ SAMPAI SINI ↑↑↑
                 });
-        }
+        },
     }"
-    x-init="scrollToBottom(); listenForMessages(); $watch('activeChat', val => { if(val) listenForMessages(); });"
+    x-init="scrollToBottom(); listenAllConversations();"
     @click.outside="showEmoji = false"
 >
 
