@@ -14,6 +14,7 @@ class Permission extends Model
         'tanggal_mulai',
         'tanggal_selesai',
         'keterangan',
+        'catatan',
         'status',
         'approved_by',
         'approved_at',

@@ -82,6 +82,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/permissions/{id}/approve', [PermissionController::class, 'approve'])->name('permissions.approve');
     Route::post('/permissions/{id}/reject', [PermissionController::class, 'reject'])->name('permissions.reject');
     Route::delete('/permissions/{id}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
+    Route::get("/perizinan/riwayat/{id}", [ApiController::class, "riwayatPerizinan"]);
+    Route::post("/perizinan", [ApiController::class, "storePerizinan"]);
 
     // Profil
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
@@ -94,4 +96,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
     Route::put('/staff/{id}', [StaffController::class, 'update'])->name('staff.update');
     Route::delete('/staff/{id}', [StaffController::class, 'destroy'])->name('staff.destroy');
+
+    Route::get('/faq',      [ApiController::class, 'faq']);
+    Route::get('/faq/{id}', [ApiController::class, 'faqDetail']);
 });

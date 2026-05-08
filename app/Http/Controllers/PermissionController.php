@@ -8,37 +8,74 @@ use Illuminate\Http\Request;
 
 class PermissionController extends Controller
 {
-    public function index(Request $request): \Illuminate\View\View
+    public function index(Request $request)
     {
-        $permissions = Permission::with("student")
-            ->latest()
-            ->get()
-            ->map(
+        $permissionsQuery = Permission::with("student")->latest()->get();
+
+        if ($request->export === 'excel') {
+            return $this->exportExcel($permissionsQuery);
+        }
+
+        if ($request->export === 'pdf') {
+            return $this->exportPdf($permissionsQuery);
+        }
+
+        $permissions = $permissionsQuery->map(
                 fn($p) => [
-                    "id" => $p->id,
-                    "santri" => $p->student?->name ?? "N/A",
-                    "avatar" => strtoupper(
-                        substr($p->student?->name ?? "N", 0, 2),
-                    ),
-                    "kelas" => $p->student?->class ?? "-",
-                    "jenis" => $p->jenis,
-                    "tanggal" =>
-                    $p->tanggal_mulai->format("d/m/Y") .
-                        " - " .
-                        $p->tanggal_selesai->format("d/m/Y"),
+                    "id"         => $p->id,
+                    "santri"     => $p->student?->name ?? "N/A",
+                    "avatar"     => strtoupper(substr($p->student?->name ?? "N", 0, 2)),
+                    "kelas"      => $p->student?->class ?? "-",
+                    "jenis"      => ucfirst($p->jenis),
+                    "tanggal"    => $p->tanggal_mulai->format("d/m/Y") . " - " . $p->tanggal_selesai->format("d/m/Y"),
                     "keterangan" => $p->keterangan,
-                    "status" => $p->status,
-                    "diajukan" => "Wali", // Default for now
-                    "tglAjuan" => $p->created_at->diffForHumans(),
-                    "catatan" =>
-                    $p->status != "pending"
-                        ? "Diproses oleh " . $p->approved_by
-                        : null,
+                    "catatan"    => $p->catatan,
+                    "status"     => ucfirst($p->status),
+                    "approvedBy" => $p->approved_by,
+                    "diajukan"   => "Wali",
+                    "tglAjuan"   => $p->created_at->diffForHumans(),
                 ],
             )
             ->toArray();
 
         return view("permissions.index", compact("permissions"));
+    }
+
+    private function exportExcel($permissions)
+    {
+        $filename = "Export_Perizinan_" . date('Y-m-d_H-i-s') . ".csv";
+        $handle = fopen('php://output', 'w');
+        
+        ob_start();
+        fputcsv($handle, ['ID', 'Nama Santri', 'Kelas', 'Jenis Izin', 'Tanggal Mulai', 'Tanggal Selesai', 'Status', 'Alasan', 'Catatan Admin']);
+        
+        foreach ($permissions as $p) {
+            fputcsv($handle, [
+                $p->id,
+                $p->student?->name ?? "N/A",
+                $p->student?->class ?? "-",
+                ucfirst($p->jenis),
+                $p->tanggal_mulai->format('d/m/Y'),
+                $p->tanggal_selesai->format('d/m/Y'),
+                ucfirst($p->status),
+                $p->keterangan,
+                $p->catatan
+            ]);
+        }
+        fclose($handle);
+        
+        $csv = ob_get_clean();
+        
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    private function exportPdf($permissions)
+    {
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('permissions.pdf', compact('permissions'));
+        return $pdf->download("Export_Perizinan_" . date('Y-m-d_H-i-s') . ".pdf");
     }
 
     public function create(): \Illuminate\View\View
@@ -87,6 +124,7 @@ class PermissionController extends Controller
         $permission = Permission::findOrFail($id);
         $permission->update([
             "status" => "ditolak",
+            "catatan" => $request->input("reason"),
             "approved_by" => $request->input("approved_by", "Admin"),
             "approved_at" => now(),
         ]);

@@ -9,6 +9,7 @@ use App\Models\Announcement;
 use App\Models\ChatMessage;
 use App\Models\Attendance;
 use App\Models\Permission;
+use App\Models\Faq;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -53,6 +54,80 @@ class ApiController extends Controller
     public function pengumuman()
     {
         return response()->json(Announcement::latest()->get());
+    }
+
+    public function faq(Request $request)
+    {
+        $query = Faq::where('is_active', true)
+            ->orderBy('urutan')
+            ->orderBy('id');
+
+        // Filter opsional berdasarkan kategori
+        if ($request->filled('kategori')) {
+            $query->where('kategori', $request->kategori);
+        }
+
+        // Pencarian fulltext sederhana
+        if ($request->filled('search')) {
+            $q = $request->search;
+            $query->where(function ($qb) use ($q) {
+                $qb->where('pertanyaan', 'like', "%{$q}%")
+                    ->orWhere('jawaban',    'like', "%{$q}%")
+                    ->orWhere('kategori',   'like', "%{$q}%");
+            });
+        }
+
+        $faqs = $query->get()->map(fn($f) => [
+            'id'         => $f->id,
+            'pertanyaan' => $f->pertanyaan,
+            'jawaban'    => $f->jawaban,
+            'kategori'   => $f->kategori,
+            'urutan'     => $f->urutan,
+            'is_active'  => $f->is_active,
+        ]);
+
+        // Daftar kategori unik (selalu dari semua FAQ aktif, bukan dari hasil filter)
+        $kategoris = Faq::where('is_active', true)
+            ->select('kategori')
+            ->distinct()
+            ->orderBy('kategori')
+            ->pluck('kategori')
+            ->values();
+
+        return response()->json([
+            'success'   => true,
+            'data'      => $faqs,
+            'kategoris' => $kategoris,
+            'total'     => $faqs->count(),
+        ]);
+    }
+
+    /**
+     * GET /api/faq/{id}
+     * Ambil detail satu FAQ berdasarkan ID.
+     */
+    public function faqDetail($id)
+    {
+        $faq = Faq::where('is_active', true)->find($id);
+
+        if (!$faq) {
+            return response()->json([
+                'success' => false,
+                'message' => 'FAQ tidak ditemukan.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'id'         => $faq->id,
+                'pertanyaan' => $faq->pertanyaan,
+                'jawaban'    => $faq->jawaban,
+                'kategori'   => $faq->kategori,
+                'urutan'     => $faq->urutan,
+                'is_active'  => $faq->is_active,
+            ],
+        ]);
     }
 
     public function santriById($id)
@@ -173,8 +248,113 @@ class ApiController extends Controller
 
     public function perizinan($id)
     {
-        $permissions = Permission::where("student_id", $id)->get();
-        return response()->json(["success" => true, "data" => $permissions]);
+        $permissions = Permission::where('student_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn($p) => [
+                'id'              => $p->id,
+                'student_id'      => $p->student_id,
+                'jenis'           => $p->jenis,
+                'tanggal_mulai'   => $p->tanggal_mulai->format('Y-m-d'),
+                'tanggal_selesai' => $p->tanggal_selesai->format('Y-m-d'),
+                'keterangan'      => $p->keterangan,
+                'catatan'         => $p->catatan,
+                'status'          => $p->status,
+                'approved_by'     => $p->approved_by,
+                'approved_at'     => $p->approved_at?->toIso8601String(),
+                'created_at'      => $p->created_at->toIso8601String(),
+            ]);
+
+        return response()->json(['success' => true, 'data' => $permissions]);
+    }
+
+        public function storePerizinan(Request $request)
+    {
+        // Validasi — mengikuti skema DB web sebagai source of truth
+        $validated = $request->validate([
+            'student_id'      => 'required|integer|exists:students,id',
+            'jenis'           => 'required|in:keluar,pulang,kegiatan,sakit',
+            'tanggal_mulai'   => 'required|date',
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+            'keterangan'      => 'nullable|string|max:1000',
+        ]);
+
+        // Simpan — status selalu 'pending' dari mobile, admin yang approve/reject
+        $permission = Permission::create([
+            'student_id'      => $validated['student_id'],
+            'jenis'           => $validated['jenis'],
+            'tanggal_mulai'   => $validated['tanggal_mulai'],
+            'tanggal_selesai' => $validated['tanggal_selesai'],
+            'keterangan'      => $validated['keterangan'] ?? null,
+            'status'          => 'pending',
+        ]);
+
+        $permission->load('student');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pengajuan izin berhasil dikirim. Menunggu persetujuan admin.',
+            'data'    => [
+                'id'              => $permission->id,
+                'student_id'      => $permission->student_id,
+                'nama_santri'     => $permission->student?->name ?? 'N/A',
+                'jenis'           => $permission->jenis,
+                'tanggal_mulai'   => $permission->tanggal_mulai->format('Y-m-d'),
+                'tanggal_selesai' => $permission->tanggal_selesai->format('Y-m-d'),
+                'keterangan'      => $permission->keterangan,
+                'status'          => $permission->status,
+                'created_at'      => $permission->created_at->toIso8601String(),
+            ],
+        ], 201);
+    }
+
+    /**
+     * GET /api/perizinan/riwayat/{student_id}
+     *
+     * Riwayat perizinan lengkap satu santri — dipakai mobile untuk menampilkan
+     * daftar pengajuan beserta status terkini (pending/disetujui/ditolak).
+     * Diurutkan dari terbaru.
+     *
+     * Response 200:
+     * {
+     *   "success": true,
+     *   "data"   : [ { id, jenis, tanggal_mulai, tanggal_selesai, keterangan,
+     *                  status, approved_by, approved_at, created_at }, ... ]
+     * }
+     */
+    public function riwayatPerizinan($studentId)
+    {
+        $student = Student::find($studentId);
+
+        if (!$student) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Santri tidak ditemukan.',
+                'data'    => [],
+            ], 404);
+        }
+
+        $permissions = Permission::where('student_id', $studentId)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn($p) => [
+                'id'              => $p->id,
+                'jenis'           => $p->jenis,
+                'tanggal_mulai'   => $p->tanggal_mulai->format('Y-m-d'),
+                'tanggal_selesai' => $p->tanggal_selesai->format('Y-m-d'),
+                'keterangan'      => $p->keterangan,
+                'catatan'         => $p->catatan,
+                'status'          => $p->status,
+                'approved_by'     => $p->approved_by,
+                'approved_at'     => $p->approved_at?->toIso8601String(),
+                'created_at'      => $p->created_at->toIso8601String(),
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Riwayat perizinan berhasil diambil.',
+            'data'    => $permissions,
+        ]);
     }
 
     public function chatHistory($parentId)
