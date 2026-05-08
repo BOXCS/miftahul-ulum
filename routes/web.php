@@ -1,6 +1,21 @@
 <?php
 
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\KehadiranController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ManagementController;
+use App\Http\Controllers\OrangtuaController;
+use App\Http\Controllers\PerizinanController;
+use App\Http\Controllers\SantriController;
+use App\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\FaqController;
+use App\Http\Controllers\PengumumanController;
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,6 +28,43 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+Route::get('/', fn () => view('landing'));
+
+// Login
+Route::get('/login', [AuthController::class, 'login'])->name('login');
+Route::post('/', [AuthController::class, 'authenticate'])->name('auth.authenticate');
+
+// Public laporan kehadiran
+Route::get('/laporan-kehadiran', [AttendanceController::class, 'index'])->name('laporan.kehadiran');
+Route::get('/laporan-kehadiran/export', [AttendanceController::class, 'export'])->name('laporan.kehadiran.export');
+
+// Semua route yang butuh login dan role admin/superadmin
+Route::middleware(['auth', 'role:admin,superadmin'])->group(function () {
+    // Dashboard tunggal
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Resource routes
+    Route::resource('management', ManagementController::class)->names('management');
+    Route::resource('santri', SantriController::class)->names('santri');
+    Route::resource('orang-tua', OrangtuaController::class)->names('orangtua');
+    Route::resource('staff', StaffController::class)->names('staff');
+    Route::resource('report', ReportController::class)->names('report');
+    Route::resource('faq', FaqController::class);
+    Route::resource('chat', ChatController::class)->names('chat');
+    Route::resource('announcement', PengumumanController::class)->names('announcement');
+    Route::resource('pengumuman', PengumumanController::class)->names('pengumuman');
+    Route::resource('attendance', AttendanceController::class)->names('attendance');
+    Route::resource('profile', ProfileController::class)->names('profile');
+    Route::resource('perizinan', PerizinanController::class)->names('perizinan');
+    Route::get('/santri-search', [SantriController::class, 'search'])->name('santri.search');
+
+
+    // Tambahan endpoint khusus
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::get('/chat/{id_staf}/{id_ortu}', fn ($id_staf, $id_ortu) => view('chat', compact('id_staf', 'id_ortu')));
+    Route::get('/announcement', fn () => view('announcement'))->name('announcement');
+    Route::post('/api/chat/send', [ChatController::class, 'store']);
+    Route::get('/api/chat/session/{id}', [ChatController::class, 'getSessionMessages']);
+    Route::get('/laporan-kehadiran/export', [AttendanceController::class, 'export'])->name('attendance.export');
 });
+
