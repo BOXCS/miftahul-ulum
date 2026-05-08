@@ -18,61 +18,40 @@ class ApiController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            "email" => "required|email",
-            "password" => "required",
+            'email'    => 'required|email',
+            'password' => 'required',
         ]);
 
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-            $parent = ParentModel::where("user_id", $user->id)->first();
+        // ← Cari user manual, jangan pakai Auth::attempt() (itu untuk session/web)
+        $user = User::where('email', $credentials['email'])->first();
 
-            if ($parent) {
-                return response()->json([
-                    "success" => true,
-                    "token" => "dummy-token-" . $user->id,
-                    "akun" => [
-                        "id_akun" => $parent->id,
-                        "email" => $user->email,
-                        "username" => $user->name,
-                        "hak_akses" => "orang_tua",
-                    ],
-                ]);
-            }
-        }
-
-        return response()->json(
-            ["success" => false, "message" => "Email atau password salah."],
-            401,
-        );
-    }
-
-    public function pengumuman()
-    {
-        return response()->json(Announcement::latest()->get());
-    }
-
-    public function santriById($id)
-    {
-        $s = Student::find($id);
-
-        if (!$s) {
+        if (!$user || !\Hash::check($credentials['password'], $user->password)) {
             return response()->json([
-                "success" => false,
-                "message" => "Not found",
-                "data" => null,
-            ]);
+                'success' => false,
+                'message' => 'Email atau password salah.',
+            ], 401);
         }
+
+        $parent = ParentModel::where('user_id', $user->id)->first();
+
+        if (!$parent) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akun ini bukan orang tua santri.',
+            ], 403);
+        }
+
+        $user->tokens()->delete();
+        $token = $user->createToken('mobile-app')->plainTextToken;
 
         return response()->json([
-            "success" => true,
-            "message" => "OK",
-            "data" => [
-                "id_santri" => (string) $s->id,
-                "nama" => $s->name,
-                "tahun_angkatan" => $s->class,
-                "sidik_jari" => null,
-                "status" => $s->status ?? "aktif",
-                "id_ortu" => (int) ($s->parent_id ?? 0),
+            'success' => true,
+            'token'   => $token,
+            'akun'    => [
+                'id_akun'   => $parent->id,
+                'email'     => $user->email,
+                'username'  => $user->name,
+                'hak_akses' => 'orang_tua',
             ],
         ]);
     }
@@ -173,32 +152,69 @@ class ApiController extends Controller
         return response()->json(["success" => true, "data" => $permissions]);
     }
 
-    public function chatHistory($parentId)
+    public function chatHistory(Request $request, $parentId)
     {
-        $messages = ChatMessage::where("parent_id", $parentId)
+        // Pastikan orang tua hanya bisa lihat chat miliknya
+        $user   = $request->user();
+        $parent = ParentModel::where('user_id', $user->id)->firstOrFail();
+
+        if ((int) $parent->id !== (int) $parentId) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
+        // Mark pesan dari admin sebagai sudah dibaca
+        ChatMessage::where('parent_id', $parentId)
+            ->where('is_from_admin', true)
+            ->where('is_read', false)
+            ->update(['is_read' => true, 'read_at' => now()]);
+
+        $messages = ChatMessage::where('parent_id', $parentId)
             ->oldest()
             ->get()
-            ->map(
-                fn($m) => [
-                    "pesan" => $m->pesan,
-                    "is_from_admin" => $m->is_from_admin,
-                    "created_at" => $m->created_at->toIso8601String(),
-                ],
-            );
-        return response()->json($messages);
+            ->map(fn($m) => [
+                'id'            => $m->id,
+                'pesan'         => $m->pesan,
+                'is_from_admin' => $m->is_from_admin,
+                'is_read'       => $m->is_read,
+                'time'          => $m->created_at->format('H:i'),
+                'created_at'    => $m->created_at->toIso8601String(),
+            ]);
+
+        return response()->json(['success' => true, 'data' => $messages]);
     }
 
     public function sendMessage(Request $request, $parentId)
     {
+        $user   = $request->user();
+        $parent = ParentModel::where('user_id', $user->id)->firstOrFail();
+
+        if ((int) $parent->id !== (int) $parentId) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
+        $validated = $request->validate([
+            'pesan' => 'required|string|max:1000',
+        ]);
+
         $msg = ChatMessage::create([
-            "parent_id" => $parentId,
-            "pesan" => $request->pesan,
-            "is_from_admin" => false,
-            "is_read" => false,
+            'parent_id'     => $parentId,
+            'pesan'         => $validated['pesan'],
+            'is_from_admin' => false,
+            'is_read'       => false,
         ]);
 
         broadcast(new \App\Events\MessageSent($msg))->toOthers();
 
-        return response()->json(["success" => true, "message" => $msg]);
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'id'            => $msg->id,
+                'pesan'         => $msg->pesan,
+                'is_from_admin' => $msg->is_from_admin,
+                'is_read'       => $msg->is_read,
+                'time'          => $msg->created_at->format('H:i'),
+                'created_at'    => $msg->created_at->toIso8601String(),
+            ],
+        ]);
     }
 }

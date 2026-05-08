@@ -7,8 +7,10 @@ Broadcast::channel("App.Models.User.{id}", function ($user, $id) {
 });
 
 Broadcast::channel("chat.{parentId}", function ($user, $parentId) {
-    // For now, allow admin to access any chat.
-    // In production, check if user is admin or the parent.
-    return true;
+    \Log::info('Broadcast auth attempt', [
+        'user' => $user?->id,
+        'parentId' => $parentId,
+    ]);
+    return true; // izinkan semua dulu untuk debug
 });
 
