@@ -35,6 +35,15 @@ class MessageSent implements ShouldBroadcast
     }
 
     /**
+     * Nama event yang dikirim via Reverb (tanpa namespace).
+     * Wajib konsisten antara web (Echo .listen('.MessageSent')) dan mobile (Pusher 'MessageSent').
+     */
+    public function broadcastAs(): string
+    {
+        return 'MessageSent';
+    }
+
+    /**
      * Data to broadcast.
      */
     public function broadcastWith(): array

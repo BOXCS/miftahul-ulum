@@ -54,6 +54,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Chat
     Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
+    Route::get('/chat/{parentId}/messages', [ChatController::class, 'messages'])->name('chat.messages');
     Route::get('/chat/{parentId}', [ChatController::class, 'show'])->name('chat.show');
     Route::post('/chat/{parentId}', [ChatController::class, 'send'])->name('chat.send');
 

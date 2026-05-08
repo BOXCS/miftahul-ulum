@@ -86,7 +86,7 @@ class ChatController extends Controller
 
     public function send(Request $request, int $parentId)
     {
-        $parent = ParentModel::findOrFail($parentId);
+        ParentModel::findOrFail($parentId);
 
         $validated = $request->validate([
             "pesan" => "required|string|max:1000",
@@ -101,8 +101,46 @@ class ChatController extends Controller
 
         broadcast(new \App\Events\MessageSent($message))->toOthers();
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                "success" => true,
+                "message" => [
+                    "id"            => $message->id,
+                    "is_from_admin" => $message->is_from_admin,
+                    "pesan"         => $message->pesan,
+                    "time"          => $message->created_at->format("H:i"),
+                    "is_read"       => $message->is_read,
+                ],
+            ]);
+        }
+
         return redirect()
             ->route("chat.index", ["active" => $parentId])
             ->with("success", "Pesan berhasil dikirim.");
+    }
+
+    public function messages(int $parentId): \Illuminate\Http\JsonResponse
+    {
+        ParentModel::findOrFail($parentId);
+
+        // Tandai semua pesan masuk dari wali santri sebagai sudah dibaca
+        ChatMessage::where("parent_id", $parentId)
+            ->where("is_from_admin", false)
+            ->where("is_read", false)
+            ->update(["is_read" => true, "read_at" => now()]);
+
+        $messages = ChatMessage::where("parent_id", $parentId)
+            ->oldest("created_at")
+            ->get()
+            ->map(fn($m) => [
+                "id"            => $m->id,
+                "is_from_admin" => $m->is_from_admin,
+                "pesan"         => $m->pesan,
+                "time"          => $m->created_at->format("H:i"),
+                "is_read"       => $m->is_read,
+            ])
+            ->toArray();
+
+        return response()->json(["messages" => $messages]);
     }
 }

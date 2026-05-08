@@ -538,6 +538,10 @@
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--slate-200); border-radius: 5px; }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
 </style>
 @endpush
 
@@ -545,12 +549,12 @@
 <div
     class="chat-layout"
     x-data="{
-        activeChat: @js($activeParentId ?? 1),
+        activeChat: @js($activeParentId),
         message: '',
         searchQuery: '',
         conversations: @js($parentsArray),
         messages: @js($messages),
-        activeParent: @js($activeParent),
+        loadingMessages: false,
         showEmoji: false,
         attachedFile: null,
         get filtered() {
@@ -592,22 +596,80 @@
             this.attachedFile = null;
             document.getElementById('fileInput').value = '';
         },
-        sendMessage() {
+        async loadMessages(parentId) {
+            if (!parentId) return;
+            this.loadingMessages = true;
+            this.messages = [];
+            try {
+                const { data } = await window.axios.get(`/chat/${parentId}/messages`);
+                this.messages = data.messages ?? [];
+                const conv = this.conversations.find(c => c.id === parentId);
+                if (conv) conv.unread = 0;
+                this.scrollToBottom();
+            } catch(e) {
+                console.error('Gagal memuat pesan:', e);
+            } finally {
+                this.loadingMessages = false;
+            }
+        },
+        async sendMessage() {
             if (!this.message.trim() && !this.attachedFile) return;
-            document.getElementById('messageForm').action = `/chat/${this.activeChat}`;
-            document.getElementById('messageForm').submit();
+            const text = this.message;
+            this.message = '';
+            this.$nextTick(() => {
+                const ta = document.getElementById('msgTextarea');
+                if (ta) ta.style.height = 'auto';
+            });
+            try {
+                // Kirim socket ID agar Laravel ->toOthers() skip Echo admin ini,
+                // sehingga admin tidak menerima pesannya sendiri via WebSocket (duplikat).
+                const socketId = window.Echo?.socketId?.() ?? null;
+                const extraHeaders = socketId ? { 'X-Socket-ID': socketId } : {};
+                const { data } = await window.axios.post(
+                    `/chat/${this.activeChat}`,
+                    { pesan: text },
+                    { headers: extraHeaders },
+                );
+                if (data.success && data.message) {
+                    this.messages.push(data.message);
+                    this.scrollToBottom();
+                    const conv = this.conversations.find(c => c.id === this.activeChat);
+                    if (conv) {
+                        conv.lastMessage = text.length > 40 ? text.substring(0, 40) + '...' : text;
+                        conv.time = 'baru saja';
+                    }
+                }
+            } catch(e) {
+                this.message = text;
+                console.error('Gagal mengirim pesan:', e);
+            }
         },
         listenForMessages() {
-            if (!this.activeChat) return;
-            window.Echo.leave(`chat.${this.activeChat}`);
-            window.Echo.private(`chat.${this.activeChat}`)
-                .listen('MessageSent', (e) => {
-                    this.messages.push({ id: e.id, pesan: e.pesan, is_from_admin: e.is_from_admin, time: e.time });
-                    this.scrollToBottom();
-                });
+            if (!this.activeChat || !window.Echo) return;
+            try {
+                window.Echo.leave(`chat.${this.activeChat}`);
+                // Dot prefix (.MessageSent) agar Echo tidak prepend namespace,
+                // karena broadcastAs() sudah mengembalikan nama pendek 'MessageSent'.
+                window.Echo.private(`chat.${this.activeChat}`)
+                    .listen('.MessageSent', (e) => {
+                        this.messages.push({ id: e.id, pesan: e.pesan, is_from_admin: e.is_from_admin, time: e.time });
+                        this.scrollToBottom();
+                        if (!e.is_from_admin) {
+                            const conv = this.conversations.find(c => c.id === this.activeChat);
+                            if (conv) { conv.lastMessage = e.pesan.substring(0, 40); conv.time = 'baru saja'; }
+                        }
+                    });
+            } catch(err) {
+                console.warn('WebSocket tidak tersedia:', err);
+            }
         }
     }"
-    x-init="scrollToBottom(); $watch('activeChat', () => listenForMessages()); listenForMessages();"
+    x-init="
+        if (activeChat) { scrollToBottom(); listenForMessages(); }
+        $watch('activeChat', async (id) => {
+            if (id) { await loadMessages(id); listenForMessages(); }
+        });
+    "
     @click.outside="showEmoji = false"
 >
 
@@ -705,7 +767,17 @@
         <div class="chat-messages-area" id="msgArea">
             <div class="date-sep">Hari ini &nbsp;{{ now()->locale('id')->isoFormat('D MMMM YYYY') }}</div>
 
-            <template x-if="messages.length === 0">
+            {{-- Loading state --}}
+            <template x-if="loadingMessages">
+                <div class="flex items-center justify-center py-16">
+                    <div style="text-align:center;color:var(--slate-400);">
+                        <div style="width:40px;height:40px;border:3px solid var(--teal-200);border-top-color:var(--teal-500);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px;"></div>
+                        <p style="font-size:.78rem;">Memuat pesan…</p>
+                    </div>
+                </div>
+            </template>
+
+            <template x-if="!loadingMessages && messages.length === 0">
                 <div class="flex items-center justify-center py-16">
                     <div style="text-align:center;color:var(--slate-400);">
                         <div style="width:56px;height:56px;background:var(--teal-50);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;border:1px solid rgba(13,148,136,.15);">
@@ -761,28 +833,21 @@
                 </button>
                 <input type="file" id="fileInput" style="display:none;" @change="handleFile($event)">
 
-                {{-- Message form --}}
-                <form id="messageForm" method="POST" class="flex flex-1 items-end gap-2" enctype="multipart/form-data">
-                    @csrf
-                    <input type="hidden" name="parent_id" :value="activeChat">
+                {{-- Emoji toggle --}}
+                <button type="button" class="input-action-btn" :class="{ 'active-emoji': showEmoji }" title="Emoji" @click.stop="showEmoji = !showEmoji">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                </button>
 
-                    {{-- Emoji toggle --}}
-                    <button type="button" class="input-action-btn" :class="{ 'active-emoji': showEmoji }" title="Emoji" @click.stop="showEmoji = !showEmoji">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-                    </button>
-
-                    <div class="msg-input-box">
-                        <textarea
-                            id="msgTextarea"
-                            name="pesan"
-                            x-model="message"
-                            @input="autoResize($el)"
-                            @keydown.enter.prevent.exact="sendMessage()"
-                            placeholder="Ketik pesan…"
-                            rows="1"
-                        ></textarea>
-                    </div>
-                </form>
+                <div class="msg-input-box flex-1">
+                    <textarea
+                        id="msgTextarea"
+                        x-model="message"
+                        @input="autoResize($el)"
+                        @keydown.enter.prevent.exact="sendMessage()"
+                        placeholder="Ketik pesan…"
+                        rows="1"
+                    ></textarea>
+                </div>
 
                 {{-- Send --}}
                 <button type="button" class="send-btn" @click="sendMessage()" title="Kirim">
