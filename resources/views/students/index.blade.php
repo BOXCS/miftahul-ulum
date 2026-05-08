@@ -740,6 +740,7 @@
                     <th style="width:48px;text-align:center;">No</th>
                     <th>NIS</th>
                     <th>Nama Santri</th>
+                    <th>Orang Tua / Wali</th>
                     <th style="text-align:center;">Kelas</th>
                     <th style="text-align:center;">Kelamin</th>
                     <th style="text-align:center;">Status</th>
@@ -748,7 +749,7 @@
             </thead>
             <tbody>
                 <tr class="empty-row" x-show="filtered.length === 0">
-                    <td colspan="7">
+                    <td colspan="8">
                         <div class="empty-ico-wrap">📋</div>
                         <p style="font-size:.82rem;font-weight:600;">Tidak ada data ditemukan</p>
                     </td>
@@ -766,8 +767,11 @@
                                 <div class="ava" :style="s.gender==='Perempuan'?'background:#fce7f3;color:#db2777;':'background:#dbeafe;color:#2563eb;'">
                                     <span x-text="initials(s.name)"></span>
                                 </div>
-<span style="font-size:.82rem;font-weight:700;color:#1e293b;" x-text="s.name"></span>
+                                <span style="font-size:.82rem;font-weight:700;color:#1e293b;" x-text="s.name"></span>
                             </div>
+                        </td>
+                        <td>
+                            <span style="font-size:.78rem;font-weight:600;color:#475569;" x-text="s.parent ? s.parent.name : '-'"></span>
                         </td>
                         <td style="text-align:center;">
                             <span class="bdg bdg-teal" x-text="s.class"></span>

@@ -65,7 +65,7 @@ class StudentController extends Controller
     {
         $validated = $request->validate([
             "name" => "required|string|max:100",
-            "parent_id" => "nullable|exists:parents,id",
+            "parent_id" => "required|exists:parents,id",
             "nis" => "required|string|unique:students,nis",
             "gender" => "required|in:Laki-laki,Perempuan",
             "tanggal_lahir" => "required|date",
@@ -104,7 +104,7 @@ class StudentController extends Controller
 
         $validated = $request->validate([
             "name" => "required|string|max:100",
-            "parent_id" => "nullable|exists:parents,id",
+            "parent_id" => "required|exists:parents,id",
             "nis" => "required|string|unique:students,nis," . $id,
             "gender" => "required|in:Laki-laki,Perempuan",
             "tanggal_lahir" => "required|date",

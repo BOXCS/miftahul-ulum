@@ -590,6 +590,19 @@
                         </div>
                     </div>
 
+                    {{-- Orang Tua --}}
+                    <div class="sf-field" style="margin-bottom: 16px;">
+                        <label for="parent_id" class="sf-label">Orang Tua / Wali <span class="sf-label-req">*</span></label>
+                        <select id="parent_id" name="parent_id" class="sf-select @error('parent_id') is-error @enderror" required>
+                            <option value="" disabled {{ old('parent_id') ? '' : 'selected' }}>Pilih orang tua yang terdaftar...</option>
+                            @foreach ($parents as $parent)
+                            <option value="{{ $parent->id }}" {{ old('parent_id') == $parent->id ? 'selected' : '' }}>{{ $parent->name }} ({{ $parent->phone ?? '-' }})</option>
+                            @endforeach
+                        </select>
+                        <p class="sf-hint">Orang tua wajib ditambahkan dahulu melalui menu Orang Tua.</p>
+                        @error('parent_id')<p class="sf-err">{{ $message }}</p>@enderror
+                    </div>
+
                     {{-- NIS + Nama --}}
                     <div class="sf-grid-2" style="margin-bottom: 16px;">
                         <div class="sf-field">
@@ -601,55 +614,45 @@
                             @error('nis')<p class="sf-err">{{ $message }}</p>@enderror
                         </div>
                         <div class="sf-field">
-                            <label for="nama" class="sf-label">Nama Lengkap <span class="sf-label-req">*</span></label>
-                            <input id="nama" type="text" name="nama"
-                                class="sf-input @error('nama') is-error @enderror"
+                            <label for="name" class="sf-label">Nama Lengkap <span class="sf-label-req">*</span></label>
+                            <input id="name" type="text" name="name"
+                                class="sf-input @error('name') is-error @enderror"
                                 placeholder="Nama lengkap sesuai akta"
-                                value="{{ old('nama') }}" required autocomplete="off">
-                            @error('nama')<p class="sf-err">{{ $message }}</p>@enderror
+                                value="{{ old('name') }}" required autocomplete="off">
+                            @error('name')<p class="sf-err">{{ $message }}</p>@enderror
                         </div>
                     </div>
 
                     {{-- Kelas + JK --}}
                     <div class="sf-grid-2" style="margin-bottom: 16px;">
                         <div class="sf-field">
-                            <label for="kelas" class="sf-label">Kelas <span class="sf-label-req">*</span></label>
-                            <select id="kelas" name="kelas" class="sf-select @error('kelas') is-error @enderror" required>
-                                <option value="" disabled {{ old('kelas') ? '' : 'selected' }}>Pilih kelas</option>
+                            <label for="class" class="sf-label">Kelas <span class="sf-label-req">*</span></label>
+                            <select id="class" name="class" class="sf-select @error('class') is-error @enderror" required>
+                                <option value="" disabled {{ old('class') ? '' : 'selected' }}>Pilih kelas</option>
                                 @foreach (['7A','7B','8A','8B','9A','9B'] as $kelas)
-                                <option value="{{ $kelas }}" {{ old('kelas') === $kelas ? 'selected' : '' }}>Kelas {{ $kelas }}</option>
+                                <option value="{{ $kelas }}" {{ old('class') === $kelas ? 'selected' : '' }}>Kelas {{ $kelas }}</option>
                                 @endforeach
                             </select>
-                            @error('kelas')<p class="sf-err">{{ $message }}</p>@enderror
+                            @error('class')<p class="sf-err">{{ $message }}</p>@enderror
                         </div>
                         <div class="sf-field">
-                            <label for="jenis_kelamin" class="sf-label">Jenis Kelamin <span class="sf-label-req">*</span></label>
-                            <select id="jenis_kelamin" name="jenis_kelamin" class="sf-select @error('jenis_kelamin') is-error @enderror" required>
-                                <option value="" disabled {{ old('jenis_kelamin') ? '' : 'selected' }}>Pilih jenis kelamin</option>
-                                <option value="Laki-laki" {{ old('jenis_kelamin') === 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
-                                <option value="Perempuan" {{ old('jenis_kelamin') === 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                            <label for="gender" class="sf-label">Jenis Kelamin <span class="sf-label-req">*</span></label>
+                            <select id="gender" name="gender" class="sf-select @error('gender') is-error @enderror" required>
+                                <option value="" disabled {{ old('gender') ? '' : 'selected' }}>Pilih jenis kelamin</option>
+                                <option value="Laki-laki" {{ old('gender') === 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                                <option value="Perempuan" {{ old('gender') === 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
                             </select>
-                            @error('jenis_kelamin')<p class="sf-err">{{ $message }}</p>@enderror
+                            @error('gender')<p class="sf-err">{{ $message }}</p>@enderror
                         </div>
                     </div>
 
-                    {{-- Tanggal + Tempat Lahir --}}
-                    <div class="sf-grid-2">
-                        <div class="sf-field">
-                            <label for="tanggal_lahir" class="sf-label">Tanggal Lahir <span class="sf-label-req">*</span></label>
-                            <input id="tanggal_lahir" type="date" name="tanggal_lahir"
-                                class="sf-input @error('tanggal_lahir') is-error @enderror"
-                                value="{{ old('tanggal_lahir') }}" required>
-                            @error('tanggal_lahir')<p class="sf-err">{{ $message }}</p>@enderror
-                        </div>
-                        <div class="sf-field">
-                            <label for="tempat_lahir" class="sf-label">Tempat Lahir <span class="sf-label-req">*</span></label>
-                            <input id="tempat_lahir" type="text" name="tempat_lahir"
-                                class="sf-input @error('tempat_lahir') is-error @enderror"
-                                placeholder="Kota tempat lahir"
-                                value="{{ old('tempat_lahir') }}" required autocomplete="off">
-                            @error('tempat_lahir')<p class="sf-err">{{ $message }}</p>@enderror
-                        </div>
+                    {{-- Tanggal Lahir --}}
+                    <div class="sf-field">
+                        <label for="tanggal_lahir" class="sf-label">Tanggal Lahir <span class="sf-label-req">*</span></label>
+                        <input id="tanggal_lahir" type="date" name="tanggal_lahir"
+                            class="sf-input @error('tanggal_lahir') is-error @enderror"
+                            value="{{ old('tanggal_lahir') }}" required>
+                        @error('tanggal_lahir')<p class="sf-err">{{ $message }}</p>@enderror
                     </div>
                 </div>{{-- end identitas --}}
 
@@ -670,43 +673,22 @@
                     </div>
 
                     <div class="sf-field" style="margin-bottom: 16px;">
-                        <label for="alamat" class="sf-label">Alamat Lengkap <span class="sf-label-req">*</span></label>
-                        <textarea id="alamat" name="alamat" class="sf-textarea @error('alamat') is-error @enderror"
-                            placeholder="Jl. Contoh No. 1, RT 01/RW 01, Desa/Kel., Kecamatan…" required>{{ old('alamat') }}</textarea>
-                        @error('alamat')<p class="sf-err">{{ $message }}</p>@enderror
-                    </div>
-
-                    <div class="sf-grid-2" style="margin-bottom: 16px;">
-                        <div class="sf-field">
-                            <label for="provinsi" class="sf-label">Provinsi</label>
-                            <select id="provinsi" name="provinsi"
-                                class="sf-select @error('provinsi') is-error @enderror">
-                                <option value="">Memuat provinsi...</option>
-                            </select>
-                            @error('provinsi')<p class="sf-err">{{ $message }}</p>@enderror
-                        </div>
-
-                        <div class="sf-field">
-                            <label for="kota" class="sf-label">Kabupaten / Kota</label>
-                            <select id="kota" name="kota"
-                                class="sf-select @error('kota') is-error @enderror"
-                                disabled>
-                                <option value="">Pilih provinsi dahulu</option>
-                            </select>
-                            @error('kota')<p class="sf-err">{{ $message }}</p>@enderror
-                        </div>
+                        <label for="address" class="sf-label">Alamat Lengkap <span class="sf-label-req">*</span></label>
+                        <textarea id="address" name="address" class="sf-textarea @error('address') is-error @enderror"
+                            placeholder="Jl. Contoh No. 1, RT 01/RW 01, Desa/Kel., Kecamatan…" required>{{ old('address') }}</textarea>
+                        @error('address')<p class="sf-err">{{ $message }}</p>@enderror
                     </div>
 
                     <div class="sf-field">
-                        <label for="no_hp_wali" class="sf-label">No. HP Wali <span class="sf-label-opt">(Opsional)</span></label>
+                        <label for="phone" class="sf-label">No. HP / Kontak <span class="sf-label-opt">(Opsional)</span></label>
                         <div class="sf-phone-wrap">
                             <span class="sf-phone-prefix">+62</span>
-                            <input id="no_hp_wali" type="tel" name="no_hp_wali"
-                                class="sf-input sf-phone-input @error('no_hp_wali') is-error @enderror"
+                            <input id="phone" type="tel" name="phone"
+                                class="sf-input sf-phone-input @error('phone') is-error @enderror"
                                 placeholder="812 3456 7890"
-                                value="{{ old('no_hp_wali') }}" autocomplete="off">
+                                value="{{ old('phone') }}" autocomplete="off">
                         </div>
-                        @error('no_hp_wali')<p class="sf-err">{{ $message }}</p>@enderror
+                        @error('phone')<p class="sf-err">{{ $message }}</p>@enderror
                     </div>
                 </div>{{-- end alamat --}}
 
@@ -731,27 +713,21 @@
                         <div class="sf-field">
                             <label for="status" class="sf-label">Status <span class="sf-label-req">*</span></label>
                             <select id="status" name="status" class="sf-select @error('status') is-error @enderror" required>
-                                <option value="Aktif" {{ old('status', 'Aktif') === 'Aktif' ? 'selected' : '' }}>Aktif</option>
-                                <option value="Cuti" {{ old('status') === 'Cuti' ? 'selected' : '' }}>Cuti</option>
-                                <option value="Keluar" {{ old('status') === 'Keluar' ? 'selected' : '' }}>Keluar</option>
+                                <option value="aktif" {{ old('status', 'aktif') === 'aktif' ? 'selected' : '' }}>Aktif</option>
+                                <option value="alumni" {{ old('status') === 'alumni' ? 'selected' : '' }}>Alumni</option>
+                                <option value="keluar" {{ old('status') === 'keluar' ? 'selected' : '' }}>Keluar</option>
                             </select>
                             @error('status')<p class="sf-err">{{ $message }}</p>@enderror
                         </div>
                         <div class="sf-field">
-                            <label for="tahun_masuk" class="sf-label">Tahun Masuk</label>
-                            <input id="tahun_masuk" type="number" name="tahun_masuk"
-                                class="sf-input @error('tahun_masuk') is-error @enderror"
+                            <label for="tahun_angkatan" class="sf-label">Tahun Angkatan <span class="sf-label-req">*</span></label>
+                            <input id="tahun_angkatan" type="number" name="tahun_angkatan"
+                                class="sf-input @error('tahun_angkatan') is-error @enderror"
                                 placeholder="{{ date('Y') }}"
-                                value="{{ old('tahun_masuk', date('Y')) }}"
-                                min="2000" max="{{ date('Y') }}">
-                            @error('tahun_masuk')<p class="sf-err">{{ $message }}</p>@enderror
+                                value="{{ old('tahun_angkatan', date('Y')) }}"
+                                min="2000" max="{{ date('Y') + 1 }}" required>
+                            @error('tahun_angkatan')<p class="sf-err">{{ $message }}</p>@enderror
                         </div>
-                    </div>
-
-                    <div class="sf-field">
-                        <label for="catatan" class="sf-label">Catatan <span class="sf-label-opt">(Opsional)</span></label>
-                        <textarea id="catatan" name="catatan" class="sf-textarea"
-                            placeholder="Catatan khusus tentang santri…">{{ old('catatan') }}</textarea>
                     </div>
                 </div>{{-- end info --}}
 
@@ -811,113 +787,3 @@
     </div>{{-- end sf-main --}}
 </div>
 @endsection
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const provinsiSelect = document.getElementById('provinsi');
-        const kotaSelect = document.getElementById('kota');
-
-        if (!provinsiSelect || !kotaSelect) return;
-
-        const oldProvinsi = document.getElementById('oldProvinsi')?.value || '';
-        const oldKota = document.getElementById('oldKota')?.value || '';
-
-        async function fetchJson(url) {
-            const response = await fetch(url, {
-                cache: 'no-store'
-            });
-
-            if (!response.ok) {
-                throw new Error(`Gagal mengambil data: ${url}`);
-            }
-
-            return response.json();
-        }
-
-        function sama(a, b) {
-            return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
-        }
-
-        function resetKota(text = 'Pilih provinsi dahulu') {
-            kotaSelect.innerHTML = `<option value="">${text}</option>`;
-            kotaSelect.disabled = true;
-        }
-
-        async function loadProvinsi() {
-            try {
-                provinsiSelect.innerHTML = '<option value="">Memuat provinsi...</option>';
-                resetKota();
-
-                const dataProvinsi = await fetchJson('/data-wilayah/provinces.json');
-
-                provinsiSelect.innerHTML = '<option value="">Pilih provinsi</option>';
-
-                dataProvinsi.forEach((provinsi) => {
-                    const option = document.createElement('option');
-                    option.value = provinsi.name;
-                    option.textContent = provinsi.name;
-                    option.dataset.kode = provinsi.id;
-
-                    if (sama(oldProvinsi, provinsi.name)) {
-                        option.selected = true;
-                    }
-
-                    provinsiSelect.appendChild(option);
-                });
-
-                if (oldProvinsi) {
-                    await loadKabupatenKota(true);
-                }
-            } catch (error) {
-                console.error(error);
-                provinsiSelect.innerHTML = '<option value="">Gagal memuat provinsi</option>';
-                resetKota('Gagal memuat kabupaten/kota');
-            }
-        }
-
-        async function loadKabupatenKota(useOldValue = false) {
-            const selectedOption = provinsiSelect.options[provinsiSelect.selectedIndex];
-            const kodeProvinsi = selectedOption?.dataset?.kode;
-
-            if (!kodeProvinsi) {
-                resetKota();
-                return;
-            }
-
-            try {
-                kotaSelect.disabled = true;
-                kotaSelect.innerHTML = '<option value="">Memuat kabupaten/kota...</option>';
-
-                const dataKota = await fetchJson(`/data-wilayah/regencies/${kodeProvinsi}.json`);
-
-                kotaSelect.innerHTML = '<option value="">Pilih kabupaten/kota</option>';
-
-                dataKota.forEach((kota) => {
-                    const option = document.createElement('option');
-                    option.value = kota.name;
-                    option.textContent = kota.name;
-                    option.dataset.kode = kota.id;
-
-                    if (useOldValue && sama(oldKota, kota.name)) {
-                        option.selected = true;
-                    }
-
-                    kotaSelect.appendChild(option);
-                });
-
-                kotaSelect.disabled = false;
-            } catch (error) {
-                console.error(error);
-                kotaSelect.innerHTML = '<option value="">Data kabupaten/kota belum tersedia</option>';
-                kotaSelect.disabled = true;
-            }
-        }
-
-        provinsiSelect.addEventListener('change', () => {
-            loadKabupatenKota(false);
-        });
-
-        loadProvinsi();
-    });
-</script>
-@endpush
