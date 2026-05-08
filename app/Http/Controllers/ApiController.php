@@ -177,6 +177,42 @@ class ApiController extends Controller
         return response()->json(["success" => true, "data" => $permissions]);
     }
 
+    /**
+     * Endpoint auth channel Reverb khusus untuk mobile (tidak pakai session Laravel).
+     * Dipanggil otomatis oleh pusher_channels_flutter saat subscribe ke private channel.
+     * Authorization: Bearer dummy-token-{parentId}
+     */
+    public function broadcastAuth(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $authHeader = $request->header('Authorization', '');
+        if (!str_starts_with($authHeader, 'Bearer ')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $token = substr($authHeader, 7);
+
+        // Format token: "dummy-token-{parentId}"
+        if (!preg_match('/^dummy-token-(\d+)$/', $token, $matches)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $parentId    = (int) $matches[1];
+        $channelName = $request->input('channel_name', '');
+        $socketId    = $request->input('socket_id', '');
+
+        // Wali santri hanya boleh subscribe ke channel miliknya
+        if ($channelName !== "private-chat.{$parentId}") {
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
+
+        $appKey    = config('broadcasting.connections.reverb.key');
+        $appSecret = config('broadcasting.connections.reverb.secret');
+
+        $signature = hash_hmac('sha256', "{$socketId}:{$channelName}", $appSecret);
+
+        return response()->json(['auth' => "{$appKey}:{$signature}"]);
+    }
+
     public function chatHistory($parentId)
     {
         $messages = ChatMessage::where("parent_id", $parentId)

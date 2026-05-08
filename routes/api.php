@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ApiController;
 
 Route::post("/login", [ApiController::class, "login"]);
+// Auth channel Reverb untuk mobile (tidak pakai Laravel session)
+Route::post("/broadcasting/auth", [ApiController::class, "broadcastAuth"]);
 Route::get("/pengumuman", [ApiController::class, "pengumuman"]);
 Route::get("/santri/ortu/{id}", [ApiController::class, "santriByOrtu"]);
 Route::get("/santri/{id}", [ApiController::class, "santriById"]);
