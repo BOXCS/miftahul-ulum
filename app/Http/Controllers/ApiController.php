@@ -217,4 +217,17 @@ class ApiController extends Controller
             ],
         ]);
     }
+
+    public function saveFcmToken(Request $request)
+    {
+        $validated = $request->validate([
+            'fcm_token' => 'required|string',
+        ]);
+
+        $user   = $request->user();
+        $parent = ParentModel::where('user_id', $user->id)->firstOrFail();
+        $parent->update(['fcm_token' => $validated['fcm_token']]);
+
+        return response()->json(['success' => true]);
+    }
 }

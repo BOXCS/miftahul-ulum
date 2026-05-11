@@ -15,6 +15,7 @@ class ParentModel extends Model
         "phone",
         "email",
         "address",
+        "fcm_token",
     ];
 
     public function user()

@@ -22,4 +22,5 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::get('/chat/{parentId}/history', [ApiController::class, 'chatHistory']);
     Route::post('/chat/{parentId}/send-api', [ApiController::class, 'sendMessage']);
+    Route::post('/fcm-token', [ApiController::class, 'saveFcmToken']);
 });

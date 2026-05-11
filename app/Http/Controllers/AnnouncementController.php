@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Announcement;
+use App\Models\ParentModel;
+use App\Services\FcmService;
 use Illuminate\Http\Request;
 
 class AnnouncementController extends Controller
@@ -55,29 +57,15 @@ class AnnouncementController extends Controller
             $validated['published_at'] = now();
         }
 
-        Announcement::create($validated);
+        $announcement = Announcement::create($validated);
+
+        // Kirim FCM ke semua orang tua jika langsung dipublish
+        if ($announcement->is_published) {
+            $this->sendFcmToAllParents($announcement);
+        }
 
         return redirect()->route('announcements.index')
             ->with('success', 'Pengumuman berhasil ditambahkan.');
-    }
-
-    public function destroy(int $id): \Illuminate\Http\RedirectResponse
-    {
-        $announcement = Announcement::findOrFail($id);
-        $announcement->delete();
-
-        return redirect()->route('announcements.index')
-            ->with('success', 'Pengumuman berhasil dihapus.');
-    }
-    public function create(): \Illuminate\View\View
-    {
-        return view('announcements.create');
-    }
-
-    public function edit(int $id): \Illuminate\View\View
-    {
-        $announcement = Announcement::findOrFail($id);
-        return view('announcements.edit', compact('announcement'));
     }
 
     public function update(Request $request, int $id): \Illuminate\Http\RedirectResponse
@@ -93,8 +81,9 @@ class AnnouncementController extends Controller
         $published = $request->has('publish');
         $validated['is_published'] = $published;
 
-        if ($published && !$announcement->is_published) {
-            // Baru dipublish sekarang
+        $wasPublished = (bool) $announcement->is_published;
+
+        if ($published && !$wasPublished) {
             $validated['published_at'] = now();
         } elseif (!$published) {
             // Dikembalikan ke draft
@@ -103,7 +92,48 @@ class AnnouncementController extends Controller
 
         $announcement->update($validated);
 
+        // Kirim FCM hanya jika baru saja dipublish (transisi draft → published)
+        if (!$wasPublished && $announcement->is_published) {
+            $this->sendFcmToAllParents($announcement->fresh());
+        }
+
         return redirect()->route('announcements.index')
             ->with('success', 'Pengumuman berhasil diperbarui.');
+    }
+
+    public function destroy(int $id): \Illuminate\Http\RedirectResponse
+    {
+        Announcement::findOrFail($id)->delete();
+
+        return redirect()->route('announcements.index')
+            ->with('success', 'Pengumuman berhasil dihapus.');
+    }
+
+    public function create(): \Illuminate\View\View
+    {
+        return view('announcements.create');
+    }
+
+    public function edit(int $id): \Illuminate\View\View
+    {
+        $announcement = Announcement::findOrFail($id);
+        return view('announcements.edit', compact('announcement'));
+    }
+
+    // Helper — kirim FCM ke semua orang tua yang punya token
+    private function sendFcmToAllParents(Announcement $announcement): void
+    {
+        $tokens = ParentModel::whereNotNull('fcm_token')
+            ->pluck('fcm_token')
+            ->toArray();
+
+        if (empty($tokens)) return;
+
+        app(FcmService::class)->sendToMultipleTokens(
+            $tokens,
+            'Pengumuman Baru: ' . $announcement->judul,
+            strip_tags(substr($announcement->konten, 0, 100)) . '...',
+            ['type' => 'announcement', 'id' => (string) $announcement->id]
+        );
     }
 }
