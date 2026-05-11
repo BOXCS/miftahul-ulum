@@ -22,6 +22,7 @@ class Student extends Model
         "fingerprint_template",
         "fingerprint_quality",
         "scanned_at",
+        "fingerprint_id",
     ];
 
     protected $casts = [

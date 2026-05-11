@@ -23,3 +23,8 @@ Broadcast::channel("permissions-admin", function ($user) {
 Broadcast::channel("santri.{studentId}", function ($user, $studentId) {
     return $user !== null;
 });
+
+// Channel admin untuk hasil scan IoT (enrollment & absensi)
+Broadcast::channel("iot-admin", function ($user) {
+    return $user !== null;
+});

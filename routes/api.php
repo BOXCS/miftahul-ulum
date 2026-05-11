@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\IotController;
 
 Route::post("/login", [ApiController::class, "login"]);
 // Auth channel Reverb untuk mobile (tidak pakai Laravel session)
@@ -21,3 +22,11 @@ Route::post("/chat/{parentId}/send-api", [ApiController::class, "sendMessage"]);
 // FAQ — diakses oleh mobile (hanya yang is_active=true)
 Route::get("/faq", [ApiController::class, "getFaqs"]);
 Route::get("/faq/{id}", [ApiController::class, "getFaqById"]);
+
+// ─────────── IoT / Fingerprint (ESP32 ↔ Web) ───────────
+Route::get("/iot/ping", [IotController::class, "ping"]);                 // ESP32 auto-discovery
+Route::get("/iot/prayer-times", [IotController::class, "prayerTimes"]);  // Debug jadwal sholat aktif
+Route::get("/iot/poll", [IotController::class, "poll"]);                 // ESP32 polling
+Route::post("/iot/enroll-request", [IotController::class, "enrollRequest"]);   // Web → ESP32
+Route::post("/iot/enroll-complete", [IotController::class, "enrollComplete"]); // ESP32 lapor balik
+Route::post("/absensi/fingerprint", [IotController::class, "attendanceScan"]); // ESP32 → Server

@@ -16,143 +16,226 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $today = Carbon::today()->toDateString();
-        $totalSantri = Student::where("status", "aktif")->count();
-        $totalOpportunities = $totalSantri * 5;
+        $tz    = env('IOT_TIMEZONE', 'Asia/Jakarta');
+        $today = Carbon::today($tz);
 
-        // Statistics
-        $totalHadirHariIni = Attendance::where("tanggal", $today)
-            ->whereIn("status", ["hadir", "terlambat"])
-            ->count();
+        $totalSantri        = Student::where("status", "aktif")->count();
+        $totalOpportunities = $totalSantri * 5; // 5 waktu sholat
 
         $stats = [
-            "total_santri" => $totalSantri,
-            "hadir_hari_ini" => $totalHadirHariIni,
-            "izin_hari_ini" => Attendance::where("tanggal", $today)
-                ->where("status", "izin")
+            "total_santri"     => $totalSantri,
+            "hadir_hari_ini"   => Attendance::whereDate("tanggal", $today)
+                ->whereIn("status", ["hadir", "terlambat"])
                 ->count(),
-            "alpha_hari_ini" =>
-                $totalOpportunities -
-                Attendance::where("tanggal", $today)->count(),
-            "total_ortu" => ParentModel::count(),
-            "pengumuman_aktif" => Announcement::where(
-                "is_published",
-                true,
-            )->count(),
+            "izin_hari_ini"    => Attendance::whereDate("tanggal", $today)
+                ->whereIn("status", ["izin", "sakit"])
+                ->count(),
+            "alpha_hari_ini"   => max(0, $totalOpportunities - Attendance::whereDate("tanggal", $today)->count()),
+            "total_ortu"       => ParentModel::count(),
+            "pengumuman_aktif" => Announcement::where("is_published", true)->count(),
         ];
 
-        // Jadwal Shalat API (Using MyQuran / Aladhan as fallback)
-        $jadwalSholat = Cache::remember(
-            "jadwal_sholat_" . $today,
-            86400,
-            function () use ($today) {
-                try {
-                    // Default to Jakarta (ID 1301 for MyQuran or search by city)
-                    $response = Http::withoutVerifying()->get(
-                        "https://api.myquran.com/v2/sholat/jadwal/1301/" .
-                            date("Y/m/d"),
-                    );
-                    if ($response->successful()) {
-                        return $response->json()["data"]["jadwal"];
-                    }
-                } catch (\Exception $e) {
-                    return null;
-                }
+        // ─── Jadwal Sholat untuk lokasi pesantren (Aladhan API, Jember default) ───
+        $jadwalSholat = $this->fetchJadwalSholat($today);
+
+        // ─── Data chart dari database (bukan dummy) ───
+        $chartData = $this->buildChartData($tz);
+
+        // ─── Recent activities ───
+        $recent_activities = $this->buildRecentActivities($today);
+
+        return view("dashboard", compact("stats", "recent_activities", "jadwalSholat", "chartData"));
+    }
+
+    /**
+     * Fetch jadwal sholat dari Aladhan API (sama API yang dipakai IoT).
+     * Kota & negara dari .env (IOT_CITY, IOT_COUNTRY).
+     * Cache 24 jam per tanggal.
+     */
+    private function fetchJadwalSholat(Carbon $date): ?array
+    {
+        $city    = env('IOT_CITY', 'Jember');
+        $country = env('IOT_COUNTRY', 'Indonesia');
+        $method  = (int) env('IOT_PRAYER_METHOD', 20);
+
+        $cacheKey = "dashboard_jadwal_{$city}_" . $date->toDateString();
+        return Cache::remember($cacheKey, 86400, function () use ($date, $city, $country, $method) {
+            try {
+                $dmy  = $date->format('d-m-Y');
+                $resp = Http::withoutVerifying()
+                    ->timeout(8)
+                    ->get("http://api.aladhan.com/v1/timingsByCity/{$dmy}", [
+                        'city'    => $city,
+                        'country' => $country,
+                        'method'  => $method,
+                    ]);
+
+                if (!$resp->successful()) return null;
+
+                $t = $resp->json('data.timings', []);
+                $g = $resp->json('data.date.gregorian', []);
+                $h = $resp->json('data.date.hijri', []);
+
+                return [
+                    'tanggal' => $g['date'] ?? $date->format('d-m-Y'),
+                    'hijri'   => trim(($h['day'] ?? '') . ' ' . ($h['month']['en'] ?? '') . ' ' . ($h['year'] ?? '')),
+                    'subuh'   => substr(trim($t['Fajr']    ?? '00:00'), 0, 5),
+                    'terbit'  => substr(trim($t['Sunrise'] ?? '00:00'), 0, 5),
+                    'dzuhur'  => substr(trim($t['Dhuhr']   ?? '00:00'), 0, 5),
+                    'ashar'   => substr(trim($t['Asr']     ?? '00:00'), 0, 5),
+                    'maghrib' => substr(trim($t['Maghrib'] ?? '00:00'), 0, 5),
+                    'isya'    => substr(trim($t['Isha']    ?? '00:00'), 0, 5),
+                    'city'    => $city,
+                    'country' => $country,
+                ];
+            } catch (\Throwable $e) {
                 return null;
-            },
-        );
+            }
+        });
+    }
 
-        // Recent activities
-        $recent_activities = [];
+    /**
+     * Build chart data nyata dari tabel attendance.
+     *   7hari   → 6 hari kebelakang + hari ini
+     *   bulanan → 12 bulan tahun berjalan
+     *   tahunan → 5 tahun terakhir
+     */
+    private function buildChartData(string $tz): array
+    {
+        $totalSantri  = Student::where('status', 'aktif')->count();
+        $prayersCount = 5;
+        $year         = Carbon::now($tz)->year;
 
-        // Latest attendance records
-        $attendances = Attendance::with("student")
-            ->where("tanggal", $today)
-            ->latest("created_at")
-            ->limit(3)
-            ->get();
+        $dayNames   = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+        $monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
 
-        foreach ($attendances as $att) {
-            $recent_activities[] = [
-                "icon" => "attendance",
-                "text" =>
-                    $att->student->name .
-                    " — " .
-                    ucfirst($att->status) .
-                    " (" .
-                    $att->waktu_shalat .
-                    ")",
-                "time" => $att->created_at->diffForHumans(),
-                "color" => in_array($att->status, ["hadir", "terlambat"])
-                    ? "green"
-                    : ($att->status === "alpha"
-                        ? "red"
-                        : "amber"),
-            ];
+        // ── 7 hari terakhir ──
+        $sevenDays = ['labels' => [], 'hadir' => [], 'izin' => [], 'alpha' => []];
+        for ($i = 6; $i >= 0; $i--) {
+            $d = Carbon::today($tz)->subDays($i);
+            $sevenDays['labels'][] = $i === 0 ? 'Hari Ini' : $dayNames[$d->dayOfWeekIso - 1];
+
+            $hadir = Attendance::whereDate('tanggal', $d)->whereIn('status', ['hadir', 'terlambat'])->count();
+            $izin  = Attendance::whereDate('tanggal', $d)->whereIn('status', ['izin', 'sakit'])->count();
+            $total = Attendance::whereDate('tanggal', $d)->count();
+            $expected = $totalSantri * $prayersCount;
+            $alpha = max(0, $expected - $total);
+
+            $sevenDays['hadir'][] = $hadir;
+            $sevenDays['izin'][]  = $izin;
+            $sevenDays['alpha'][] = $alpha;
         }
 
-        // Latest permissions
-        $permissions = Permission::with("student")
+        // ── Bulanan (12 bulan tahun berjalan) ──
+        $bulanan = ['labels' => [], 'hadir' => [], 'izin' => [], 'alpha' => []];
+        for ($m = 1; $m <= 12; $m++) {
+            $bulanan['labels'][] = $monthNames[$m - 1];
+            $hadir = Attendance::whereYear('tanggal', $year)->whereMonth('tanggal', $m)
+                ->whereIn('status', ['hadir', 'terlambat'])->count();
+            $izin  = Attendance::whereYear('tanggal', $year)->whereMonth('tanggal', $m)
+                ->whereIn('status', ['izin', 'sakit'])->count();
+            $total = Attendance::whereYear('tanggal', $year)->whereMonth('tanggal', $m)->count();
+            $daysInMonth = Carbon::create($year, $m, 1)->daysInMonth;
+            $expected = $totalSantri * $prayersCount * $daysInMonth;
+            $alpha = max(0, $expected - $total);
+
+            $bulanan['hadir'][] = $hadir;
+            $bulanan['izin'][]  = $izin;
+            $bulanan['alpha'][] = $alpha;
+        }
+
+        // ── Tahunan (5 tahun terakhir, % rate) ──
+        $tahunan = ['labels' => [], 'hadir' => [], 'izin' => [], 'alpha' => []];
+        for ($i = 4; $i >= 0; $i--) {
+            $y = $year - $i;
+            $tahunan['labels'][] = (string) $y;
+            $hadir = Attendance::whereYear('tanggal', $y)->whereIn('status', ['hadir', 'terlambat'])->count();
+            $izin  = Attendance::whereYear('tanggal', $y)->whereIn('status', ['izin', 'sakit'])->count();
+            $total = Attendance::whereYear('tanggal', $y)->count();
+            $daysInYear = Carbon::createFromDate($y, 1, 1)->isLeapYear() ? 366 : 365;
+            $expected = $totalSantri * $prayersCount * $daysInYear;
+            $alpha = max(0, $expected - $total);
+
+            $tahunan['hadir'][] = $hadir;
+            $tahunan['izin'][]  = $izin;
+            $tahunan['alpha'][] = $alpha;
+        }
+
+        return [
+            '7hari'   => $sevenDays,
+            'bulanan' => $bulanan,
+            'tahunan' => $tahunan,
+        ];
+    }
+
+    /**
+     * Aktivitas terbaru: 5 paling baru dari attendance, permission, chat, announcement.
+     */
+    private function buildRecentActivities(Carbon $today): array
+    {
+        $activities = [];
+
+        Attendance::with("student")
+            ->whereDate("tanggal", $today)
+            ->latest("created_at")
+            ->limit(3)
+            ->get()
+            ->each(function ($att) use (&$activities) {
+                $activities[] = [
+                    "icon"  => "attendance",
+                    "text"  => ($att->student?->name ?? 'N/A') . " — " . ucfirst($att->status) . " (" . $att->waktu_shalat . ")",
+                    "time"  => $att->created_at->diffForHumans(),
+                    "color" => in_array($att->status, ["hadir", "terlambat"]) ? "green" : ($att->status === "alpha" ? "red" : "amber"),
+                    "ts"    => $att->created_at->timestamp,
+                ];
+            });
+
+        Permission::with("student")
             ->where("status", "pending")
             ->latest("created_at")
             ->limit(2)
-            ->get();
+            ->get()
+            ->each(function ($perm) use (&$activities) {
+                $activities[] = [
+                    "icon"  => "permission",
+                    "text"  => "Izin: " . ($perm->student?->name ?? 'N/A') . " — " . ucfirst($perm->jenis),
+                    "time"  => $perm->created_at->diffForHumans(),
+                    "color" => "amber",
+                    "ts"    => $perm->created_at->timestamp,
+                ];
+            });
 
-        foreach ($permissions as $perm) {
-            $recent_activities[] = [
-                "icon" => "permission",
-                "text" =>
-                    "Izin: " .
-                    $perm->student->name .
-                    " — " .
-                    ucfirst($perm->jenis),
-                "time" => $perm->created_at->diffForHumans(),
-                "color" => "amber",
-            ];
-        }
-
-        // Latest messages
-        $messages = ChatMessage::with("parent")
+        ChatMessage::with("parent")
             ->where("is_from_admin", false)
             ->latest("created_at")
             ->limit(1)
-            ->get();
+            ->get()
+            ->each(function ($msg) use (&$activities) {
+                $activities[] = [
+                    "icon"  => "message",
+                    "text"  => "Pesan dari " . ($msg->parent?->name ?? 'wali'),
+                    "time"  => $msg->created_at->diffForHumans(),
+                    "color" => "blue",
+                    "ts"    => $msg->created_at->timestamp,
+                ];
+            });
 
-        foreach ($messages as $msg) {
-            $recent_activities[] = [
-                "icon" => "message",
-                "text" => "Pesan dari " . $msg->parent->name,
-                "time" => $msg->created_at->diffForHumans(),
-                "color" => "blue",
-            ];
-        }
-
-        // Latest announcements
-        $announcements = Announcement::where("is_published", true)
+        Announcement::where("is_published", true)
             ->latest("published_at")
             ->limit(1)
-            ->get();
+            ->get()
+            ->each(function ($ann) use (&$activities) {
+                $activities[] = [
+                    "icon"  => "announcement",
+                    "text"  => "Pengumuman: " . $ann->judul,
+                    "time"  => $ann->published_at ? $ann->published_at->diffForHumans() : "Baru saja",
+                    "color" => "purple",
+                    "ts"    => $ann->published_at ? $ann->published_at->timestamp : 0,
+                ];
+            });
 
-        foreach ($announcements as $ann) {
-            $recent_activities[] = [
-                "icon" => "announcement",
-                "text" => "Pengumuman: " . $ann->judul,
-                "time" => $ann->published_at
-                    ? $ann->published_at->diffForHumans()
-                    : "Baru saja",
-                "color" => "purple",
-            ];
-        }
-
-        // Sort by time (most recent first) and limit to 5
-        usort($recent_activities, function ($a, $b) {
-            return strcmp($b["time"], $a["time"]);
-        });
-        $recent_activities = array_slice($recent_activities, 0, 5);
-
-        return view(
-            "dashboard",
-            compact("stats", "recent_activities", "jadwalSholat"),
-        );
+        // Sort by timestamp (latest first), ambil 5
+        usort($activities, fn($a, $b) => $b['ts'] - $a['ts']);
+        return array_slice($activities, 0, 5);
     }
 }
