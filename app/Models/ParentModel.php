@@ -15,6 +15,7 @@ class ParentModel extends Model
         "phone",
         "email",
         "address",
+        "fcm_token",
         "password",  // Menambahkan password ke $fillable
         "role",      // Menambahkan role ke $fillable
     ];

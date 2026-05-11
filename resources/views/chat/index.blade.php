@@ -557,6 +557,13 @@
         loadingMessages: false,
         showEmoji: false,
         attachedFile: null,
+        showNewChat: false,
+        allParents: @js($allParents),
+        get availableParents() {
+            // Orang tua yang belum pernah chat
+            const chattedIds = this.conversations.map(c => c.id);
+            return this.allParents.filter(p => !chattedIds.includes(p.id));
+        },
         get filtered() {
             if (!this.searchQuery.trim()) return this.conversations;
             const q = this.searchQuery.toLowerCase();
@@ -682,7 +689,7 @@
         <div class="sidebar-top">
             <h2>Pesan</h2>
             <p class="sub">Percakapan dengan wali santri</p>
-            <button class="new-chat-btn" title="Pesan baru">
+            <button class="new-chat-btn" title="Pesan baru" @click="showNewChat = true">
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
         </div>
@@ -698,10 +705,9 @@
         {{-- List --}}
         <div class="chat-list-scroll">
             <template x-for="conv in filtered" :key="conv.id">
-                <div
-                    class="conv-item"
+                <div class="conv-item"
                     :class="{ 'active': activeChat === conv.id }"
-                    @click="activeChat = conv.id"
+                    @click="switchChat(conv.id)"
                 >
                     <div class="conv-avatar-wrap">
                         <div class="conv-avatar" :class="conv.av" x-text="conv.initials"></div>
@@ -865,6 +871,31 @@
         <div style="text-align:center;">
             <p style="font-size:.95rem;font-weight:700;color:var(--slate-700);letter-spacing:-.01em;">Pilih Percakapan</p>
             <p style="font-size:.78rem;color:var(--slate-400);margin-top:5px;">Pilih wali santri dari daftar untuk memulai</p>
+        </div>
+    </div>
+
+    {{-- Modal Pesan Baru --}}
+    <div x-show="showNewChat" @click.self="showNewChat=false" style="position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.5);overflow-y:auto;">
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(15,23,42,.3);padding:32px 24px;width:min(90%,380px);max-height:80vh;overflow-y:auto;animation:pop-in-center .2s ease;">
+            <div style="font-weight:700;font-size:1.15rem;color:var(--slate-800);margin-bottom:20px;">Pilih Wali Santri</div>
+            
+            <template x-if="availableParents.length === 0">
+                <div style="text-align:center;color:var(--slate-400);padding:24px 0;font-size:.9rem;">Semua wali sudah pernah mengobrol.</div>
+            </template>
+            
+            <template x-for="p in availableParents" :key="p.id">
+                <div style="padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;border-radius:10px;transition:background .15s;" @click="window.location.href = `/chat?active=${p.id}`" @mouseenter="$el.style.background='#f8fafc'" @mouseleave="$el.style.background='transparent'">
+                    <div style="background:linear-gradient(135deg, #0d9488, #14b8a6);color:#fff;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:12px;font-weight:700;font-size:.9rem;flex-shrink:0;" x-text="p.name.substring(0,2).toUpperCase()"></div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:600;color:var(--slate-800);font-size:.9rem;" x-text="p.name"></div>
+                        <div style="font-size:.78rem;color:var(--slate-500);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" x-text="p.child + ' · ' + p.kelas"></div>
+                    </div>
+                </div>
+            </template>
+            
+            <div style="border-top:1px solid #e2e8f0;margin-top:20px;padding-top:16px;text-align:right;">
+                <button @click="showNewChat=false" style="background:transparent;border:1px solid #e2e8f0;padding:8px 20px;border-radius:8px;font-weight:600;cursor:pointer;color:var(--slate-600);transition:background .15s;" @mouseenter="$el.style.background='#f1f5f9'" @mouseleave="$el.style.background='transparent'">Tutup</button>
+            </div>
         </div>
     </div>
 
