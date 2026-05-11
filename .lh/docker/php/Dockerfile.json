@@ -1,0 +1,26 @@
+{
+    "sourceFile": "docker/php/Dockerfile",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 2,
+            "patches": [
+                {
+                    "date": 1778237963493,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1778239298567,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -28,16 +28,19 @@\n COPY --from=composer:latest /usr/bin/composer /usr/bin/composer\r\n \r\n WORKDIR /var/www/html\r\n \r\n-# Copy composer files first (for layer caching)\r\n-COPY composer.json composer.lock ./\r\n-RUN composer install --no-scripts --no-autoloader --no-interaction\r\n-\r\n-# Copy rest of the app\r\n+# Copy SELURUH project dulu, baru composer install\r\n+# (menghindari masalah script/autoload yang butuh file lengkap)\r\n COPY . .\r\n-RUN composer dump-autoload --optimize\r\n \r\n+# Install dependencies — skip scripts dulu, jalankan setelah semua file ada\r\n+RUN composer install \\\r\n+    --no-interaction \\\r\n+    --no-dev \\\r\n+    --optimize-autoloader \\\r\n+    --ignore-platform-reqs\r\n+\r\n RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache\r\n \r\n EXPOSE 9000\r\n CMD [\"php-fpm\"]\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1778240067691,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,5 +1,5 @@\n-FROM php:8.3-fpm\r\n+FROM php:8.4-fpm\r\n \r\n # Install system dependencies\r\n RUN apt-get update && apt-get install -y \\\r\n     git \\\r\n"
+                }
+            ],
+            "date": 1778237963493,
+            "name": "Commit-0",
+            "content": "FROM php:8.3-fpm\r\n\r\n# Install system dependencies\r\nRUN apt-get update && apt-get install -y \\\r\n    git \\\r\n    curl \\\r\n    libpng-dev \\\r\n    libonig-dev \\\r\n    libxml2-dev \\\r\n    libzip-dev \\\r\n    zip \\\r\n    unzip \\\r\n    && docker-php-ext-install \\\r\n        pdo_mysql \\\r\n        mbstring \\\r\n        exif \\\r\n        pcntl \\\r\n        bcmath \\\r\n        gd \\\r\n        zip \\\r\n    && apt-get clean \\\r\n    && rm -rf /var/lib/apt/lists/*\r\n\r\n# Install Redis extension\r\nRUN pecl install redis && docker-php-ext-enable redis\r\n\r\n# Install Composer\r\nCOPY --from=composer:latest /usr/bin/composer /usr/bin/composer\r\n\r\nWORKDIR /var/www/html\r\n\r\n# Copy composer files first (for layer caching)\r\nCOPY composer.json composer.lock ./\r\nRUN composer install --no-scripts --no-autoloader --no-interaction\r\n\r\n# Copy rest of the app\r\nCOPY . .\r\nRUN composer dump-autoload --optimize\r\n\r\nRUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache\r\n\r\nEXPOSE 9000\r\nCMD [\"php-fpm\"]"
+        }
+    ]
+}

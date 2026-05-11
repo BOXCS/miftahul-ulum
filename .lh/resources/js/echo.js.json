@@ -1,0 +1,18 @@
+{
+    "sourceFile": "resources/js/echo.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1778159042486,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1778159042486,
+            "name": "Commit-0",
+            "content": "// import Echo from 'laravel-echo';\n\n// import Pusher from 'pusher-js';\n// window.Pusher = Pusher;\n\n// window.Echo = new Echo({\n//     broadcaster: 'reverb',\n//     key: import.meta.env.VITE_REVERB_APP_KEY,\n//     wsHost: import.meta.env.VITE_REVERB_HOST,\n//     wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,\n//     wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,\n//     forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',\n//     enabledTransports: ['ws', 'wss'],\n// });\n"
+        }
+    ]
+}

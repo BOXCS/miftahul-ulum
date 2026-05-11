@@ -1,0 +1,26 @@
+{
+    "sourceFile": "app/Events/MessageSent.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 2,
+            "patches": [
+                {
+                    "date": 1778160072853,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1778160081349,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -5,9 +5,9 @@\n use App\\Models\\ChatMessage;\n use Illuminate\\Broadcasting\\Channel;\n use Illuminate\\Broadcasting\\InteractsWithSockets;\n use Illuminate\\Broadcasting\\PrivateChannel;\n-use Illuminate\\Contracts\\Broadcasting\\ShouldBroadcast;\n+use Illuminate\\Contracts\\Broadcasting\\ShouldBroadcastNow;\n use Illuminate\\Foundation\\Events\\Dispatchable;\n use Illuminate\\Queue\\SerializesModels;\n \n class MessageSent implements ShouldBroadcastNow\n"
+                },
+                {
+                    "date": 1778194495473,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -2,9 +2,8 @@\n \n namespace App\\Events;\n \n use App\\Models\\ChatMessage;\n-use Illuminate\\Broadcasting\\Channel;\n use Illuminate\\Broadcasting\\InteractsWithSockets;\n use Illuminate\\Broadcasting\\PrivateChannel;\n use Illuminate\\Contracts\\Broadcasting\\ShouldBroadcastNow;\n use Illuminate\\Foundation\\Events\\Dispatchable;\n@@ -15,36 +14,25 @@\n     use Dispatchable, InteractsWithSockets, SerializesModels;\n \n     public $message;\n \n-    /**\n-     * Create a new event instance.\n-     */\n     public function __construct(ChatMessage $message)\n     {\n         $this->message = $message;\n     }\n \n-    /**\n-     * Get the channels the event should broadcast on.\n-     *\n-     * @return array<int, \\Illuminate\\Broadcasting\\Channel>\n-     */\n-    public function broadcastOn(): array\n+    public function broadcastOn()\n     {\n-        return [new PrivateChannel(\"chat.\" . $this->message->parent_id)];\n+        return new PrivateChannel('chat.' . $this->message->parent_id);\n     }\n \n-    /**\n-     * Data to broadcast.\n-     */\n-    public function broadcastWith(): array\n+    public function broadcastWith()\n     {\n         return [\n-            \"id\" => $this->message->id,\n-            \"pesan\" => $this->message->pesan,\n-            \"is_from_admin\" => $this->message->is_from_admin,\n-            \"time\" => $this->message->created_at->format(\"H:i\"),\n-            \"parent_id\" => $this->message->parent_id,\n+            'id' => $this->message->id,\n+            'pesan' => $this->message->pesan,\n+            'is_from_admin' => $this->message->is_from_admin,\n+            'time' => $this->message->time,\n+            'parent_id' => $this->message->sender_id,\n         ];\n     }\n-}\n+}\n\\ No newline at end of file\n"
+                }
+            ],
+            "date": 1778160072853,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace App\\Events;\n\nuse App\\Models\\ChatMessage;\nuse Illuminate\\Broadcasting\\Channel;\nuse Illuminate\\Broadcasting\\InteractsWithSockets;\nuse Illuminate\\Broadcasting\\PrivateChannel;\nuse Illuminate\\Contracts\\Broadcasting\\ShouldBroadcast;\nuse Illuminate\\Foundation\\Events\\Dispatchable;\nuse Illuminate\\Queue\\SerializesModels;\n\nclass MessageSent implements ShouldBroadcastNow\n{\n    use Dispatchable, InteractsWithSockets, SerializesModels;\n\n    public $message;\n\n    /**\n     * Create a new event instance.\n     */\n    public function __construct(ChatMessage $message)\n    {\n        $this->message = $message;\n    }\n\n    /**\n     * Get the channels the event should broadcast on.\n     *\n     * @return array<int, \\Illuminate\\Broadcasting\\Channel>\n     */\n    public function broadcastOn(): array\n    {\n        return [new PrivateChannel(\"chat.\" . $this->message->parent_id)];\n    }\n\n    /**\n     * Data to broadcast.\n     */\n    public function broadcastWith(): array\n    {\n        return [\n            \"id\" => $this->message->id,\n            \"pesan\" => $this->message->pesan,\n            \"is_from_admin\" => $this->message->is_from_admin,\n            \"time\" => $this->message->created_at->format(\"H:i\"),\n            \"parent_id\" => $this->message->parent_id,\n        ];\n    }\n}\n"
+        }
+    ]
+}
