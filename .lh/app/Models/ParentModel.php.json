@@ -3,11 +3,15 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 0,
+            "activePatchIndex": 1,
             "patches": [
                 {
                     "date": 1778147734968,
                     "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1778507221599,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -14,12 +14,20 @@\n         \"relationship\",\n         \"phone\",\n         \"email\",\n         \"address\",\n+        \"fcm_token\",\n         \"password\",  // Menambahkan password ke $fillable\n         \"role\",      // Menambahkan role ke $fillable\n     ];\n+    protected $hidden = [\n+        \"password\",\n+        \"remember_token\",\n+    ];\n \n+    protected $casts = [\n+        \"password\" => \"hashed\",\n+    ];\n     // Relasi ke User\n     public function user()\n     {\n         return $this->belongsTo(User::class);\n"
                 }
             ],
             "date": 1778147734968,
