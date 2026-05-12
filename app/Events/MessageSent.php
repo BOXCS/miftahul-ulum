@@ -49,11 +49,12 @@ class MessageSent implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            "id" => $this->message->id,
-            "pesan" => $this->message->pesan,
-            "is_from_admin" => $this->message->is_from_admin,
-            "time" => $this->message->created_at->format("H:i"),
-            "parent_id" => $this->message->parent_id,
+            "id"            => (string) $this->message->id,
+            "pesan"         => $this->message->pesan,
+            "is_from_admin" => (bool) $this->message->is_from_admin,
+            "created_at"    => $this->message->created_at->toIso8601String(),
+            "time"          => $this->message->created_at->format("H:i"),
+            "parent_id"     => $this->message->parent_id,
         ];
     }
 }
