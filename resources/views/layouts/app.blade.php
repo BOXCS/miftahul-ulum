@@ -968,131 +968,136 @@
                 </div>
 
                 {{-- Global Search --}}
-            <div class="topbar-search">
-                <svg xmlns="http://www.w3.org/2000/svg" class="search-icon w-4 h-4" viewBox="0 0 24 24"
-                     fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <circle cx="11" cy="11" r="8"/>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <input type="search"
-                       placeholder="Cari santri, absensi…"
-                       aria-label="Cari">
-            </div>
+                <div class="topbar-search">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        class="search-icon"
+                        width="16" height="16" {{-- tambahkan ini --}}
+                        viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input type="search"
+                        placeholder="Cari santri, absensi…"
+                        aria-label="Cari">
+                </div>
 
-            {{-- Right Actions --}}
-            <div class="flex items-center gap-1 shrink-0 ml-auto">
+                {{-- Right Actions --}}
+                <div class="flex items-center gap-1 shrink-0 ml-auto ">
 
-                {{-- Notification Bell --}}
-                <button type="button"
+                    {{-- Notification Bell --}}
+                    <button type="button"
                         class="btn-icon relative"
                         style="color: #64748b;"
                         aria-label="Notifikasi">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24"
-                         fill="none" stroke="currentColor" stroke-width="1.5"
-                         stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                    </svg>
-                    <span class="notif-dot" aria-hidden="true"></span>
-                </button>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg>
+                        <span class="notif-dot" aria-hidden="true"></span>
+                    </button>
 
-                {{-- Divider --}}
-                <div class="w-px h-6 mx-1" style="background: #e2e8f0;"></div>
+                    {{-- Divider --}}
+                    <div class="w-px h-6 mx-1" style="background: #e2e8f0;"></div>
 
-                {{-- User Profile Dropdown --}}
-                <div class="relative" x-data="dropdown">
+                    {{-- User Profile Dropdown --}}
+                    <div class="relative" x-data="dropdown">
 
-                    <button type="button"
+                        <button type="button"
                             class="flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition-colors"
                             style="color: #334155;"
                             :class="open ? 'bg-slate-100' : 'hover:bg-slate-50'"
                             @click="toggle()"
                             aria-haspopup="true"
                             :aria-expanded="open">
-                        <div class="avatar avatar-sm shrink-0"
-                             style="background: linear-gradient(135deg, #16a34a, #15803d);
-                                    color: #fff; font-size: 0.6rem; font-weight: 800;">
-                            {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 2)) }}
-                        </div>
-                        <div class="hidden sm:flex flex-col items-start leading-tight">
-                            <span class="text-xs font-semibold" style="color: #1e293b;">{{ auth()->user()->name ?? '-' }}</span>
-                            <span class="text-xs" style="color: #94a3b8;">{{ auth()->user()->roleLabel() ?? 'Staff' }}</span>
-                        </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 hidden sm:block transition-transform"
-                             :style="open ? 'transform:rotate(180deg)' : ''"
-                             style="color: #94a3b8;"
-                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                             stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                    </button>
-
-                    {{-- Dropdown Panel --}}
-                    <div class="dropdown-menu right-0 mt-2 w-56"
-                         x-show="open"
-                         x-transition:enter="transition ease-out duration-150"
-                         x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
-                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                         x-transition:leave="transition ease-in duration-100"
-                         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                         x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
-                         style="display:none;"
-                         role="menu">
-
-                        {{-- User Info Header --}}
-                        <div class="flex items-center gap-3 px-4 py-3 border-b border-slate-100">
                             <div class="avatar avatar-sm shrink-0"
-                                 style="background: linear-gradient(135deg, #16a34a, #15803d);
-                                        color: #fff; font-size: 0.6rem; font-weight: 800;">
+                                style="background: linear-gradient(135deg, #16a34a, #15803d);
+                                    color: #fff; font-size: 0.6rem; font-weight: 800;">
                                 {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 2)) }}
                             </div>
-                            <div class="min-w-0">
-                                <p class="text-xs font-semibold truncate" style="color: #1e293b;">{{ auth()->user()->name ?? '-' }}</p>
-                                <p class="text-xs truncate" style="color: #94a3b8;">{{ auth()->user()->email ?? '' }}</p>
+                            <div class="hidden sm:flex flex-col items-start leading-tight">
+                                <span class="text-xs font-semibold" style="color: #1e293b;">{{ auth()->user()->name ?? '-' }}</span>
+                                <span class="text-xs" style="color: #94a3b8;">{{ auth()->user()->roleLabel() ?? 'Staff' }}</span>
                             </div>
-                        </div>
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-3.5 h-3.5 hidden sm:block transition-transform"
+                                width="14" height="14"
+                                :style="open ? 'transform:rotate(180deg)' : ''"
+                                style="color: #94a3b8;"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </button>
 
-                        {{-- Menu Items --}}
-                        <div class="py-1">
-                            <a href="{{ route('profile.index') }}" class="dropdown-item" role="menuitem">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" stroke-width="1.5"
-                                     stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                    <circle cx="12" cy="7" r="4"/>
-                                </svg>
-                                Profil Saya
-                            </a>
-                            <a href="{{ route('profile.settings') }}" class="dropdown-item" role="menuitem">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" stroke-width="1.5"
-                                     stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="3"/>
-                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                                </svg>
-                                Pengaturan
-                            </a>
-                        </div>
+                        {{-- Dropdown Panel --}}
+                        <div class="dropdown-menu right-0 mt-2 w-56"
+                            x-show="open"
+                            x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                            x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-100"
+                            x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                            style="display:none;"
+                            role="menu">
 
-                        {{-- Logout --}}
-                        <div class="border-t border-slate-100 py-1">
-                            <button type="button" onclick="openLogoutModal()" class="dropdown-item danger w-full text-left" role="menuitem">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
-                                     fill="none" stroke="currentColor" stroke-width="1.5"
-                                     stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                                    <polyline points="16 17 21 12 16 7"/>
-                                    <line x1="21" y1="12" x2="9" y2="12"/>
-                                </svg>
-                                Keluar
-                            </button>
-                        </div>
+                            {{-- User Info Header --}}
+                            <div class="flex items-center gap-3 px-4 py-3 border-b border-slate-100">
+                                <div class="avatar avatar-sm shrink-0"
+                                    style="background: linear-gradient(135deg, #16a34a, #15803d);
+                                        color: #fff; font-size: 0.6rem; font-weight: 800;">
+                                    {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 2)) }}
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-xs font-semibold truncate" style="color: #1e293b;">{{ auth()->user()->name ?? '-' }}</p>
+                                    <p class="text-xs truncate" style="color: #94a3b8;">{{ auth()->user()->email ?? '' }}</p>
+                                </div>
+                            </div>
 
-                    </div>{{-- end dropdown-menu --}}
-                </div>{{-- end dropdown x-data --}}
+                            {{-- Menu Items --}}
+                            <div class="py-1">
+                                <a href="{{ route('profile.index') }}" class="dropdown-item" role="menuitem">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" width="16" height="16" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="1.5"
+                                        stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                        <circle cx="12" cy="7" r="4" />
+                                    </svg>
+                                    Profil Saya
+                                </a>
+                                <a href="{{ route('profile.settings') }}" class="dropdown-item" role="menuitem">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" width="16" height="16" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="1.5"
+                                        stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="3" />
+                                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                                    </svg>
+                                    Pengaturan
+                                </a>
+                            </div>
 
-            </div>{{-- end right actions --}}
+                            {{-- Logout --}}
+                            <div class="border-t border-slate-100 py-1">
+                                <button type="button" onclick="openLogoutModal()" class="dropdown-item danger w-full text-left" role="menuitem">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" width="16" height="16" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="1.5"
+                                        stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                        <polyline points="16 17 21 12 16 7" />
+                                        <line x1="21" y1="12" x2="9" y2="12" />
+                                    </svg>
+                                    Keluar
+                                </button>
+                            </div>
+
+                        </div>{{-- end dropdown-menu --}}
+                    </div>{{-- end dropdown x-data --}}
+
+                </div>{{-- end right actions --}}
             </header>
 
             <main class="@yield('main-class', 'content-area')" id="main-content">
@@ -1111,9 +1116,9 @@
         @stack('scripts')
         {{-- ═══════════════════════════════════════════════════════════════ --}}
         @if (Route::has('logout'))
-            <form id="logout-form" method="POST" action="{{ route('logout') }}" style="display:none;">
-                @csrf
-            </form>
+        <form id="logout-form" method="POST" action="{{ route('logout') }}" style="display:none;">
+            @csrf
+        </form>
         @endif
 
         <div id="logout-modal"

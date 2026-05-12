@@ -1,0 +1,42 @@
+{
+    "sourceFile": "docker-compose.yml",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 6,
+            "patches": [
+                {
+                    "date": 1778237952294,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1778238163133,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -89,12 +89,12 @@\n     restart: unless-stopped\r\n     ports:\r\n       - \"3306:3306\"\r\n     environment:\r\n-      MYSQL_DATABASE: ${DB_DATABASE:-miftahul_ulumv2}\r\n-      MYSQL_USER: ${DB_USERNAME:-laravel}\r\n-      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}\r\n-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}\r\n+      MYSQL_DATABASE: pesantren_db\r\n+      MYSQL_ROOT_PASSWORD: rootsecret\r\n+      # Izinkan root login tanpa password dari container lain\r\n+      MYSQL_ROOT_HOST: \"%\"\r\n     volumes:\r\n       - mysql_data:/var/lib/mysql\r\n     networks:\r\n       - app-network\r\n"
+                },
+                {
+                    "date": 1778239789490,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -87,9 +87,9 @@\n     image: mysql:8.0\r\n     container_name: laravel_mysql\r\n     restart: unless-stopped\r\n     ports:\r\n-      - \"3306:3306\"\r\n+      - \"3307:3306\"\r\n     environment:\r\n       MYSQL_DATABASE: pesantren_db\r\n       MYSQL_ROOT_PASSWORD: rootsecret\r\n       # Izinkan root login tanpa password dari container lain\r\n"
+                },
+                {
+                    "date": 1778239934171,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -87,9 +87,11 @@\n     image: mysql:8.0\r\n     container_name: laravel_mysql\r\n     restart: unless-stopped\r\n     ports:\r\n-      - \"3307:3306\"\r\n+      # port MySQL tidak di-expose ke host, Laravel connect lewat network internal\r\n+      # uncomment jika butuh akses dari TablePlus/DBeaver:\r\n+      # - \"3308:3306\"\r\n     environment:\r\n       MYSQL_DATABASE: pesantren_db\r\n       MYSQL_ROOT_PASSWORD: rootsecret\r\n       # Izinkan root login tanpa password dari container lain\r\n"
+                },
+                {
+                    "date": 1778239972134,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -87,11 +87,9 @@\n     image: mysql:8.0\r\n     container_name: laravel_mysql\r\n     restart: unless-stopped\r\n     ports:\r\n-      # port MySQL tidak di-expose ke host, Laravel connect lewat network internal\r\n-      # uncomment jika butuh akses dari TablePlus/DBeaver:\r\n-      # - \"3308:3306\"\r\n+      - \"3310:3306\"\r\n     environment:\r\n       MYSQL_DATABASE: pesantren_db\r\n       MYSQL_ROOT_PASSWORD: rootsecret\r\n       # Izinkan root login tanpa password dari container lain\r\n"
+                },
+                {
+                    "date": 1778240078798,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -87,8 +87,10 @@\n     image: mysql:8.0\r\n     container_name: laravel_mysql\r\n     restart: unless-stopped\r\n     ports:\r\n+      # port MySQL tidak di-expose ke host, Laravel connect lewat network internal\r\n+      # uncomment jika butuh akses dari TablePlus/DBeaver:\r\n       - \"3310:3306\"\r\n     environment:\r\n       MYSQL_DATABASE: pesantren_db\r\n       MYSQL_ROOT_PASSWORD: rootsecret\r\n"
+                },
+                {
+                    "date": 1778240859837,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -41,9 +41,9 @@\n     container_name: laravel_reverb\r\n     restart: unless-stopped\r\n     command: php artisan reverb:start --host=0.0.0.0 --port=8080\r\n     ports:\r\n-      - \"8080:8080\"\r\n+      - \"8081:8080\"\r\n     volumes:\r\n       - .:/var/www/html\r\n     depends_on:\r\n       - app\r\n"
+                }
+            ],
+            "date": 1778237952294,
+            "name": "Commit-0",
+            "content": "services:\r\n\r\n  # ─── Laravel App (PHP + Nginx) ──────────────────────────────────────────────\r\n  app:\r\n    build:\r\n      context: .\r\n      dockerfile: docker/php/Dockerfile\r\n    container_name: laravel_app\r\n    restart: unless-stopped\r\n    volumes:\r\n      - .:/var/www/html\r\n      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini\r\n    depends_on:\r\n      - mysql\r\n      - redis\r\n    networks:\r\n      - app-network\r\n    environment:\r\n      - APP_ENV=${APP_ENV:-local}\r\n\r\n  # ─── Nginx Web Server ────────────────────────────────────────────────────────\r\n  nginx:\r\n    image: nginx:alpine\r\n    container_name: laravel_nginx\r\n    restart: unless-stopped\r\n    ports:\r\n      - \"8000:80\"\r\n    volumes:\r\n      - .:/var/www/html\r\n      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf\r\n    depends_on:\r\n      - app\r\n    networks:\r\n      - app-network\r\n\r\n  # ─── Reverb WebSocket Server ─────────────────────────────────────────────────\r\n  reverb:\r\n    build:\r\n      context: .\r\n      dockerfile: docker/php/Dockerfile\r\n    container_name: laravel_reverb\r\n    restart: unless-stopped\r\n    command: php artisan reverb:start --host=0.0.0.0 --port=8080\r\n    ports:\r\n      - \"8080:8080\"\r\n    volumes:\r\n      - .:/var/www/html\r\n    depends_on:\r\n      - app\r\n      - redis\r\n    networks:\r\n      - app-network\r\n\r\n  # ─── Queue Worker ────────────────────────────────────────────────────────────\r\n  queue:\r\n    build:\r\n      context: .\r\n      dockerfile: docker/php/Dockerfile\r\n    container_name: laravel_queue\r\n    restart: unless-stopped\r\n    command: php artisan queue:work --sleep=3 --tries=3 --timeout=90\r\n    volumes:\r\n      - .:/var/www/html\r\n    depends_on:\r\n      - app\r\n      - redis\r\n    networks:\r\n      - app-network\r\n\r\n  # ─── Vite Dev Server ─────────────────────────────────────────────────────────\r\n  vite:\r\n    image: node:20-alpine\r\n    container_name: laravel_vite\r\n    restart: unless-stopped\r\n    working_dir: /var/www/html\r\n    command: sh -c \"npm install && npm run dev -- --host\"\r\n    ports:\r\n      - \"5173:5173\"\r\n    volumes:\r\n      - .:/var/www/html\r\n      - /var/www/html/node_modules\r\n    networks:\r\n      - app-network\r\n\r\n  # ─── MySQL Database ───────────────────────────────────────────────────────────\r\n  mysql:\r\n    image: mysql:8.0\r\n    container_name: laravel_mysql\r\n    restart: unless-stopped\r\n    ports:\r\n      - \"3306:3306\"\r\n    environment:\r\n      MYSQL_DATABASE: ${DB_DATABASE:-miftahul_ulumv2}\r\n      MYSQL_USER: ${DB_USERNAME:-laravel}\r\n      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}\r\n      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}\r\n    volumes:\r\n      - mysql_data:/var/lib/mysql\r\n    networks:\r\n      - app-network\r\n\r\n  # ─── Redis (Queue + Cache + Broadcast) ───────────────────────────────────────\r\n  redis:\r\n    image: redis:alpine\r\n    container_name: laravel_redis\r\n    restart: unless-stopped\r\n    ports:\r\n      - \"6379:6379\"\r\n    volumes:\r\n      - redis_data:/data\r\n    networks:\r\n      - app-network\r\n\r\nvolumes:\r\n  mysql_data:\r\n  redis_data:\r\n\r\nnetworks:\r\n  app-network:\r\n    driver: bridge"
+        }
+    ]
+}

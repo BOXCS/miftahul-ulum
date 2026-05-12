@@ -5,6 +5,8 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+@source '/var/www/html/resources/views/**/*.blade.php';
+@source '/var/www/html/resources/js/**/*.js';
 
 @theme {
     --font-sans:
