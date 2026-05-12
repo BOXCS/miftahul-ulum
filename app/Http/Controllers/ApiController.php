@@ -425,14 +425,21 @@ class ApiController extends Controller
 
     public function chatHistory($parentId)
     {
+        // Tandai pesan dari admin sebagai sudah dibaca oleh mobile
+        ChatMessage::where("parent_id", $parentId)
+            ->where("is_from_admin", true)
+            ->where("is_read", false)
+            ->update(["is_read" => true, "read_at" => now()]);
+
         $messages = ChatMessage::where("parent_id", $parentId)
             ->oldest()
             ->get()
             ->map(
                 fn($m) => [
-                    "pesan" => $m->pesan,
-                    "is_from_admin" => $m->is_from_admin,
-                    "created_at" => $m->created_at->toIso8601String(),
+                    "id"           => (string) $m->id,
+                    "pesan"        => $m->pesan,
+                    "is_from_admin"=> (bool) $m->is_from_admin,
+                    "created_at"   => $m->created_at->toIso8601String(),
                 ],
             );
         return response()->json($messages);
@@ -440,15 +447,27 @@ class ApiController extends Controller
 
     public function sendMessage(Request $request, $parentId)
     {
+        $request->validate([
+            "pesan" => "required|string|max:1000",
+        ]);
+
         $msg = ChatMessage::create([
-            "parent_id" => $parentId,
-            "pesan" => $request->pesan,
-            "is_from_admin" => false,
-            "is_read" => false,
+            "parent_id"    => $parentId,
+            "pesan"        => $request->pesan,
+            "is_from_admin"=> false,
+            "is_read"      => false,
         ]);
 
         broadcast(new \App\Events\MessageSent($msg))->toOthers();
 
-        return response()->json(["success" => true, "message" => $msg]);
+        return response()->json([
+            "success" => true,
+            "message" => [
+                "id"           => (string) $msg->id,
+                "pesan"        => $msg->pesan,
+                "is_from_admin"=> false,
+                "created_at"   => $msg->created_at->toIso8601String(),
+            ],
+        ]);
     }
 }
