@@ -74,6 +74,80 @@ class ApiController extends Controller
         return response()->json($announcements);
     }
 
+    public function faq(Request $request)
+    {
+        $query = Faq::where('is_active', true)
+            ->orderBy('urutan')
+            ->orderBy('id');
+
+        // Filter opsional berdasarkan kategori
+        if ($request->filled('kategori')) {
+            $query->where('kategori', $request->kategori);
+        }
+
+        // Pencarian fulltext sederhana
+        if ($request->filled('search')) {
+            $q = $request->search;
+            $query->where(function ($qb) use ($q) {
+                $qb->where('pertanyaan', 'like', "%{$q}%")
+                    ->orWhere('jawaban',    'like', "%{$q}%")
+                    ->orWhere('kategori',   'like', "%{$q}%");
+            });
+        }
+
+        $faqs = $query->get()->map(fn($f) => [
+            'id'         => $f->id,
+            'pertanyaan' => $f->pertanyaan,
+            'jawaban'    => $f->jawaban,
+            'kategori'   => $f->kategori,
+            'urutan'     => $f->urutan,
+            'is_active'  => $f->is_active,
+        ]);
+
+        // Daftar kategori unik (selalu dari semua FAQ aktif, bukan dari hasil filter)
+        $kategoris = Faq::where('is_active', true)
+            ->select('kategori')
+            ->distinct()
+            ->orderBy('kategori')
+            ->pluck('kategori')
+            ->values();
+
+        return response()->json([
+            'success'   => true,
+            'data'      => $faqs,
+            'kategoris' => $kategoris,
+            'total'     => $faqs->count(),
+        ]);
+    }
+
+    /**
+     * GET /api/faq/{id}
+     * Ambil detail satu FAQ berdasarkan ID.
+     */
+    public function faqDetail($id)
+    {
+        $faq = Faq::where('is_active', true)->find($id);
+
+        if (!$faq) {
+            return response()->json([
+                'success' => false,
+                'message' => 'FAQ tidak ditemukan.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'id'         => $faq->id,
+                'pertanyaan' => $faq->pertanyaan,
+                'jawaban'    => $faq->jawaban,
+                'kategori'   => $faq->kategori,
+                'urutan'     => $faq->urutan,
+                'is_active'  => $faq->is_active,
+            ],
+        ]);
+    }
+
     public function santriById($id)
     {
         $s = Student::find($id);
@@ -90,12 +164,15 @@ class ApiController extends Controller
             "success" => true,
             "message" => "OK",
             "data" => [
-                "id_santri" => (string) $s->id,
-                "nama" => $s->name,
+                "id_santri"      => (string) $s->id,
+                "nis"            => $s->nis ?? '',
+                "nama"           => $s->name,
+                "kelas"          => $s->class ?? null,
+                "kamar"          => $s->kamar ?? null,
                 "tahun_angkatan" => $s->class,
-                "sidik_jari" => null,
-                "status" => $s->status ?? "aktif",
-                "id_ortu" => (int) ($s->parent_id ?? 0),
+                "sidik_jari"     => null,
+                "status"         => $s->status ?? "aktif",
+                "id_ortu"        => (int) ($s->parent_id ?? 0),
             ],
         ]);
     }
@@ -107,21 +184,20 @@ class ApiController extends Controller
             ->get()
             ->map(function ($s) {
                 return [
-                    "id_santri" => (string) $s->id,
-                    "nama" => $s->name, // ✅ rename
-                    "tahun_angkatan" => $s->class, // mapping sementara
-                    "sidik_jari" => null, // belum ada alat
-                    "status" => $s->status ?? "aktif", // default
-                    "id_ortu" => (int) $s->parent_id,
-
-                    // optional nested object
-                    "ortu" => $s->parent
-                        ? [
-                            "nama_lengkap" => $s->parent->name,
-                            "alamat" => $s->parent->address,
-                            "no_telp" => $s->parent->phone,
-                        ]
-                        : null,
+                    "id_santri"      => (string) $s->id,
+                    "nis"            => $s->nis ?? '',        // ← tambah
+                    "nama"           => $s->name,
+                    "kelas"          => $s->class ?? null,    // ← tambah
+                    "kamar"          => $s->kamar ?? null,    // ← tambah
+                    "tahun_angkatan" => $s->tahun_angkatan ?? $s->class,
+                    "sidik_jari"     => null,
+                    "status"         => $s->status ?? "aktif",
+                    "id_ortu"        => (int) $s->parent_id,
+                    "ortu"           => $s->parent ? [
+                        "nama_lengkap" => $s->parent->name,
+                        "alamat"       => $s->parent->address,
+                        "no_telp"      => $s->parent->phone,
+                    ] : null,
                 ];
             });
 
@@ -172,20 +248,75 @@ class ApiController extends Controller
         ]);
     }
 
+    // Ganti seluruh function kehadiranSummary:
     public function kehadiranSummary($id)
     {
-        $totalHadir = Attendance::where("student_id", $id)
-            ->where("status", "hadir")
-            ->count();
-        $totalIzin = Attendance::where("student_id", $id)
-            ->where("status", "izin")
-            ->count();
+        $now = now();
+
+        // === SEMINGGU ===
+        $semingguStart = $now->copy()->startOfWeek();
+        $semingguEnd   = $now->copy()->endOfWeek();
+        $semingguRows  = Attendance::where('student_id', $id)
+            ->whereBetween('tanggal', [$semingguStart, $semingguEnd])
+            ->get();
+        $semingguTotal  = $semingguRows->count() * 5; // 5 shalat per hari
+        $semingguHadir  = $semingguRows->sum(function ($a) {
+            return ($a->Subuh ?? 0) + ($a->Dzuhur ?? 0) + ($a->Ashar ?? 0)
+                + ($a->Maghrib ?? 0) + ($a->Isya ?? 0);
+        });
+        $semingguPersen = $semingguTotal > 0
+            ? round(($semingguHadir / $semingguTotal) * 100, 1)
+            : 0;
+
+        // === SEBULAN ===
+        $sebulanStart = $now->copy()->startOfMonth();
+        $sebulanEnd   = $now->copy()->endOfMonth();
+        $sebulanRows  = Attendance::where('student_id', $id)
+            ->whereBetween('tanggal', [$sebulanStart, $sebulanEnd])
+            ->get();
+        $sebulanTotal  = $sebulanRows->count() * 5;
+        $sebulanHadir  = $sebulanRows->sum(function ($a) {
+            return ($a->Subuh ?? 0) + ($a->Dzuhur ?? 0) + ($a->Ashar ?? 0)
+                + ($a->Maghrib ?? 0) + ($a->Isya ?? 0);
+        });
+        $sebulanPersen = $sebulanTotal > 0
+            ? round(($sebulanHadir / $sebulanTotal) * 100, 1)
+            : 0;
+
+        // === SETAHUN ===
+        $setahunStart = $now->copy()->startOfYear();
+        $setahunEnd   = $now->copy()->endOfYear();
+        $setahunRows  = Attendance::where('student_id', $id)
+            ->whereBetween('tanggal', [$setahunStart, $setahunEnd])
+            ->get();
+        $setahunTotal  = $setahunRows->count() * 5;
+        $setahunHadir  = $setahunRows->sum(function ($a) {
+            return ($a->Subuh ?? 0) + ($a->Dzuhur ?? 0) + ($a->Ashar ?? 0)
+                + ($a->Maghrib ?? 0) + ($a->Isya ?? 0);
+        });
+        $setahunPersen = $setahunTotal > 0
+            ? round(($setahunHadir / $setahunTotal) * 100, 1)
+            : 0;
 
         return response()->json([
-            "success" => true,
-            "data" => [
-                "hadir" => $totalHadir,
-                "izin" => $totalIzin,
+            'success' => true,
+            'message' => 'OK',
+            'data' => [
+                'seminggu' => [
+                    'total_hadir'  => $semingguHadir,
+                    'total_shalat' => $semingguTotal,
+                    'persentase'   => $semingguPersen,
+                ],
+                'sebulan' => [
+                    'total_hadir'  => $sebulanHadir,
+                    'total_shalat' => $sebulanTotal,
+                    'persentase'   => $sebulanPersen,
+                ],
+                'setahun' => [
+                    'total_hadir'  => $setahunHadir,
+                    'total_shalat' => $setahunTotal,
+                    'persentase'   => $setahunPersen,
+                ],
             ],
         ]);
     }
@@ -259,6 +390,51 @@ class ApiController extends Controller
     }
 
     /**
+     * GET /api/perizinan/riwayat/{student_id}
+     *
+     * Riwayat perizinan lengkap satu santri — dipakai mobile untuk menampilkan
+     * daftar pengajuan beserta status terkini (pending/disetujui/ditolak).
+     * Diurutkan dari terbaru.
+     *
+     * Response 200:
+     * {
+     *   "success": true,
+     *   "data"   : [ { id, jenis, tanggal_mulai, tanggal_selesai, keterangan,
+     *                  status, approved_by, approved_at, created_at }, ... ]
+     * }
+     */
+    public function riwayatPerizinan($studentId)
+    {
+        $student = Student::find($studentId);
+
+        if (!$student) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Santri tidak ditemukan.',
+                'data'    => [],
+            ], 404);
+        }
+
+        $permissions = Permission::where('student_id', $studentId)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn($p) => [
+                'id'              => $p->id,
+                'jenis'           => $p->jenis,
+                'tanggal_mulai'   => $p->tanggal_mulai->format('Y-m-d'),
+                'tanggal_selesai' => $p->tanggal_selesai->format('Y-m-d'),
+                'keterangan'      => $p->keterangan,
+                'catatan'         => $p->catatan,
+                'status'          => $p->status,
+                'approved_by'     => $p->approved_by,
+                'approved_at'     => $p->approved_at?->toIso8601String(),
+                'created_at'      => $p->created_at->toIso8601String(),
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Riwayat perizinan berhasil diambil.',
+            'data'    => $permissions,
      * GET /api/perizinan-by-ortu/{parentId}
      * Riwayat perizinan untuk semua anak dari satu wali santri.
      */

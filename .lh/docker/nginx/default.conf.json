@@ -1,0 +1,18 @@
+{
+    "sourceFile": "docker/nginx/default.conf",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1778237972047,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1778237972047,
+            "name": "Commit-0",
+            "content": "server {\r\n    listen 80;\r\n    server_name localhost;\r\n    root /var/www/html/public;\r\n    index index.php index.html;\r\n\r\n    # Gzip\r\n    gzip on;\r\n    gzip_types text/plain text/css application/json application/javascript text/xml application/xml;\r\n\r\n    location / {\r\n        try_files $uri $uri/ /index.php?$query_string;\r\n    }\r\n\r\n    location ~ \\.php$ {\r\n        fastcgi_pass app:9000;\r\n        fastcgi_index index.php;\r\n        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;\r\n        include fastcgi_params;\r\n        fastcgi_read_timeout 300;\r\n    }\r\n\r\n    # Vite HMR (Hot Module Replacement)\r\n    location /vite-hmr {\r\n        proxy_pass http://vite:5173;\r\n        proxy_http_version 1.1;\r\n        proxy_set_header Upgrade $http_upgrade;\r\n        proxy_set_header Connection \"Upgrade\";\r\n    }\r\n\r\n    # Static assets\r\n    location ~* \\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {\r\n        expires max;\r\n        log_not_found off;\r\n    }\r\n\r\n    client_max_body_size 20M;\r\n    error_log  /var/log/nginx/error.log;\r\n    access_log /var/log/nginx/access.log;\r\n}"
+        }
+    ]
+}
