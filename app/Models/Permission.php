@@ -18,6 +18,7 @@ class Permission extends Model
         'status',
         'approved_by',
         'approved_at',
+        'catatan',
     ];
 
     protected $casts = [

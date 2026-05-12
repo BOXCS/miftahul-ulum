@@ -1496,12 +1496,12 @@
                                 </div>
                                 <div class="sholat-head-text">
                                     <h2>Jadwal Waktu Sholat</h2>
-                                    <p>Jakarta &amp; Sekitarnya &mdash; Kemenag RI</p>
+                                    <p>{{ $jadwalSholat['city'] ?? 'Jember' }}, {{ $jadwalSholat['country'] ?? 'Indonesia' }} &mdash; Kemenag RI</p>
                                 </div>
                             </div>
                             <div class="sholat-date-badge">
                                 <span class="sholat-date-primary">{{ $jadwalSholat['tanggal'] }}</span>
-                                <span class="sholat-date-hijri" id="hijriDate">— Hijriah</span>
+                                <span class="sholat-date-hijri" id="hijriDate">{{ $jadwalSholat['hijri'] ?? '— Hijriah' }}</span>
                             </div>
                         </div>
 
@@ -2261,27 +2261,8 @@
         Chart.defaults.font.family = "'Outfit', sans-serif";
         Chart.defaults.color = '#94a3b8';
 
-        // ─── CHART DATA ─────────────────────────────────
-        const DATA = {
-            '7hari': {
-                labels: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Hari Ini'],
-                hadir: [148, 152, 145, 150, 153, 138, 160],
-                izin: [8, 5, 9, 7, 6, 10, 5],
-                alpha: [4, 3, 6, 3, 1, 12, 3],
-            },
-            'bulanan': {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'],
-                hadir: [2820, 2650, 2910, 2780, 2990, 2730, 2650, 2880, 2950, 2810, 2700, 2600],
-                izin: [180, 210, 160, 190, 140, 220, 240, 170, 150, 200, 230, 260],
-                alpha: [80, 60, 90, 70, 40, 110, 130, 70, 60, 90, 110, 140],
-            },
-            'tahunan': {
-                labels: ['2019', '2020', '2021', '2022', '2023', '2024'],
-                hadir: [88.2, 79.4, 82.1, 87.6, 91.3, 93.8],
-                izin: [6.4, 11.2, 9.6, 7.8, 5.4, 4.2],
-                alpha: [5.4, 9.4, 8.3, 4.6, 3.3, 2.0],
-            }
-        };
+        // ─── CHART DATA dari database (DashboardController::buildChartData) ─────────────
+        const DATA = @json($chartData);
 
         // ─── SHARED CHART OPTIONS ───────────────────────
         function makeOptions(type, period) {

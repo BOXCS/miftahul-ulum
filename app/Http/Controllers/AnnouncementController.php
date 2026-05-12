@@ -55,7 +55,12 @@ class AnnouncementController extends Controller
             $validated['published_at'] = now();
         }
 
-        Announcement::create($validated);
+        $announcement = Announcement::create($validated);
+
+        // Realtime: broadcast ke semua mobile client jika published langsung
+        if ($announcement->is_published) {
+            broadcast(new \App\Events\AnnouncementCreated($announcement));
+        }
 
         return redirect()->route('announcements.index')
             ->with('success', 'Pengumuman berhasil ditambahkan.');
@@ -101,7 +106,13 @@ class AnnouncementController extends Controller
             $validated['published_at'] = null;
         }
 
+        $wasPublished  = (bool) $announcement->is_published;
         $announcement->update($validated);
+
+        // Realtime: broadcast hanya jika baru saja dipublish (transisi draft → published)
+        if (!$wasPublished && $announcement->is_published) {
+            broadcast(new \App\Events\AnnouncementCreated($announcement->fresh()));
+        }
 
         return redirect()->route('announcements.index')
             ->with('success', 'Pengumuman berhasil diperbarui.');

@@ -880,7 +880,57 @@ openReject(item) {
         if (s==='Ditolak')   return 'background:linear-gradient(135deg,#dc2626,#f87171)';
         return 'background:linear-gradient(135deg,#7c3aed,#a78bfa)';
     },
-}">
+
+    // ─── Realtime listener via Laravel Reverb ───────────────────
+    init() {
+        if (!window.Echo) {
+            console.warn('Echo tidak tersedia, real-time perizinan dimatikan');
+            return;
+        }
+        try {
+            window.Echo.private('permissions-admin')
+                .listen('.PermissionSubmitted', (e) => {
+                    // Hindari duplikat (kalau by chance dikirim 2x)
+                    if (this.permissions.some(p => p.id === e.id)) return;
+
+                    // Prepend ke list — izin paling baru di atas
+                    this.permissions.unshift(e);
+
+                    // Tampilkan toast notifikasi (kalau komponen toast tersedia)
+                    this.notifyNewPermission(e);
+                });
+            console.log('[Reverb] Listening on permissions-admin');
+        } catch (err) {
+            console.warn('[Reverb] Gagal subscribe permissions-admin:', err);
+        }
+    },
+
+    notifyNewPermission(p) {
+        // Notifikasi browser native (kalau diizinkan)
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('Permohonan Izin Baru', {
+                body: `${p.santri} mengajukan izin ${p.jenis}`,
+                icon: '/favicon.ico',
+            });
+        }
+        // Audio beep singkat
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.frequency.value = 880;
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.25);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+        } catch(_) {}
+    },
+}"
+x-init="
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+">
 
     {{-- Alert pending --}}
     <div class="alert-pending" x-show="pendingCount > 0" style="margin:16px 20px 0;">
@@ -1144,7 +1194,7 @@ openReject(item) {
     </div>
     <form id="approveForm" method="POST" style="display:none;">
         @csrf
-        <input type="hidden" name="approved_by" value="Admin">
+        <input type="hidden" name="approved_by" value="{{ auth()->user()->name ?? 'Admin' }}">
     </form>
 
     {{-- MODAL TOLAK --}}
@@ -1211,8 +1261,8 @@ openReject(item) {
     </div>
     <form id="rejectForm" method="POST" style="display:none;">
         @csrf
-        <input type="hidden" name="approved_by" value="Admin">
-        <input type="hidden" name="reason" id="rejectReasonHidden">
+        <input type="hidden" name="approved_by" value="{{ auth()->user()->name ?? 'Admin' }}">
+        <input type="hidden" name="catatan" id="rejectReasonHidden">
     </form>
 
 </div>{{-- end tcard / x-data --}}

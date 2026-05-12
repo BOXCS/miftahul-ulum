@@ -53,7 +53,25 @@ class ApiController extends Controller
 
     public function pengumuman()
     {
-        return response()->json(Announcement::latest()->get());
+        // Hanya pengumuman yg sudah dipublish, terbaru di atas
+        $announcements = Announcement::where('is_published', true)
+            ->orderByDesc('published_at')
+            ->get()
+            ->map(fn($a) => [
+                'id'           => (int) $a->id,
+                'judul'        => $a->judul,
+                'isi'          => $a->konten,         // mobile baca 'isi'
+                'konten'       => $a->konten,         // backward-compat
+                'kategori'     => $a->kategori,
+                'foto'         => null,
+                'tgl_mulai'    => optional($a->published_at)->toIso8601String(),
+                'tgl_selesai'  => null,                // null = no expiry
+                'is_published' => (bool) $a->is_published,
+                'published_at' => optional($a->published_at)->toIso8601String(),
+                'created_at'   => optional($a->created_at)->toIso8601String(),
+                'updated_at'   => optional($a->updated_at)->toIso8601String(),
+            ]);
+        return response()->json($announcements);
     }
 
     public function faq(Request $request)
@@ -303,64 +321,70 @@ class ApiController extends Controller
         ]);
     }
 
+    /**
+     * GET /api/perizinan/{santriId}
+     * Riwayat perizinan untuk satu santri (digunakan mobile).
+     * Format response disesuaikan dengan Perizinan.fromJson() di Flutter.
+     */
     public function perizinan($id)
     {
-        $permissions = Permission::where('student_id', $id)
-            ->orderBy('created_at', 'desc')
+        $permissions = Permission::where("student_id", $id)
+            ->latest("created_at")
             ->get()
             ->map(fn($p) => [
-                'id'              => $p->id,
-                'student_id'      => $p->student_id,
-                'jenis'           => $p->jenis,
-                'tanggal_mulai'   => $p->tanggal_mulai->format('Y-m-d'),
-                'tanggal_selesai' => $p->tanggal_selesai->format('Y-m-d'),
-                'keterangan'      => $p->keterangan,
-                'catatan'         => $p->catatan,
-                'status'          => $p->status,
-                'approved_by'     => $p->approved_by,
-                'approved_at'     => $p->approved_at?->toIso8601String(),
-                'created_at'      => $p->created_at->toIso8601String(),
+                "id"              => (int) $p->id,
+                "student_id"      => (int) $p->student_id,
+                "jenis"           => $p->jenis,
+                "tanggal_mulai"   => optional($p->tanggal_mulai)->format("Y-m-d"),
+                "tanggal_selesai" => optional($p->tanggal_selesai)->format("Y-m-d"),
+                "keterangan"      => $p->keterangan,
+                "status"          => $p->status,
+                "approved_by"     => $p->approved_by,
+                "approved_at"     => optional($p->approved_at)->toIso8601String(),
+                "catatan"         => $p->catatan,
+                "created_at"      => optional($p->created_at)->toIso8601String(),
+                "updated_at"      => optional($p->updated_at)->toIso8601String(),
             ]);
 
-        return response()->json(['success' => true, 'data' => $permissions]);
+        return response()->json([
+            "success" => true,
+            "message" => "OK",
+            "data"    => $permissions,
+        ]);
     }
 
-        public function storePerizinan(Request $request)
+    /**
+     * POST /api/perizinan
+     * Submit perizinan baru dari mobile (wali santri).
+     * Body: { student_id, jenis, tanggal_mulai, tanggal_selesai, keterangan }
+     */
+    public function submitPerizinan(Request $request): \Illuminate\Http\JsonResponse
     {
-        // Validasi — mengikuti skema DB web sebagai source of truth
         $validated = $request->validate([
-            'student_id'      => 'required|integer|exists:students,id',
-            'jenis'           => 'required|in:keluar,pulang,kegiatan,sakit',
-            'tanggal_mulai'   => 'required|date',
-            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-            'keterangan'      => 'nullable|string|max:1000',
+            "student_id"      => "required|exists:students,id",
+            "jenis"           => "required|in:keluar,pulang,kegiatan,sakit",
+            "tanggal_mulai"   => "required|date",
+            "tanggal_selesai" => "required|date|after_or_equal:tanggal_mulai",
+            "keterangan"      => "nullable|string|max:1000",
         ]);
 
-        // Simpan — status selalu 'pending' dari mobile, admin yang approve/reject
-        $permission = Permission::create([
-            'student_id'      => $validated['student_id'],
-            'jenis'           => $validated['jenis'],
-            'tanggal_mulai'   => $validated['tanggal_mulai'],
-            'tanggal_selesai' => $validated['tanggal_selesai'],
-            'keterangan'      => $validated['keterangan'] ?? null,
-            'status'          => 'pending',
-        ]);
+        $permission = Permission::create($validated + ["status" => "pending"]);
 
-        $permission->load('student');
+        // Broadcast realtime ke channel admin agar dashboard otomatis update
+        broadcast(new \App\Events\PermissionSubmitted($permission));
 
         return response()->json([
-            'success' => true,
-            'message' => 'Pengajuan izin berhasil dikirim. Menunggu persetujuan admin.',
-            'data'    => [
-                'id'              => $permission->id,
-                'student_id'      => $permission->student_id,
-                'nama_santri'     => $permission->student?->name ?? 'N/A',
-                'jenis'           => $permission->jenis,
-                'tanggal_mulai'   => $permission->tanggal_mulai->format('Y-m-d'),
-                'tanggal_selesai' => $permission->tanggal_selesai->format('Y-m-d'),
-                'keterangan'      => $permission->keterangan,
-                'status'          => $permission->status,
-                'created_at'      => $permission->created_at->toIso8601String(),
+            "success" => true,
+            "message" => "Permintaan izin berhasil diajukan, menunggu persetujuan admin.",
+            "data" => [
+                "id"              => (int) $permission->id,
+                "student_id"      => (int) $permission->student_id,
+                "jenis"           => $permission->jenis,
+                "tanggal_mulai"   => optional($permission->tanggal_mulai)->format("Y-m-d"),
+                "tanggal_selesai" => optional($permission->tanggal_selesai)->format("Y-m-d"),
+                "keterangan"      => $permission->keterangan,
+                "status"          => $permission->status,
+                "created_at"      => optional($permission->created_at)->toIso8601String(),
             ],
         ], 201);
     }
@@ -411,6 +435,36 @@ class ApiController extends Controller
             'success' => true,
             'message' => 'Riwayat perizinan berhasil diambil.',
             'data'    => $permissions,
+     * GET /api/perizinan-by-ortu/{parentId}
+     * Riwayat perizinan untuk semua anak dari satu wali santri.
+     */
+    public function perizinanByOrtu($parentId): \Illuminate\Http\JsonResponse
+    {
+        $studentIds = Student::where("parent_id", $parentId)->pluck("id");
+
+        $permissions = Permission::with("student")
+            ->whereIn("student_id", $studentIds)
+            ->latest("created_at")
+            ->get()
+            ->map(fn($p) => [
+                "id"              => (int) $p->id,
+                "student_id"      => (int) $p->student_id,
+                "santri_nama"     => $p->student?->name,
+                "jenis"           => $p->jenis,
+                "tanggal_mulai"   => optional($p->tanggal_mulai)->format("Y-m-d"),
+                "tanggal_selesai" => optional($p->tanggal_selesai)->format("Y-m-d"),
+                "keterangan"      => $p->keterangan,
+                "status"          => $p->status,
+                "approved_by"     => $p->approved_by,
+                "approved_at"     => optional($p->approved_at)->toIso8601String(),
+                "catatan"         => $p->catatan,
+                "created_at"      => optional($p->created_at)->toIso8601String(),
+                "updated_at"      => optional($p->updated_at)->toIso8601String(),
+            ]);
+
+        return response()->json([
+            "success" => true,
+            "data"    => $permissions,
         ]);
     }
 
@@ -437,8 +491,20 @@ class ApiController extends Controller
         $channelName = $request->input('channel_name', '');
         $socketId    = $request->input('socket_id', '');
 
-        // Wali santri hanya boleh subscribe ke channel miliknya
-        if ($channelName !== "private-chat.{$parentId}") {
+        // Validasi channel — wali santri hanya boleh akses channel miliknya
+        $allowed = false;
+
+        if ($channelName === "private-chat.{$parentId}") {
+            $allowed = true;
+        } elseif (preg_match('/^private-santri\.(\d+)$/', $channelName, $sm)) {
+            // Cek apakah santri tersebut anak dari wali ini
+            $studentId = (int) $sm[1];
+            $allowed = Student::where('id', $studentId)
+                ->where('parent_id', $parentId)
+                ->exists();
+        }
+
+        if (!$allowed) {
             return response()->json(['error' => 'Forbidden'], 403);
         }
 
@@ -448,6 +514,89 @@ class ApiController extends Controller
         $signature = hash_hmac('sha256', "{$socketId}:{$channelName}", $appSecret);
 
         return response()->json(['auth' => "{$appKey}:{$signature}"]);
+    }
+
+    /**
+     * GET /api/faq?search=...&kategori=...
+     * Mengembalikan semua FAQ aktif untuk ditampilkan di mobile.
+     * Format response disesuaikan dengan FaqResponse.fromJson() di Flutter.
+     */
+    public function getFaqs(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $search   = trim((string) $request->query('search', ''));
+        $kategori = trim((string) $request->query('kategori', ''));
+
+        $query = Faq::query()->where('is_active', true);
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('pertanyaan', 'like', "%{$search}%")
+                  ->orWhere('jawaban', 'like', "%{$search}%");
+            });
+        }
+
+        if ($kategori !== '') {
+            $query->where('kategori', $kategori);
+        }
+
+        $faqs = $query
+            ->orderBy('kategori')
+            ->orderBy('urutan')
+            ->orderBy('id')
+            ->get()
+            ->map(fn($f) => [
+                'id'         => (int) $f->id,
+                'pertanyaan' => $f->pertanyaan,
+                'jawaban'    => $f->jawaban,
+                'kategori'   => $f->kategori,
+                'urutan'     => (int) ($f->urutan ?? 0),
+                'is_active'  => (bool) $f->is_active,
+            ])
+            ->values();
+
+        // Daftar semua kategori unik (dari FAQ aktif) untuk dropdown filter mobile
+        $kategoris = Faq::where('is_active', true)
+            ->select('kategori')
+            ->distinct()
+            ->orderBy('kategori')
+            ->pluck('kategori')
+            ->filter()
+            ->values();
+
+        return response()->json([
+            'success'   => true,
+            'data'      => $faqs,
+            'kategoris' => $kategoris,
+            'total'     => $faqs->count(),
+        ]);
+    }
+
+    /**
+     * GET /api/faq/{id} — detail satu FAQ.
+     */
+    public function getFaqById($id): \Illuminate\Http\JsonResponse
+    {
+        $faq = Faq::where('is_active', true)->find($id);
+
+        if (!$faq) {
+            return response()->json([
+                'success' => false,
+                'message' => 'FAQ tidak ditemukan',
+                'data'    => null,
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'id'         => (int) $faq->id,
+                'pertanyaan' => $faq->pertanyaan,
+                'jawaban'    => $faq->jawaban,
+                'kategori'   => $faq->kategori,
+                'urutan'     => (int) ($faq->urutan ?? 0),
+                'is_active'  => (bool) $faq->is_active,
+            ],
+        ]);
     }
 
     public function chatHistory($parentId)

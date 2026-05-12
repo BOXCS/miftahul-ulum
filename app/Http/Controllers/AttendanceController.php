@@ -31,6 +31,7 @@ class AttendanceController extends Controller
                 'status'     => $att->status,
                 'keterangan' => $att->keterangan,
                 'jam_masuk'  => $att->jam_masuk,
+                'jam_keluar' => $att->jam_keluar,
             ];
         }
 
