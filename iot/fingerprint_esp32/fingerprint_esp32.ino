@@ -18,8 +18,8 @@
 #include <time.h>
 
 // ================= KONFIGURASI WIFI =================
-#define WIFI_SSID    "Atas"
-#define WIFI_PASS    "Atas0009876"
+#define WIFI_SSID    "Basecamp 1"
+#define WIFI_PASS    "gulaaren"
 
 #define SERVER_PORT  8000
 #define SERVER_SIG   "miftahul_ulum"
@@ -49,6 +49,11 @@ unsigned long lastScanTime  = 0;
 unsigned long lastPollTime  = 0;
 unsigned long lastPrayerFetch = 0;
 bool ntpSynced = false;
+
+// Counter berapa kali request berturut-turut gagal sebelum invalidate cache.
+// Mencegah re-scan subnet hanya karena 1 packet loss / server slow respond.
+int  consecutiveFailures = 0;
+const int MAX_CONSECUTIVE_FAILURES = 5;
 
 // Jadwal sholat hari ini — di-fetch dari server
 struct PrayerWindow {
@@ -480,11 +485,24 @@ void kirimAbsensi(uint16_t fingerprintId, bool matched, int confidence) {
     lcdPrint("Server 302", "Cek header");
     beepError();
   } else if (code < 0) {
-    Serial.println("Connection lost, invalidate cache");
-    invalidateCache();
-    lcdPrint("Server lost", "Cari ulang...");
+    // Jangan langsung invalidate cache — bisa jadi network glitch sesaat.
+    // Pakai counter, baru re-discover kalau gagal berturut-turut.
+    consecutiveFailures++;
+    Serial.printf("Connection fail %d/%d (code=%d)\n",
+                  consecutiveFailures, MAX_CONSECUTIVE_FAILURES, code);
+    if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+      Serial.println("Server hilang permanen, invalidate cache");
+      invalidateCache();
+      consecutiveFailures = 0;
+      lcdPrint("Server lost", "Cari ulang...");
+    } else {
+      lcdPrint("Server lambat", "Retry...");
+    }
     beepError();
   } else { lcdPrint("Server Error", "HTTP:" + String(code)); beepError(); }
+
+  // Reset counter saat request sukses (kode 2xx, 4xx, 422, dst)
+  if (code >= 200) consecutiveFailures = 0;
 
   http.end();
   delay(3000);
