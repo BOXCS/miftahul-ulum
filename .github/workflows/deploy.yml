@@ -23,7 +23,7 @@ jobs:
             cd ~/miftahul-ulum
 
             echo "=== Pull latest code ==="
-            git pull origin main
+            git pull origin develop-docker
 
             echo "=== Build assets ==="
             docker compose exec -T vite npm run build || true
