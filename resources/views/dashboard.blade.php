@@ -1447,6 +1447,91 @@
         .act-bg-amber {
             background: #fef3c7;
         }
+        /* ═══════════════════════════════════════════════════
+        RESPONSIVE FIXES
+        ═══════════════════════════════════════════════════ */
+
+        /* Pastikan tidak ada horizontal scroll */
+        .db {
+            overflow-x: hidden;
+        }
+
+        /* Main grid — stack lebih awal */
+        @media(max-width:1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Stats row — 2 kolom di tablet */
+        @media(max-width:900px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .db-header-title h1 {
+                font-size: 1.4rem;
+            }
+            .scard-value {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Mobile */
+        @media(max-width:640px) {
+            .db {
+                padding: 8px 12px 16px;
+            }
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            .scard {
+                padding: 16px 14px 14px;
+            }
+            .scard-value {
+                font-size: 1.6rem;
+            }
+            .db-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .db-header-actions {
+                width: 100%;
+            }
+            .sholat-head {
+                padding: 16px 16px 12px;
+                flex-wrap: wrap;
+            }
+            .sholat-footer {
+                padding: 10px 16px 14px;
+                flex-wrap: wrap;
+            }
+            .qa-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .chart-controls {
+                flex-wrap: wrap;
+            }
+        }
+        .panel-head {
+            display: flex !important;
+            align-items: flex-start !important;
+            justify-content: space-between !important;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .panel-head .panel-title {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .panel-head .chart-controls {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
     </style>
 @endpush
 

@@ -526,6 +526,71 @@
         .tcard {
             width: 100%;
         }
+
+        .filter-bar-top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .filter-selects {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-bar-search {
+            position: relative;
+            width: 220px;
+            flex-shrink: 0;
+        }
+
+        @media(max-width: 1000px) {
+            .att-stats {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media(max-width: 640px) {
+            .att-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            .st-card {
+                padding: 14px 14px;
+            }
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-bar-top {
+                width: 100%;
+                flex-direction: column; /* ← tambah */
+                align-items: stretch;   /* ← tambah */
+            }
+            .filter-bar-top form {
+                width: 100%;            /* ← tambah */
+            }
+            .filter-bar-top form > div {
+                width: 100%;            /* ← date input full width */
+                box-sizing: border-box;
+                justify-content: space-between; /* ← tambah */
+            }
+            .filter-bar-top form > div input[type="date"] {
+                flex: 1; /* ← tambah, biar input mengisi sisa ruang */
+                text-align: right; /* ← icon otomatis nempel kiri, text nempel kanan */
+            }
+            .filter-selects {
+                width: 100%;
+            }
+            .filter-selects .fselect {
+                flex: 1;
+            }
+            .filter-bar-search {
+                width: 100%;
+            }
+        }
     </style>
 @endpush
 
@@ -806,42 +871,45 @@
 
             {{-- Filter bar --}}
             <div class="filter-bar">
-                <form action="{{ route('attendance.index') }}" method="GET"
-                    style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;" id="filterForm">
-                    <div
-                        style="display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;padding:6px 12px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                            fill="none" stroke="#94a3b8" stroke-width="2">
-                            <rect x="3" y="4" width="18" height="18" rx="2" />
-                            <line x1="16" y1="2" x2="16" y2="6" />
-                            <line x1="8" y1="2" x2="8" y2="6" />
-                            <line x1="3" y1="10" x2="21" y2="10" />
-                        </svg>
-                        <input type="date" name="tanggal" value="{{ $today }}"
-                            style="border:none;background:transparent;padding:0;outline:none;font-size:.82rem;font-family:inherit;color:#1e293b;"
-                            onchange="this.form.submit()">
+                {{-- Baris 1: date + selects --}}
+                <div class="filter-bar-top">
+                    <form action="{{ route('attendance.index') }}" method="GET"
+                        style="display:flex;align-items:center;gap:8px;" id="filterForm">
+                        <div
+                            style="display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;padding:6px 12px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="#94a3b8" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" />
+                                <line x1="16" y1="2" x2="16" y2="6" />
+                                <line x1="8" y1="2" x2="8" y2="6" />
+                                <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                            <input type="date" name="tanggal" value="{{ $today }}"
+                                style="border:none;background:transparent;padding:0;outline:none;font-size:.82rem;font-family:inherit;color:#1e293b;"
+                                onchange="this.form.submit()">
+                        </div>
+                    </form>
+
+                    <div class="filter-selects">
+                        <select class="fselect" x-model="waktu_shalat" @change="currentPage=1;filterStatus='semua'">
+                            <option value="semua">Semua Waktu</option>
+                            @foreach ($prayers as $p)
+                                <option value="{{ $p }}">{{ $p }}</option>
+                            @endforeach
+                        </select>
+                        <select class="fselect" x-model="filterStatus" @change="currentPage=1">
+                            <option value="semua">Semua Status</option>
+                            <option value="hadir">Hadir</option>
+                            <option value="terlambat">Terlambat</option>
+                            <option value="izin">Izin</option>
+                            <option value="sakit">Sakit</option>
+                            <option value="alpha">Alpha</option>
+                        </select>
                     </div>
-                </form>
+                </div>
 
-                {{-- Filter Waktu Shalat (Alpine, no page reload) --}}
-                <select class="fselect" x-model="waktu_shalat" @change="currentPage=1;filterStatus='semua'">
-                    <option value="semua">Semua Waktu</option>
-                    @foreach ($prayers as $p)
-                        <option value="{{ $p }}">{{ $p }}</option>
-                    @endforeach
-                </select>
-
-                {{-- Filter Status (Alpine) --}}
-                <select class="fselect" x-model="filterStatus" @change="currentPage=1">
-                    <option value="semua">Semua Status</option>
-                    <option value="hadir">Hadir</option>
-                    <option value="terlambat">Terlambat</option>
-                    <option value="izin">Izin</option>
-                    <option value="sakit">Sakit</option>
-                    <option value="alpha">Alpha</option>
-                </select>
-
-                <div style="position:relative;margin-left:auto;">
+                {{-- Baris 2: search --}}
+                <div class="filter-bar-search">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
                         fill="none" stroke="#94a3b8" stroke-width="2"
                         style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;">
@@ -849,7 +917,7 @@
                         <line x1="21" y1="21" x2="16.65" y2="16.65" />
                     </svg>
                     <input type="search" placeholder="Cari santri…" x-model="search" @input="currentPage=1"
-                        style="padding:9px 14px 9px 36px;border-radius:10px;border:1.5px solid #e2e8f0;font-size:.8rem;background:#fff;font-family:inherit;outline:none;width:220px;color:#334155;"
+                        style="width:100%;padding:9px 14px 9px 36px;border-radius:10px;border:1.5px solid #e2e8f0;font-size:.8rem;background:#fff;font-family:inherit;outline:none;color:#334155;"
                         autocomplete="off">
                 </div>
             </div>

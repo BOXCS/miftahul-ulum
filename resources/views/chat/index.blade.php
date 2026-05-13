@@ -1,5 +1,6 @@
 @extends('layouts.app')
 
+@section('hide-footer', '1')
 @section('title', 'Pesan - Santri Monitoring')
 @section('breadcrumb', 'Chat Wali')
 @section('main-class', 'flex-1 overflow-hidden p-0')
@@ -260,31 +261,62 @@
     .header-status {
         display: flex; align-items: center; gap: 5px;
         margin-top: 2px;
+        max-width: 220px;
+        overflow: hidden;
     }
     .status-dot {
         width: 7px; height: 7px;
         background: #22c55e;
         border-radius: 50%;
+        flex-shrink: 0;
         animation: pulse-dot 2.5s infinite;
     }
     @keyframes pulse-dot {
         0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,.4); }
         50%      { box-shadow: 0 0 0 5px rgba(34,197,94,0); }
     }
+    /* Running text wrapper */
+    .status-text-wrap {
+        overflow: hidden;
+        white-space: nowrap;
+        flex: 1;
+        min-width: 0;
+    }
     .status-text {
         font-size: .7rem; color: var(--slate-500); font-weight: 500;
+        display: inline-block;
+        white-space: nowrap;
     }
-    .header-child-tag {
-        display: inline-flex; align-items: center; gap: 4px;
+    /* Hanya aktifkan marquee saat teks panjang (offline state) */
+    .status-text.marquee {
+        animation: marquee-scroll 9s linear infinite;
+        padding-right: 32px;
+    }
+    @keyframes marquee-scroll {
+        0%   { transform: translateX(0); }
+        100% { transform: translateX(-100%); }
+    }
+    /* Header child tag — dipindah ke strip bawah */
+    .header-child-strip {
         background: var(--teal-50);
-        border: 1px solid var(--teal-200, #99f6e4);
-        border-radius: 20px;
-        padding: 2px 9px;
+        border-bottom: 1px solid rgba(13,148,136,.12);
+        padding: 5px 20px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
         font-size: .68rem;
         color: var(--teal-700);
         font-weight: 600;
-        margin-left: 6px;
+        overflow: hidden;
     }
+    .header-child-strip svg { flex-shrink: 0; }
+    .header-child-strip span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    /* Hapus .header-child-tag lama */
+    .header-child-tag { display: none; }
 
     .icon-btn {
         width: 34px; height: 34px;
@@ -542,6 +574,76 @@
     @keyframes spin {
         to { transform: rotate(360deg); }
     }
+
+    /* ─── MOBILE RESPONSIVE ─────────────────────── */
+    @media(max-width: 768px) {
+        .chat-layout {
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Sidebar full width, tersembunyi saat ada activeChat */
+        .chat-sidebar {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            z-index: 10;
+            transition: transform .25s ease;
+        }
+
+        /* Sembunyikan sidebar saat chat aktif */
+        .chat-sidebar.hide-mobile {
+            transform: translateX(-100%);
+            pointer-events: none;
+        }
+
+        /* Chat main full width */
+        .chat-main {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+        }
+
+        /* Sembunyikan chat-main saat belum ada activeChat */
+        .chat-main.hide-mobile {
+            transform: translateX(100%);
+            pointer-events: none;
+        }
+
+        /* Tombol back di header */
+        .back-btn {
+            display: flex !important;
+        }
+    }
+
+    @media(min-width: 769px) {
+        .back-btn {
+            display: none !important;
+        }
+    }
+
+    .back-btn {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        border: none;
+        background: var(--slate-100);
+        color: var(--slate-600);
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background .2s;
+    }
+
+    .back-btn:hover { background: var(--slate-200); }
+
+    /* Paksa main-wrapper tidak overflow saat chat */
+    .main-wrapper {
+        max-height: 100vh;
+        overflow: hidden;
+    }
 </style>
 @endpush
 
@@ -676,7 +778,7 @@
     {{-- ══════════════════════════════════════════ --}}
     {{-- SIDEBAR                                    --}}
     {{-- ══════════════════════════════════════════ --}}
-    <aside class="chat-sidebar">
+    <aside class="chat-sidebar" :class="{ 'hide-mobile': activeChat !== null }">
 
         {{-- Header --}}
         <div class="sidebar-top">
@@ -729,24 +831,31 @@
     {{-- ══════════════════════════════════════════ --}}
     {{-- MAIN CHAT                                  --}}
     {{-- ══════════════════════════════════════════ --}}
-    <div class="chat-main" x-show="activeChat !== null" style="position:relative;">
+    <div class="chat-main" :class="{ 'hide-mobile': activeChat === null }" style="position:relative;">
 
         {{-- Header --}}
         <div class="chat-header-bar" x-show="activeConv">
             <div class="flex items-center gap-3">
+                <button class="back-btn" @click="activeChat = null" title="Kembali">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
+                    </svg>
+                </button>
                 <div style="position:relative;">
                     <div class="header-avatar" :class="activeConv?.av" x-text="activeConv?.initials"></div>
                     <span x-show="activeConv?.online" style="position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;background:#22c55e;border:2px solid #fff;border-radius:50%;"></span>
                 </div>
-                <div>
+                <div style="min-width:0;">
                     <div class="header-name" x-text="activeConv?.name"></div>
                     <div class="header-status">
                         <span x-show="activeConv?.online" class="status-dot"></span>
-                        <span class="status-text" x-text="activeConv?.online ? 'Online' : 'Terakhir aktif beberapa jam lalu'"></span>
-                        <span class="header-child-tag">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            <span x-text="activeConv?.child + ' · ' + activeConv?.kelas"></span>
-                        </span>
+                        <div class="status-text-wrap">
+                            <span
+                                class="status-text"
+                                :class="activeConv?.online ? '' : 'marquee'"
+                                x-text="activeConv?.online ? 'Online' : 'Terakhir aktif beberapa jam lalu'"
+                            ></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -761,6 +870,12 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
                 </button>
             </div>
+        </div>
+
+        {{-- Child info strip (bawah header, compact) --}}
+        <div class="header-child-strip" x-show="activeConv">
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span x-text="'Santri: ' + activeConv?.child + '  ·  Kelas: ' + activeConv?.kelas"></span>
         </div>
 
         {{-- Messages --}}

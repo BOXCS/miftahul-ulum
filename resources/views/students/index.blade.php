@@ -599,6 +599,27 @@
     .dt tbody td span {
         font-size: .85rem !important;
     }
+    .st-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+    }
+
+    @media(max-width: 900px) {
+        .st-cards-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media(max-width: 480px) {
+        .st-cards-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .st-card {
+            padding: 14px 14px;
+        }
+    }
 </style>
 @endpush
 
@@ -628,8 +649,7 @@
 </div>
 
 {{-- ── STAT CARDS ── --}}
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;">
-
+<div class="st-cards-grid" style="margin-bottom:22px;">
     <div class="st-card tc-teal">
         <div class="st-ico" style="background:#ccfbf1;color:#0f766e;">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -713,18 +733,20 @@
             </svg>
             <input type="search" placeholder="Cari nama, NIS, kelas…" x-model="search" autocomplete="off">
         </div>
-        <select class="filter-select" x-model="kelasFilter" style="min-width:130px;">
-            <option value="">Semua Kelas</option>
-            @foreach($kelas_options as $opt)
-            <option value="{{ $opt }}">Kelas {{ $opt }}</option>
-            @endforeach
-        </select>
-        <select class="filter-select" x-model="statusFilter" style="min-width:130px;">
-            <option value="">Semua Status</option>
-            <option value="aktif">Aktif</option>
-            <option value="alumni">Alumni</option>
-            <option value="keluar">Keluar</option>
-        </select>
+        <div class="filter-selects">
+            <select class="filter-select" x-model="kelasFilter" style="min-width:130px;">
+                <option value="">Semua Kelas</option>
+                @foreach($kelas_options as $opt)
+                <option value="{{ $opt }}">Kelas {{ $opt }}</option>
+                @endforeach
+            </select>
+            <select class="filter-select" x-model="statusFilter" style="min-width:130px;">
+                <option value="">Semua Status</option>
+                <option value="aktif">Aktif</option>
+                <option value="alumni">Alumni</option>
+                <option value="keluar">Keluar</option>
+            </select>
+        </div>
     </div>
 
     {{-- Result Bar --}}

@@ -230,6 +230,13 @@
             border: 1px solid transparent;
         }
 
+        /* Collapsed: center icon perfectly dalam 68px */
+        .collapsed .nav-item {
+            padding: 9px 0;
+            justify-content: center;
+            gap: 0;
+        }
+
         .nav-item::before {
             content: '';
             position: absolute;
@@ -279,9 +286,12 @@
         .nav-icon {
             width: 18px;
             height: 18px;
+            min-width: 18px;
+            min-height: 18px;
             flex-shrink: 0;
             stroke-width: 1.7;
             transition: var(--transition);
+            display: block;
         }
 
         .nav-item.active .nav-icon {
@@ -367,6 +377,12 @@
             transition: var(--transition);
             position: relative;
             overflow: hidden;
+        }
+
+        .collapsed .user-card {
+            justify-content: center;
+            padding: 10px 0;
+            gap: 0;
         }
 
         .user-card:hover {
@@ -1099,6 +1115,7 @@
                 @yield('content')
             </main>
 
+            @unless(View::hasSection('hide-footer'))
             <footer
                 style="padding:14px 28px;border-top:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
                 <p style="font-size:.72rem;color:#94a3b8;">
@@ -1106,6 +1123,7 @@
                 </p>
                 <p style="font-size:.72rem;color:#cbd5e1;">Santri Monitoring Dashboard v2.0</p>
             </footer>
+            @endunless
         </div>
 
         @stack('scripts')
