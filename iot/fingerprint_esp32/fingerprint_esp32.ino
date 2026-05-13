@@ -18,8 +18,8 @@
 #include <time.h>
 
 // ================= KONFIGURASI WIFI =================
-#define WIFI_SSID    "Basecamp 1"
-#define WIFI_PASS    "gulaaren"
+#define WIFI_SSID    "Teknologi Informasi"
+#define WIFI_PASS    ""
 
 #define SERVER_PORT  8000
 #define SERVER_SIG   "miftahul_ulum"
