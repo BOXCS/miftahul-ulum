@@ -700,6 +700,91 @@
         color: #64748b;
         margin-top: 2px;
     }
+    .tab-strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 14px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        flex-wrap: wrap;
+    }
+
+    .tab-buttons {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+
+    .tab-search {
+        position: relative;
+        width: 240px;
+        flex-shrink: 0;
+    }
+
+    .tab-search svg {
+        position: absolute;
+        left: 11px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: #94a3b8;
+    }
+
+    .tab-search input {
+        width: 100%;
+        padding: 9px 14px 9px 36px;
+        border-radius: 10px;
+        border: 1.5px solid #e2e8f0;
+        font-size: .8rem;
+        background: #f8fafc;
+        font-family: inherit;
+        outline: none;
+        transition: border .2s, box-shadow .2s;
+        color: #334155;
+    }
+
+    .tab-search input:focus {
+        border-color: #0d9488;
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, .12);
+        background: #fff;
+    }
+
+    .perm-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 22px;
+    }
+
+    @media(max-width: 480px) {
+        .perm-stats {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .st-card {
+            padding: 14px;
+        }
+    }
+
+    @media(max-width: 640px) {
+        .tab-strip {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .tab-buttons {
+            width: 100%;
+        }
+        .tab-search {
+            width: 100%;
+        }
+    }
+
+    @media(max-width: 900px) {
+        .perm-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
 </style>
 @endpush
 
@@ -759,7 +844,7 @@
 </div>
 
 {{-- STAT CARDS --}}
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;">
+<div class="perm-stats">
     <div class="st-card tc-purple">
         <div class="st-ico" style="background:#ccfbf1;color:#0d9488;">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -955,21 +1040,22 @@ x-init="
 
     {{-- Tab strip --}}
     <div class="tab-strip">
-        <button class="tab-btn" :class="activeTab==='semua' ? 'active' : ''" @click="activeTab='semua'">
-            Semua <span class="tab-count" x-text="permissions.length"></span>
-        </button>
-        <button class="tab-btn amber" :class="activeTab==='pending' ? 'active' : ''" @click="activeTab='pending'">
-            Pending <span class="tab-count" x-text="pendingCount"></span>
-        </button>
-        <button class="tab-btn" :class="activeTab==='disetujui' ? 'active' : ''" @click="activeTab='disetujui'">
-            Disetujui <span class="tab-count" x-text="approvedCount"></span>
-        </button>
-        <button class="tab-btn" :class="activeTab==='ditolak' ? 'active' : ''" @click="activeTab='ditolak'">
-            Ditolak <span class="tab-count" x-text="rejectedCount"></span>
-        </button>
+        <div class="tab-buttons">
+            <button class="tab-btn" :class="activeTab==='semua' ? 'active' : ''" @click="activeTab='semua'">
+                Semua <span class="tab-count" x-text="permissions.length"></span>
+            </button>
+            <button class="tab-btn amber" :class="activeTab==='pending' ? 'active' : ''" @click="activeTab='pending'">
+                Pending <span class="tab-count" x-text="pendingCount"></span>
+            </button>
+            <button class="tab-btn" :class="activeTab==='disetujui' ? 'active' : ''" @click="activeTab='disetujui'">
+                Disetujui <span class="tab-count" x-text="approvedCount"></span>
+            </button>
+            <button class="tab-btn" :class="activeTab==='ditolak' ? 'active' : ''" @click="activeTab='ditolak'">
+                Ditolak <span class="tab-count" x-text="rejectedCount"></span>
+            </button>
+        </div>
 
-        {{-- Search --}}
-        <div class="filter-search" style="margin-left:auto;max-width:240px;">
+        <div class="tab-search">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />

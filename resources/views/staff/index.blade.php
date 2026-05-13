@@ -621,6 +621,41 @@
         color: #334155;
         margin-bottom: 6px;
     }
+    .filter-selects {
+        display: flex;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+    .staff-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin-bottom: 22px;
+    }
+    @media(max-width: 640px) {
+        .staff-stats {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .st-card {
+            padding: 14px;
+        }
+        .filter-strip {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .filter-search {
+            width: 100%;
+            min-width: 0 !important;
+        }
+        .filter-selects {
+            width: 100%;
+        }
+        .filter-selects .filter-select {
+            flex: 1;
+            min-width: 0 !important;
+        }
+    }
 </style>
 @endpush
 
@@ -653,8 +688,7 @@
 </div>
 
 {{-- ── STAT CARDS ── --}}
-<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px;margin-bottom:22px;">
-
+<div class="staff-stats">
     <div class="st-card tc-green">
         <div class="st-ico" style="background:#dcfce7;color:#15803d;">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -730,11 +764,13 @@
                 </svg>
                 <input type="search" placeholder="Cari nama atau email…" x-model="search" autocomplete="off">
             </div>
-            <select class="filter-select" x-model="roleFilter" style="min-width:140px;">
-                <option value="">Semua Role</option>
-                <option value="superadmin">Super Admin</option>
-                <option value="admin">Admin</option>
-            </select>
+            <div class="filter-selects">
+                <select class="filter-select" x-model="roleFilter" style="min-width:140px;">
+                    <option value="">Semua Role</option>
+                    <option value="superadmin">Super Admin</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
         </div>
 
         {{-- Result Bar --}}
