@@ -1,0 +1,26 @@
+{
+    "sourceFile": ".github/workflows/deploy.yml",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 2,
+            "patches": [
+                {
+                    "date": 1778571293957,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1778571589014,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -2,9 +2,9 @@\n \r\n on:\r\n   push:\r\n     branches:\r\n-      - main\r\n+      - develop-docker\r\n \r\n jobs:\r\n   deploy:\r\n     runs-on: ubuntu-latest\r\n"
+                },
+                {
+                    "date": 1778641216027,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -22,9 +22,9 @@\n           script: |\r\n             cd ~/miftahul-ulum\r\n \r\n             echo \"=== Pull latest code ===\"\r\n-            git pull origin main\r\n+            git pull origin develop-docker\r\n \r\n             echo \"=== Build assets ===\"\r\n             docker compose exec -T vite npm run build || true\r\n \r\n"
+                }
+            ],
+            "date": 1778571293956,
+            "name": "Commit-0",
+            "content": "name: Deploy to VPS\r\n\r\non:\r\n  push:\r\n    branches:\r\n      - main\r\n\r\njobs:\r\n  deploy:\r\n    runs-on: ubuntu-latest\r\n\r\n    steps:\r\n      - name: Checkout code\r\n        uses: actions/checkout@v4\r\n\r\n      - name: Deploy to VPS via SSH\r\n        uses: appleboy/ssh-action@v1.0.3\r\n        with:\r\n          host: ${{ secrets.SSH_HOST }}\r\n          username: ${{ secrets.SSH_USERNAME }}\r\n          key: ${{ secrets.SSH_PRIVATE_KEY }}\r\n          script: |\r\n            cd ~/miftahul-ulum\r\n\r\n            echo \"=== Pull latest code ===\"\r\n            git pull origin main\r\n\r\n            echo \"=== Build assets ===\"\r\n            docker compose exec -T vite npm run build || true\r\n\r\n            echo \"=== Rebuild PHP containers ===\"\r\n            docker compose up --build -d app queue reverb\r\n\r\n            echo \"=== Run migrations ===\"\r\n            docker compose exec -T app php artisan migrate --force\r\n\r\n            echo \"=== Clear & cache config ===\"\r\n            docker compose exec -T app php artisan optimize:clear\r\n            docker compose exec -T app php artisan optimize\r\n\r\n            echo \"=== Fix permissions ===\"\r\n            docker compose exec -T app chmod -R 777 storage bootstrap/cache\r\n\r\n            echo \"=== Done! ===\""
+        }
+    ]
+}

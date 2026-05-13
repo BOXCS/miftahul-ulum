@@ -8,6 +8,8 @@ Route::post("/login", [ApiController::class, "login"]);
 // Auth channel Reverb untuk mobile (tidak pakai Laravel session)
 Route::post("/broadcasting/auth", [ApiController::class, "broadcastAuth"]);
 Route::get("/pengumuman", [ApiController::class, "pengumuman"]);
+Route::get("/faq", [ApiController::class, "faq"]);
+Route::get("/faq/{id}", [ApiController::class, "faqDetail"]);
 Route::get("/santri/ortu/{id}", [ApiController::class, "santriByOrtu"]);
 Route::get("/santri/{id}", [ApiController::class, "santriById"]);
 Route::get("/ortu/{id}", [ApiController::class, "santriByOrtu"]);

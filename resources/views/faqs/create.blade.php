@@ -334,9 +334,9 @@
                         <label>Urutan Tampil</label>
                         <input type="number" name="urutan"
                             class="form-control-styled {{ $errors->has('urutan') ? 'error' : '' }}"
-                            value="{{ old('urutan', 1) }}"
-                            min="0" placeholder="1">
-                        <div class="hint-text">Angka kecil tampil lebih dulu</div>
+                            value="{{ old('urutan', $nextUrutan) }}"
+                            min="1" placeholder="{{ $nextUrutan }}">
+                        <div class="hint-text">Diisi otomatis ke posisi berikutnya ({{ $nextUrutan }}). Jika diisi sama dengan FAQ lain, FAQ yang ada akan digeser ke bawah.</div>
                         @error('urutan')
                         <div class="error-msg">{{ $message }}</div>
                         @enderror

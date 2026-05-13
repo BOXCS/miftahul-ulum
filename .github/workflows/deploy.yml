@@ -1,0 +1,44 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - develop-docker
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/miftahul-ulum
+
+            echo "=== Pull latest code ==="
+            git pull origin develop-docker
+
+            echo "=== Build assets ==="
+            docker compose exec -T vite npm run build || true
+
+            echo "=== Rebuild PHP containers ==="
+            docker compose up --build -d app queue reverb
+
+            echo "=== Run migrations ==="
+            docker compose exec -T app php artisan migrate --force
+
+            echo "=== Clear & cache config ==="
+            docker compose exec -T app php artisan optimize:clear
+            docker compose exec -T app php artisan optimize
+
+            echo "=== Fix permissions ==="
+            docker compose exec -T app chmod -R 777 storage bootstrap/cache
+
+            echo "=== Done! ==="

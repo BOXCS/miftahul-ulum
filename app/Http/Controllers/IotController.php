@@ -54,15 +54,28 @@ class IotController extends Controller
     private const COMMAND_TIMEOUT_SEC = 60;
 
     /** Timezone pesantren — bisa di-override via .env IOT_TIMEZONE */
-    private function tz(): string {
+    private function tz(): string
+    {
         return env('IOT_TIMEZONE', 'Asia/Jakarta');
     }
 
     /** Lokasi & metode jadwal sholat — bisa di-override via .env */
-    private function prayerCity():    string { return env('IOT_CITY', 'Jember'); }
-    private function prayerCountry(): string { return env('IOT_COUNTRY', 'Indonesia'); }
-    private function prayerMethod():  int    { return (int) env('IOT_PRAYER_METHOD', 20); }
-    private function TIMEZONE_(): string { return $this->tz(); }
+    private function prayerCity(): string
+    {
+        return env('IOT_CITY', 'Jember');
+    }
+    private function prayerCountry(): string
+    {
+        return env('IOT_COUNTRY', 'Indonesia');
+    }
+    private function prayerMethod(): int
+    {
+        return (int) env('IOT_PRAYER_METHOD', 20);
+    }
+    private function TIMEZONE_(): string
+    {
+        return $this->tz();
+    }
 
     /** Backward-compat constant references */
     private const TIMEZONE = 'Asia/Jakarta'; // fallback constant — code now uses $this->tz()
@@ -226,7 +239,7 @@ class IotController extends Controller
         // ── KASUS 1: Sensor tidak match (no template found di sensor) ──
         if (!$matched || $validated['fingerprint_id'] === 0) {
             // Log buat audit — server tahu ada scan attempt
-            \Log::info('Scan attempt tanpa match di sensor', [
+            Log::info('Scan attempt tanpa match di sensor', [
                 'ip' => $request->ip(),
                 'confidence' => $validated['confidence'] ?? 0,
             ]);
@@ -243,7 +256,7 @@ class IotController extends Controller
         // KASUS 3: Sensor punya template tapi DB tidak punya mapping
         // (sensor-DB inconsistency — orphan template)
         if (!$student) {
-            \Log::warning('Orphan template di sensor', [
+            Log::warning('Orphan template di sensor', [
                 'fingerprint_id' => $validated['fingerprint_id'],
                 'confidence' => $validated['confidence'] ?? 0,
             ]);
@@ -366,9 +379,11 @@ class IotController extends Controller
             }
 
             // Tentukan hadir/terlambat (>15 menit dari adzan)
-            $start       = Carbon::createFromTimeString($prayer['start'], $this->tz());
-            $diffMin     = abs($now->diffInMinutes($start, false));
-            $statusHadir = $diffMin > 15 ? 'terlambat' : 'hadir';
+            $start = Carbon::parse($prayer['start_at'], $this->tz());
+
+            $statusHadir = $now->greaterThan($start->copy()->addMinutes(15))
+                ? 'terlambat'
+                : 'hadir';
 
             $attendance = Attendance::updateOrCreate(
                 [
@@ -446,8 +461,14 @@ class IotController extends Controller
      */
     private function detectPrayerWindow(): ?array
     {
-        $now     = now($this->tz());
-        $windows = $this->buildWindows($now);
+        $now = now($this->tz());
+
+        // Cek window hari ini dan kemarin.
+        // Kemarin perlu dicek karena Isya kemarin bisa berakhir di Subuh hari ini.
+        $windows = array_merge(
+            $this->buildWindows($now->copy()->subDay()),
+            $this->buildWindows($now)
+        );
 
         if (empty($windows)) {
             Log::warning('Prayer windows kosong, fallback hardcoded');
@@ -455,12 +476,14 @@ class IotController extends Controller
         }
 
         foreach ($windows as $w) {
-            $start = Carbon::createFromTimeString($w['start'], $this->tz());
-            $end   = Carbon::createFromTimeString($w['end'],   $this->tz());
-            if ($now->between($start, $end)) {
+            $start = Carbon::parse($w['start_at'], $this->tz());
+            $end   = Carbon::parse($w['end_at'], $this->tz());
+
+            if ($now->betweenIncluded($start, $end)) {
                 return $w;
             }
         }
+
         return null;
     }
 
@@ -489,7 +512,7 @@ class IotController extends Controller
             if (!$startStr) continue;
 
             $start = Carbon::createFromFormat('H:i', $startStr, $tz)
-                           ->setDate($date->year, $date->month, $date->day);
+                ->setDate($date->year, $date->month, $date->day);
 
             // KHUSUS Subuh: end = Sunrise (syuruq), bukan adzan Dzuhur.
             // Setelah Sunrise sampai Dzuhur tidak ada absensi sholat.
@@ -497,34 +520,36 @@ class IotController extends Controller
                 $sunriseStr = substr(trim($times['Sunrise'] ?? ''), 0, 5);
                 if (!$sunriseStr) continue;
                 $end = Carbon::createFromFormat('H:i', $sunriseStr, $tz)
-                             ->setDate($date->year, $date->month, $date->day)
-                             ->subMinutes(self::NEXT_PRAYER_BUFFER_MIN);
+                    ->setDate($date->year, $date->month, $date->day)
+                    ->subMinutes(self::NEXT_PRAYER_BUFFER_MIN);
             } elseif ($i < $count - 1) {
                 // Sholat lain: end = adzan sholat berikutnya - buffer
                 $nextStr = substr(trim($times[$apiKeys[$i + 1]] ?? ''), 0, 5);
                 if (!$nextStr) continue;
                 $end = Carbon::createFromFormat('H:i', $nextStr, $tz)
-                             ->setDate($date->year, $date->month, $date->day)
-                             ->subMinutes(self::NEXT_PRAYER_BUFFER_MIN);
+                    ->setDate($date->year, $date->month, $date->day)
+                    ->subMinutes(self::NEXT_PRAYER_BUFFER_MIN);
             } else {
                 // Isya: sampai sebelum Subuh besok (atau 23:59 fallback)
                 $nextDayFajr = substr(trim($tomorrowTimes['Fajr'] ?? ''), 0, 5);
                 if ($nextDayFajr) {
                     $end = Carbon::createFromFormat('H:i', $nextDayFajr, $tz)
-                                 ->setDate($date->year, $date->month, $date->day)
-                                 ->addDay()
-                                 ->subMinutes(self::NEXT_PRAYER_BUFFER_MIN);
+                        ->setDate($date->year, $date->month, $date->day)
+                        ->addDay()
+                        ->subMinutes(self::NEXT_PRAYER_BUFFER_MIN);
                 } else {
                     $end = Carbon::createFromTimeString('23:59:00', $tz)
-                                 ->setDate($date->year, $date->month, $date->day);
+                        ->setDate($date->year, $date->month, $date->day);
                 }
             }
 
             $windows[] = [
-                'name'     => $localKeys[$i],
-                'start'    => $start->format('H:i:s'),
-                'end'      => $end->format('H:i:s'),
-                'duration' => max(0, (int) $start->diffInMinutes($end)),
+                'name'      => $localKeys[$i],
+                'start'     => $start->format('H:i:s'),
+                'end'       => $end->format('H:i:s'),
+                'start_at'  => $start->toDateTimeString(),
+                'end_at'    => $end->toDateTimeString(),
+                'duration'  => max(0, (int) $start->diffInMinutes($end)),
             ];
         }
         return $windows;

@@ -1,11 +1,14 @@
 /**
  * ================================================================
- * Miftahul Ulum — Fingerprint ESP32 (auto-discover server)
+ * Miftahul Ulum — Fingerprint ESP32 ke VPS
  * ================================================================
  *
- * Tidak ada hardcode IP server. ESP32 scan subnet WiFi otomatis,
- * cari host yang return signature "miftahul_ulum" di /api/iot/ping.
- * Hasil di-cache di NVS (Preferences).
+ * Versi ini TIDAK memakai auto-discovery subnet lokal.
+ * Server langsung diarahkan ke VPS:
+ * http://103.157.27.237:8000
+ *
+ * Endpoint ping yang sudah terbukti aktif:
+ * http://103.157.27.237:8000/api/iot/ping
  */
 
 #include <Wire.h>
@@ -14,91 +17,104 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
-#include <Preferences.h>
 #include <time.h>
 
 // ================= KONFIGURASI WIFI =================
-#define WIFI_SSID    "Basecamp 1"
-#define WIFI_PASS    "gulaaren"
+#define WIFI_SSID    "Teknologi Informasi"
+#define WIFI_PASS    ""
 
-#define SERVER_PORT  8000
-#define SERVER_SIG   "miftahul_ulum"
+// ================= KONFIGURASI SERVER VPS =================
+#define SERVER_BASE_URL "http://103.157.27.237:8000"
+#define SERVER_SIG      "miftahul_ulum"
 
+// ================= KONFIGURASI SISTEM =================
 #define BUZZER_PIN       4
 #define COOLDOWN_MS      3000
 #define POLL_INTERVAL_MS 3000
 
 // ================= NTP & JADWAL SHOLAT =================
-// WIB = UTC+7 → 7*3600 detik. Untuk WITA: 8*3600, WIT: 9*3600
+// WIB = UTC+7. Untuk WITA gunakan 8 * 3600. Untuk WIT gunakan 9 * 3600.
 #define GMT_OFFSET_SEC      (7 * 3600)
 #define DST_OFFSET_SEC      0
 #define NTP_SERVER_1        "pool.ntp.org"
 #define NTP_SERVER_2        "time.google.com"
 
-// Refresh jadwal sholat setiap 6 jam (atau saat hari berubah)
+// Refresh jadwal sholat setiap 6 jam.
 #define PRAYER_REFRESH_MS   (6UL * 60 * 60 * 1000)
 
 // ================= HARDWARE =================
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 HardwareSerial mySerial(2);
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
-Preferences prefs;
 
-String serverBase = "";
-unsigned long lastScanTime  = 0;
-unsigned long lastPollTime  = 0;
+String serverBase = SERVER_BASE_URL;
+
+unsigned long lastScanTime = 0;
+unsigned long lastPollTime = 0;
 unsigned long lastPrayerFetch = 0;
-bool ntpSynced = false;
 
-// Counter berapa kali request berturut-turut gagal sebelum invalidate cache.
-// Mencegah re-scan subnet hanya karena 1 packet loss / server slow respond.
-int  consecutiveFailures = 0;
+bool ntpSynced = false;
+bool serverOnline = false;
+
+int consecutiveFailures = 0;
 const int MAX_CONSECUTIVE_FAILURES = 5;
 
-// Jadwal sholat hari ini — di-fetch dari server
+// ================= JADWAL SHOLAT =================
 struct PrayerWindow {
   char name[12];
-  int startMinOfDay;  // misal 04:21 → 4*60+21 = 261
-  int endMinOfDay;    // 05:21 → 321
+  int startMinOfDay;
+  int endMinOfDay;
 };
+
 PrayerWindow todayPrayers[5];
 int prayerCount = 0;
-String prayerDateCached = "";  // YYYY-MM-DD
+String prayerDateCached = "";
 
-// State LCD idle screen — cache untuk hindari flicker
+// Cache LCD idle agar tidak flicker.
 String lastIdleTopLine = "";
 String lastIdleBottomLine = "";
 
+// ================= FORWARD DECLARATION =================
+int currentPrayerIndex();
+bool checkServer();
+
 // ================= BUZZER =================
 void beepSuccess() {
-  digitalWrite(BUZZER_PIN, HIGH); delay(100);
-  digitalWrite(BUZZER_PIN, LOW);  delay(100);
-  digitalWrite(BUZZER_PIN, HIGH); delay(100);
+  digitalWrite(BUZZER_PIN, HIGH);
+  delay(100);
+  digitalWrite(BUZZER_PIN, LOW);
+  delay(100);
+  digitalWrite(BUZZER_PIN, HIGH);
+  delay(100);
   digitalWrite(BUZZER_PIN, LOW);
 }
+
 void beepError() {
-  digitalWrite(BUZZER_PIN, HIGH); delay(500);
+  digitalWrite(BUZZER_PIN, HIGH);
+  delay(500);
   digitalWrite(BUZZER_PIN, LOW);
 }
 
 // ================= LCD HELPER =================
 void lcdPrint(const String& l1, const String& l2 = "") {
   lcd.clear();
-  lcd.setCursor(0, 0); lcd.print(l1.substring(0, 16));
-  lcd.setCursor(0, 1); lcd.print(l2.substring(0, 16));
+  lcd.setCursor(0, 0);
+  lcd.print(l1.substring(0, 16));
+  lcd.setCursor(0, 1);
+  lcd.print(l2.substring(0, 16));
 }
 
-// Forward declaration (dipanggil sebelum currentPrayerIndex didefinisikan)
-int currentPrayerIndex();
-
-/**
- * Render satu baris LCD dengan padding spasi sampai 16 karakter.
- * Pakai partial update (cursor + print) supaya tidak flicker.
- */
 void renderLcdLine(uint8_t row, const String& text, String& cache) {
   String padded = text;
-  if (padded.length() > 16) padded = padded.substring(0, 16);
-  while (padded.length() < 16) padded += " ";
+
+  if (padded.length() > 16) {
+    padded = padded.substring(0, 16);
+  }
+
+  while (padded.length() < 16) {
+    padded += " ";
+  }
+
   if (padded != cache) {
     lcd.setCursor(0, row);
     lcd.print(padded);
@@ -106,15 +122,17 @@ void renderLcdLine(uint8_t row, const String& text, String& cache) {
   }
 }
 
-/**
- * Tampilan standby (idle): nama sholat aktif + jam HH:MM:SS realtime.
- * Dipanggil tiap iterasi loop saat tidak ada jari terdeteksi.
- * Partial update agar tidak flicker (hanya redraw kalau berubah).
- */
+void backToIdle() {
+  lastIdleTopLine = "";
+  lastIdleBottomLine = "";
+}
+
 void showIdleScreen() {
-  // Baris 1: nama sholat aktif atau status
   String topLine;
-  if (!ntpSynced) {
+
+  if (!serverOnline) {
+    topLine = "Server offline";
+  } else if (!ntpSynced) {
     topLine = "Sync waktu...";
   } else {
     int idx = currentPrayerIndex();
@@ -125,14 +143,14 @@ void showIdleScreen() {
     }
   }
 
-  // Baris 2: jam HH:MM:SS (center, 8 char dengan padding 4 spasi)
   String bottomLine = "Tunggu NTP";
+
   if (ntpSynced) {
     struct tm t;
     if (getLocalTime(&t)) {
       char buf[10];
       snprintf(buf, sizeof(buf), "%02d:%02d:%02d", t.tm_hour, t.tm_min, t.tm_sec);
-      bottomLine = "    " + String(buf) + "    ";  // pad agar centered di 16 kolom
+      bottomLine = "    " + String(buf) + "    ";
     }
   }
 
@@ -140,21 +158,6 @@ void showIdleScreen() {
   renderLcdLine(1, bottomLine, lastIdleBottomLine);
 }
 
-/**
- * Tandai bahwa LCD perlu redraw ke idle screen.
- * Dipanggil setelah menampilkan hasil scan/error agar idle screen
- * di-rebuild dari nol di iterasi loop berikutnya.
- */
-void backToIdle() {
-  lastIdleTopLine = "";     // invalidate cache → force redraw
-  lastIdleBottomLine = "";
-}
-
-/**
- * Helper: setup HTTPClient dengan header standar JSON API.
- * Wajib pakai Accept: application/json agar Laravel tidak return 302 redirect
- * saat validation gagal (behavior web fallback).
- */
 void setupJsonHeaders(HTTPClient& http) {
   http.addHeader("Content-Type", "application/json");
   http.addHeader("Accept", "application/json");
@@ -165,6 +168,7 @@ void setupJsonHeaders(HTTPClient& http) {
 void connectWifi() {
   lcdPrint("Konek WiFi...", WIFI_SSID);
   Serial.printf("\nConnect ke '%s'\n", WIFI_SSID);
+
   WiFi.disconnect(true);
   delay(300);
   WiFi.mode(WIFI_STA);
@@ -172,9 +176,13 @@ void connectWifi() {
   WiFi.begin(WIFI_SSID, WIFI_PASS);
 
   int tries = 0;
+
   while (WiFi.status() != WL_CONNECTED && tries < 40) {
-    delay(500); Serial.print("."); tries++;
+    delay(500);
+    Serial.print(".");
+    tries++;
   }
+
   Serial.println();
 
   if (WiFi.status() == WL_CONNECTED) {
@@ -182,162 +190,133 @@ void connectWifi() {
     lcdPrint("WiFi OK", WiFi.localIP().toString());
     beepSuccess();
   } else {
+    Serial.println("WiFi gagal");
     lcdPrint("WiFi Gagal", "Cek Setting");
     beepError();
   }
+
   delay(1500);
 }
 
-// ================= AUTO-DISCOVER SERVER =================
-bool probeHost(const String& ip) {
+// ================= SERVER VPS =================
+bool checkServer() {
+  if (WiFi.status() != WL_CONNECTED) {
+    serverOnline = false;
+    return false;
+  }
+
   HTTPClient http;
-  String url = "http://" + ip + ":" + String(SERVER_PORT) + "/api/iot/ping";
+  String url = serverBase + "/api/iot/ping";
+
+  Serial.println("Cek server:");
+  Serial.println(url);
+
   http.begin(url);
   http.addHeader("Accept", "application/json");
-  http.setTimeout(400);
-  http.setConnectTimeout(300);
+  http.setTimeout(8000);
 
   int code = http.GET();
+
+  Serial.print("Ping HTTP code: ");
+  Serial.println(code);
+
   bool ok = false;
+
   if (code == 200) {
     String resp = http.getString();
-    StaticJsonDocument<128> doc;
-    if (!deserializeJson(doc, resp)) {
+    Serial.println("Ping response:");
+    Serial.println(resp);
+
+    StaticJsonDocument<256> doc;
+    DeserializationError err = deserializeJson(doc, resp);
+
+    if (!err) {
       String sig = doc["server"] | "";
       ok = (sig == SERVER_SIG);
     }
   }
+
   http.end();
+
+  serverOnline = ok;
+
+  if (ok) {
+    lcdPrint("Server VPS OK", "Port 8000");
+    beepSuccess();
+    delay(1500);
+  } else {
+    lcdPrint("Server Gagal", "Cek VPS/API");
+    beepError();
+    delay(2000);
+  }
+
   return ok;
 }
 
-void saveServerIp(const String& ip) {
-  prefs.begin("iot", false);
-  prefs.putString("server_ip", ip);
-  prefs.end();
-  Serial.println("✓ Server: " + ip + " (cached)");
-  lcdPrint("Server OK", ip);
-  beepSuccess();
-  delay(1500);
-}
-
-bool discoverServer() {
-  lcdPrint("Cari server...", "Mode auto");
-  Serial.println("\n=== DISCOVERY ===");
-
-  IPAddress me = WiFi.localIP();
-  IPAddress gw = WiFi.gatewayIP();
-  String prefix = String(me[0]) + "." + me[1] + "." + me[2] + ".";
-
-  // 1. Cached
-  prefs.begin("iot", true);
-  String cached = prefs.getString("server_ip", "");
-  prefs.end();
-  if (cached.length() > 0) {
-    Serial.printf("Try cached: %s\n", cached.c_str());
-    lcdPrint("Coba cache", cached);
-    if (probeHost(cached)) {
-      serverBase = "http://" + cached + ":" + String(SERVER_PORT);
-      Serial.println("✓ Cached HIT: " + serverBase);
-      return true;
-    }
-  }
-
-  // 2. Gateway
-  String gwIp = String(gw[0]) + "." + gw[1] + "." + gw[2] + "." + gw[3];
-  Serial.printf("Try gateway: %s\n", gwIp.c_str());
-  if (probeHost(gwIp)) {
-    serverBase = "http://" + gwIp + ":" + String(SERVER_PORT);
-    saveServerIp(gwIp);
-    return true;
-  }
-
-  // 3. Priority IPs
-  uint8_t priority[] = {1, 2, 3, 4, 5, 10, 100, 101, 102, 103, 104, 105, 110, 120, 150, 253};
-  for (uint8_t i : priority) {
-    if (i == me[3]) continue;
-    String ip = prefix + String(i);
-    lcdPrint("Scan...", ip);
-    Serial.print(" ."); Serial.print(i);
-    if (probeHost(ip)) {
-      Serial.println();
-      serverBase = "http://" + ip + ":" + String(SERVER_PORT);
-      saveServerIp(ip);
-      return true;
-    }
-  }
-
-  // 4. Full scan
-  Serial.println("\nFull scan...");
-  for (int i = 1; i <= 254; i++) {
-    if (i == me[3]) continue;
-    String ip = prefix + String(i);
-    if (i % 20 == 0) lcdPrint("Scan...", ip);
-    if (probeHost(ip)) {
-      Serial.println();
-      serverBase = "http://" + ip + ":" + String(SERVER_PORT);
-      saveServerIp(ip);
-      return true;
-    }
-  }
-
-  Serial.println("\n✗ Server tidak ditemukan");
-  return false;
-}
-
-void invalidateCache() {
-  prefs.begin("iot", false);
-  prefs.remove("server_ip");
-  prefs.end();
-  serverBase = "";
-}
-
 // ================= NTP TIME SYNC =================
-/**
- * Sync waktu via NTP. Pakai zona waktu lokal (WIB/WITA/WIT).
- * Wajib dilakukan setelah WiFi connect agar local time akurat.
- */
 void syncNtpTime() {
   Serial.println("NTP sync...");
   lcdPrint("Sync waktu...", "NTP");
+
   configTime(GMT_OFFSET_SEC, DST_OFFSET_SEC, NTP_SERVER_1, NTP_SERVER_2);
 
   struct tm t;
+
   if (getLocalTime(&t, 10000)) {
-    Serial.printf("✓ Time OK: %04d-%02d-%02d %02d:%02d:%02d\n",
-      t.tm_year + 1900, t.tm_mon + 1, t.tm_mday,
-      t.tm_hour, t.tm_min, t.tm_sec);
+    Serial.printf(
+      "Time OK: %04d-%02d-%02d %02d:%02d:%02d\n",
+      t.tm_year + 1900,
+      t.tm_mon + 1,
+      t.tm_mday,
+      t.tm_hour,
+      t.tm_min,
+      t.tm_sec
+    );
+
     ntpSynced = true;
+
     char buf[20];
-    snprintf(buf, sizeof(buf), "%02d:%02d %02d-%02d-%02d", t.tm_hour, t.tm_min, t.tm_mday, t.tm_mon + 1, (t.tm_year + 1900) % 100);
+    snprintf(
+      buf,
+      sizeof(buf),
+      "%02d:%02d %02d-%02d-%02d",
+      t.tm_hour,
+      t.tm_min,
+      t.tm_mday,
+      t.tm_mon + 1,
+      (t.tm_year + 1900) % 100
+    );
+
     lcdPrint("NTP Sync OK", buf);
   } else {
-    Serial.println("✗ NTP gagal");
+    Serial.println("NTP gagal");
     lcdPrint("NTP Gagal", "Pakai lokal");
     ntpSynced = false;
   }
+
   delay(1500);
 }
 
-/** Konversi "HH:MM:SS" → menit dalam hari */
+// ================= JADWAL SHOLAT =================
 int parseTimeToMin(const String& s) {
   int h = s.substring(0, 2).toInt();
   int m = s.substring(3, 5).toInt();
+
   return h * 60 + m;
 }
 
-/**
- * Fetch jadwal sholat dari server (yang sudah cache dari Aladhan API).
- * Parse dan simpan ke array todayPrayers[].
- */
 bool fetchPrayerSchedule() {
-  if (WiFi.status() != WL_CONNECTED || serverBase.length() == 0) return false;
+  if (WiFi.status() != WL_CONNECTED || serverBase.length() == 0) {
+    return false;
+  }
 
   Serial.println("Fetch jadwal sholat...");
+
   HTTPClient http;
   http.begin(serverBase + "/api/iot/prayer-times");
   http.addHeader("Accept", "application/json");
   http.setTimeout(8000);
+
   int code = http.GET();
 
   if (code != 200) {
@@ -350,78 +329,106 @@ bool fetchPrayerSchedule() {
   http.end();
 
   StaticJsonDocument<2048> doc;
+
   if (deserializeJson(doc, resp)) {
     Serial.println("Prayer JSON parse error");
     return false;
   }
 
   prayerDateCached = String((const char*)(doc["date"] | ""));
+
   JsonArray windows = doc["windows"];
   prayerCount = 0;
+
   for (JsonObject w : windows) {
-    if (prayerCount >= 5) break;
+    if (prayerCount >= 5) {
+      break;
+    }
+
     const char* name = w["name"] | "";
-    String startStr  = String((const char*)(w["start"] | "00:00:00"));
-    String endStr    = String((const char*)(w["end"]   | "00:00:00"));
+    String startStr = String((const char*)(w["start"] | "00:00:00"));
+    String endStr = String((const char*)(w["end"] | "00:00:00"));
 
     strncpy(todayPrayers[prayerCount].name, name, sizeof(todayPrayers[prayerCount].name) - 1);
     todayPrayers[prayerCount].name[sizeof(todayPrayers[prayerCount].name) - 1] = '\0';
+
     todayPrayers[prayerCount].startMinOfDay = parseTimeToMin(startStr);
-    todayPrayers[prayerCount].endMinOfDay   = parseTimeToMin(endStr);
+    todayPrayers[prayerCount].endMinOfDay = parseTimeToMin(endStr);
+
     Serial.printf("  %s: %s - %s\n", name, startStr.c_str(), endStr.c_str());
+
     prayerCount++;
   }
 
   lastPrayerFetch = millis();
-  Serial.printf("✓ %d window jadwal sholat dimuat\n", prayerCount);
+
+  Serial.printf("%d window jadwal sholat dimuat\n", prayerCount);
+
   return prayerCount > 0;
 }
 
-/**
- * Cek apakah saat ini di dalam window sholat (lokal, pakai NTP).
- * Return index window di todayPrayers[] kalau iya, -1 kalau tidak.
- */
 int currentPrayerIndex() {
-  if (!ntpSynced || prayerCount == 0) return -1;
-  struct tm t;
-  if (!getLocalTime(&t)) return -1;
+  if (!ntpSynced || prayerCount == 0) {
+    return -1;
+  }
 
-  // Re-fetch kalau hari sudah ganti (jadwal kemarin tidak akurat)
+  struct tm t;
+
+  if (!getLocalTime(&t)) {
+    return -1;
+  }
+
   char todayBuf[12];
-  snprintf(todayBuf, sizeof(todayBuf), "%04d-%02d-%02d", t.tm_year + 1900, t.tm_mon + 1, t.tm_mday);
+
+  snprintf(
+    todayBuf,
+    sizeof(todayBuf),
+    "%04d-%02d-%02d",
+    t.tm_year + 1900,
+    t.tm_mon + 1,
+    t.tm_mday
+  );
+
   if (prayerDateCached != String(todayBuf)) {
     Serial.println("Hari berganti, fetch ulang jadwal");
     fetchPrayerSchedule();
-    if (prayerCount == 0) return -1;
+
+    if (prayerCount == 0) {
+      return -1;
+    }
   }
 
   int nowMin = t.tm_hour * 60 + t.tm_min;
+
   for (int i = 0; i < prayerCount; i++) {
     if (nowMin >= todayPrayers[i].startMinOfDay && nowMin <= todayPrayers[i].endMinOfDay) {
       return i;
     }
   }
+
   return -1;
 }
 
 // ================= KIRIM ABSENSI =================
-/**
- * Kirim hasil scan ke server. Server selalu jadi sumber kebenaran.
- *   matched=true → ESP32 lapor template ID, server cek DB
- *   matched=false → ESP32 lapor "tidak ada match di sensor"
- * Server response routing:
- *   200 → terdaftar, hadir/terlambat dicatat
- *   404 status=not_recognized → sensor tidak punya template
- *   404 status=orphan_template → sensor punya tapi DB tidak (cacat data)
- */
 void kirimAbsensi(uint16_t fingerprintId, bool matched, int confidence) {
-  if (WiFi.status() != WL_CONNECTED || serverBase.length() == 0) {
+  if (WiFi.status() != WL_CONNECTED) {
     lcdPrint("Offline!", "Cek WiFi");
-    beepError(); delay(2000); backToIdle();
+    beepError();
+    delay(2000);
+    backToIdle();
+    return;
+  }
+
+  if (!serverOnline) {
+    lcdPrint("Server offline", "Cek koneksi");
+    beepError();
+    delay(2000);
+    backToIdle();
     return;
   }
 
   lcdPrint("Mengirim...");
+
   HTTPClient http;
   http.begin(serverBase + "/api/absensi/fingerprint");
   setupJsonHeaders(http);
@@ -430,81 +437,115 @@ void kirimAbsensi(uint16_t fingerprintId, bool matched, int confidence) {
   String body = "{\"fingerprint_id\":" + String(fingerprintId) +
                 ",\"matched\":" + (matched ? "true" : "false") +
                 ",\"confidence\":" + String(confidence) + "}";
+
   int code = http.POST(body);
+
   Serial.printf("HTTP %d body=%s\n", code, body.c_str());
 
   if (code == 200 || code == 201) {
     String resp = http.getString();
-    StaticJsonDocument<512> doc;
-    if (!deserializeJson(doc, resp)) {
-      String nama   = doc["student_name"] | "";
-      String waktu  = doc["waktu_shalat"] | "";
-      String status = doc["status"]       | "";
-      String action = doc["action"]       | "";
+    Serial.println(resp);
 
-      // Format line 2 berdasarkan action:
-      //   masuk          → "Dzuhur hadir"
-      //   keluar         → "Keluar Dzuhur"
-      //   keluar_lintas  → "Lintas → Ashar" (auto-hadir multi-window)
+    StaticJsonDocument<512> doc;
+
+    if (!deserializeJson(doc, resp)) {
+      String nama = doc["student_name"] | "";
+      String waktu = doc["waktu_shalat"] | "";
+      String status = doc["status"] | "";
+      String action = doc["action"] | "";
+
       String line2;
-      if (action == "keluar")             line2 = "Keluar " + waktu;
-      else if (action == "keluar_lintas") line2 = "Lintas->" + waktu;
-      else                                 line2 = waktu + " " + status;
+
+      if (action == "keluar") {
+        line2 = "Keluar " + waktu;
+      } else if (action == "keluar_lintas") {
+        line2 = "Lintas->" + waktu;
+      } else {
+        line2 = waktu + " " + status;
+      }
 
       lcdPrint(nama, line2);
-      (status == "terlambat") ? beepError() : beepSuccess();
-    } else { lcdPrint("JSON Error"); beepError(); }
+
+      if (status == "terlambat") {
+        beepError();
+      } else {
+        beepSuccess();
+      }
+    } else {
+      lcdPrint("JSON Error");
+      beepError();
+    }
   } else if (code == 429) {
     String resp = http.getString();
+
     StaticJsonDocument<256> doc;
     deserializeJson(doc, resp);
+
     String msg = doc["message"] | "Cooldown";
+
     lcdPrint("Tunggu", msg.substring(0, 16));
     beepError();
-  }
-  else if (code == 404) {
-    // Bedakan tidak terdaftar vs orphan template berdasarkan field 'status'
+  } else if (code == 404) {
     String resp = http.getString();
+
     StaticJsonDocument<256> doc;
     deserializeJson(doc, resp);
+
     String status = doc["status"] | "not_recognized";
+
     Serial.println("404 status=" + status);
+
     if (status == "orphan_template") {
       lcdPrint("Data Cacat", "Hubungi Admin");
     } else {
       lcdPrint("Belum Daftar", "Hubungi Admin");
     }
+
     beepError();
-  }
-  else if (code == 422) {
+  } else if (code == 422) {
     String resp = http.getString();
-    Serial.println("422 body: " + resp);
-    lcdPrint("Di luar", "Waktu Shalat"); beepError();
+
+    Serial.println("422 body:");
+    Serial.println(resp);
+
+    lcdPrint("Di luar", "Waktu Shalat");
+    beepError();
   } else if (code == 302) {
-    Serial.println("302 redirect — Accept header mungkin missing");
+    Serial.println("302 redirect. Cek header Laravel.");
     lcdPrint("Server 302", "Cek header");
     beepError();
   } else if (code < 0) {
-    // Jangan langsung invalidate cache — bisa jadi network glitch sesaat.
-    // Pakai counter, baru re-discover kalau gagal berturut-turut.
     consecutiveFailures++;
-    Serial.printf("Connection fail %d/%d (code=%d)\n",
-                  consecutiveFailures, MAX_CONSECUTIVE_FAILURES, code);
+
+    Serial.printf(
+      "Connection fail %d/%d code=%d\n",
+      consecutiveFailures,
+      MAX_CONSECUTIVE_FAILURES,
+      code
+    );
+
     if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
-      Serial.println("Server hilang permanen, invalidate cache");
-      invalidateCache();
+      serverOnline = false;
       consecutiveFailures = 0;
-      lcdPrint("Server lost", "Cari ulang...");
+
+      lcdPrint("Server lost", "Cek VPS");
+      checkServer();
     } else {
       lcdPrint("Server lambat", "Retry...");
     }
-    beepError();
-  } else { lcdPrint("Server Error", "HTTP:" + String(code)); beepError(); }
 
-  // Reset counter saat request sukses (kode 2xx, 4xx, 422, dst)
-  if (code >= 200) consecutiveFailures = 0;
+    beepError();
+  } else {
+    lcdPrint("Server Error", "HTTP:" + String(code));
+    beepError();
+  }
+
+  if (code >= 200) {
+    consecutiveFailures = 0;
+  }
 
   http.end();
+
   delay(3000);
   backToIdle();
 }
@@ -512,44 +553,89 @@ void kirimAbsensi(uint16_t fingerprintId, bool matched, int confidence) {
 // ================= ENROLLMENT =================
 int capturePrint(unsigned long timeoutMs) {
   unsigned long start = millis();
+
   while ((millis() - start) < timeoutMs) {
-    if (finger.getImage() == FINGERPRINT_OK) return FINGERPRINT_OK;
+    if (finger.getImage() == FINGERPRINT_OK) {
+      return FINGERPRINT_OK;
+    }
+
     delay(50);
   }
+
   return -1;
 }
 
 void doEnrollment(long commandId, uint16_t targetFp) {
   Serial.printf("\n=== ENROLL id=%d ===\n", targetFp);
+
   bool success = false;
   String message = "";
   int quality = 0;
 
-  lcdPrint("Daftar 1/2", "Tempel jari"); beepSuccess();
-  if (capturePrint(15000) != FINGERPRINT_OK) { message = "Timeout 1"; goto report; }
-  if (finger.image2Tz(1) != FINGERPRINT_OK)  { message = "Img2Tz #1 fail"; goto report; }
+  lcdPrint("Daftar 1/2", "Tempel jari");
+  beepSuccess();
 
-  lcdPrint("Angkat Jari"); delay(2000);
-  while (finger.getImage() != FINGERPRINT_NOFINGER) delay(100);
+  if (capturePrint(15000) != FINGERPRINT_OK) {
+    message = "Timeout 1";
+    goto report;
+  }
+
+  if (finger.image2Tz(1) != FINGERPRINT_OK) {
+    message = "Img2Tz #1 fail";
+    goto report;
+  }
+
+  lcdPrint("Angkat Jari");
+  delay(2000);
+
+  while (finger.getImage() != FINGERPRINT_NOFINGER) {
+    delay(100);
+  }
 
   lcdPrint("Daftar 2/2", "Tempel ulang");
-  if (capturePrint(15000) != FINGERPRINT_OK) { message = "Timeout 2"; goto report; }
-  if (finger.image2Tz(2) != FINGERPRINT_OK)  { message = "Img2Tz #2 fail"; goto report; }
 
-  if (finger.createModel() != FINGERPRINT_OK) { message = "Jari tdk match"; goto report; }
-  if (finger.storeModel(targetFp) != FINGERPRINT_OK) { message = "Simpan gagal"; goto report; }
+  if (capturePrint(15000) != FINGERPRINT_OK) {
+    message = "Timeout 2";
+    goto report;
+  }
 
-  success = true; quality = 95; message = "Berhasil";
+  if (finger.image2Tz(2) != FINGERPRINT_OK) {
+    message = "Img2Tz #2 fail";
+    goto report;
+  }
+
+  if (finger.createModel() != FINGERPRINT_OK) {
+    message = "Jari tdk match";
+    goto report;
+  }
+
+  if (finger.storeModel(targetFp) != FINGERPRINT_OK) {
+    message = "Simpan gagal";
+    goto report;
+  }
+
+  success = true;
+  quality = 95;
+  message = "Berhasil";
+
   lcdPrint("Berhasil!", "ID: #" + String(targetFp));
   beepSuccess();
 
 report:
   if (!success) {
-    lcdPrint("Enroll Gagal", message); beepError();
-    // PENTING: bersihkan slot agar tidak jadi orphan template di sensor
-    // (kalau storeModel sempat partial atau ada template lama di slot ini)
+    lcdPrint("Enroll Gagal", message);
+    beepError();
+
     finger.deleteModel(targetFp);
+
     Serial.printf("Slot %d dihapus utk sinkron dgn DB\n", targetFp);
+  }
+
+  if (WiFi.status() != WL_CONNECTED || !serverOnline) {
+    Serial.println("Gagal kirim enroll-complete karena server offline");
+    delay(3000);
+    backToIdle();
+    return;
   }
 
   HTTPClient http;
@@ -558,39 +644,63 @@ report:
   http.setTimeout(8000);
 
   StaticJsonDocument<256> body;
-  body["command_id"]     = commandId;
+
+  body["command_id"] = commandId;
   body["fingerprint_id"] = targetFp;
-  body["success"]        = success;
-  body["message"]        = message;
-  body["quality"]        = quality;
-  String payload; serializeJson(body, payload);
-  Serial.println("POST enroll-complete: " + payload);
+  body["success"] = success;
+  body["message"] = message;
+  body["quality"] = quality;
+
+  String payload;
+  serializeJson(body, payload);
+
+  Serial.println("POST enroll-complete:");
+  Serial.println(payload);
+
   int code = http.POST(payload);
+
   Serial.printf("HTTP %d\n", code);
-  if (code == 302) Serial.println("WARN: 302 — likely missing Accept header");
+
+  if (code == 302) {
+    Serial.println("WARN: 302. Cek Accept header.");
+  }
+
   http.end();
 
   delay(3000);
   backToIdle();
 }
 
-// ================= POLL =================
+// ================= POLL COMMAND DARI SERVER =================
 void pollServer() {
-  if (WiFi.status() != WL_CONNECTED || serverBase.length() == 0) return;
+  if (WiFi.status() != WL_CONNECTED || !serverOnline) {
+    return;
+  }
 
   HTTPClient http;
   http.begin(serverBase + "/api/iot/poll");
   http.addHeader("Accept", "application/json");
   http.setTimeout(5000);
+
   int code = http.GET();
+
   if (code == 200) {
     String resp = http.getString();
+
     StaticJsonDocument<384> doc;
+
     if (!deserializeJson(doc, resp) && !doc["command"].isNull()) {
       String type = doc["command"]["type"] | "";
-      long  cmdId = doc["command"]["id"]   | 0L;
+      long cmdId = doc["command"]["id"] | 0L;
       uint16_t fpid = doc["command"]["fingerprint_id"] | 0;
-      Serial.printf("CMD: type=%s id=%ld fpid=%d\n", type.c_str(), cmdId, fpid);
+
+      Serial.printf(
+        "CMD: type=%s id=%ld fpid=%d\n",
+        type.c_str(),
+        cmdId,
+        fpid
+      );
+
       if (type == "enroll" && fpid > 0) {
         http.end();
         doEnrollment(cmdId, fpid);
@@ -598,36 +708,54 @@ void pollServer() {
       }
     }
   } else if (code < 0) {
-    Serial.println("Poll lost, invalidate cache");
-    invalidateCache();
+    Serial.printf("Poll gagal code=%d\n", code);
+
+    consecutiveFailures++;
+
+    if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+      serverOnline = false;
+      consecutiveFailures = 0;
+      checkServer();
+    }
   }
+
   http.end();
 }
 
 // ================= SETUP =================
 void setup() {
   Serial.begin(115200);
+
   pinMode(BUZZER_PIN, OUTPUT);
   digitalWrite(BUZZER_PIN, LOW);
 
   Wire.begin(21, 22);
-  lcd.init(); lcd.backlight();
+
+  lcd.init();
+  lcd.backlight();
+
   lcdPrint("Sistem Absensi", "Miftahul Ulum");
   delay(2000);
 
   connectWifi();
 
   if (WiFi.status() == WL_CONNECTED) {
-    if (!discoverServer()) {
-      lcdPrint("Server tdk", "ditemukan");
-      beepError();
+    serverBase = SERVER_BASE_URL;
+
+    Serial.println("Server VPS digunakan:");
+    Serial.println(serverBase);
+
+    checkServer();
+
+    if (serverOnline) {
+      syncNtpTime();
+      fetchPrayerSchedule();
     }
-    syncNtpTime();
-    fetchPrayerSchedule();
   }
 
   mySerial.begin(57600, SERIAL_8N1, 16, 17);
   finger.begin(57600);
+
   lcdPrint("Cek Sensor...");
   delay(1000);
 
@@ -636,19 +764,60 @@ void setup() {
     lcdPrint("Sensor OK");
     beepSuccess();
   } else {
-    lcdPrint("Sensor Gagal", "Cek Wiring!"); beepError();
-    while (true) delay(1000);
+    Serial.println("Sensor gagal. Cek wiring.");
+    lcdPrint("Sensor Gagal", "Cek Wiring!");
+    beepError();
+
+    while (true) {
+      delay(1000);
+    }
   }
+
   delay(1500);
   backToIdle();
 }
 
 // ================= LOOP =================
 void loop() {
-  if (WiFi.status() != WL_CONNECTED) { WiFi.reconnect(); delay(3000); }
+  if (WiFi.status() != WL_CONNECTED) {
+    serverOnline = false;
 
-  if (serverBase.length() == 0 && WiFi.status() == WL_CONNECTED) {
-    discoverServer();
+    lcdPrint("WiFi putus", "Reconnect...");
+    WiFi.reconnect();
+
+    delay(3000);
+
+    if (WiFi.status() == WL_CONNECTED) {
+      lcdPrint("WiFi OK", WiFi.localIP().toString());
+      delay(1000);
+      checkServer();
+
+      if (serverOnline && !ntpSynced) {
+        syncNtpTime();
+      }
+    }
+
+    backToIdle();
+    return;
+  }
+
+  if (!serverOnline) {
+    static unsigned long lastServerCheck = 0;
+
+    if (millis() - lastServerCheck >= 10000) {
+      lastServerCheck = millis();
+      checkServer();
+
+      if (serverOnline) {
+        syncNtpTime();
+        fetchPrayerSchedule();
+      }
+
+      backToIdle();
+    }
+
+    showIdleScreen();
+    return;
   }
 
   if (millis() - lastPollTime >= POLL_INTERVAL_MS) {
@@ -656,43 +825,50 @@ void loop() {
     pollServer();
   }
 
-  // Refresh jadwal tiap 6 jam
   if (ntpSynced && (millis() - lastPrayerFetch >= PRAYER_REFRESH_MS)) {
     fetchPrayerSchedule();
   }
 
   uint8_t p = finger.getImage();
+
   if (p == FINGERPRINT_NOFINGER) {
-    // Standby: tampil nama sholat aktif + jam realtime
     showIdleScreen();
     return;
   }
+
   if (p != FINGERPRINT_OK) {
-    lcdPrint("Scan Gagal", "Coba Lagi"); beepError();
-    delay(1500); backToIdle(); return;
-  }
-  if (finger.image2Tz() != FINGERPRINT_OK) {
-    lcdPrint("Gagal Proses", "Angkat Jari"); beepError();
-    delay(1500); backToIdle(); return;
+    lcdPrint("Scan Gagal", "Coba Lagi");
+    beepError();
+    delay(1500);
+    backToIdle();
+    return;
   }
 
-  // ─── Sensor cek match lokal (proses biometrik wajib di chip sensor) ──
+  if (finger.image2Tz() != FINGERPRINT_OK) {
+    lcdPrint("Gagal Proses", "Angkat Jari");
+    beepError();
+    delay(1500);
+    backToIdle();
+    return;
+  }
+
   uint8_t searchResult = finger.fingerFastSearch();
+
   bool matched = (searchResult == FINGERPRINT_OK);
   uint16_t fpid = matched ? finger.fingerID : 0;
-  int conf      = matched ? finger.confidence : 0;
+  int conf = matched ? finger.confidence : 0;
 
-  // Debounce hardware (anti spam sensor — bukan anti-fraud bisnis)
-  if (millis() - lastScanTime < COOLDOWN_MS) return;
+  if (millis() - lastScanTime < COOLDOWN_MS) {
+    return;
+  }
+
   lastScanTime = millis();
 
-  // ═══ SEMUA RULE BISNIS DI SERVER ═══
-  // ESP32 cuma kirim raw event scan. Server yang putuskan:
-  //   - apakah di dalam waktu sholat
-  //   - anti-fraud cooldown 5 menit per santri (via cache)
-  //   - tap masuk vs tap keluar
-  //   - lintas waktu sholat (Dzuhur → Ashar = hadir keduanya)
-  if (matched) Serial.printf("Match: ID=%d, Conf=%d\n", fpid, conf);
-  else         Serial.println("No match di sensor — tetap lapor ke server");
+  if (matched) {
+    Serial.printf("Match: ID=%d, Conf=%d\n", fpid, conf);
+  } else {
+    Serial.println("No match di sensor. Tetap lapor ke server.");
+  }
+
   kirimAbsensi(fpid, matched, conf);
 }
