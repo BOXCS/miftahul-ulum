@@ -1,0 +1,22 @@
+{
+    "sourceFile": "tests/Unit/ApiChatTest.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1778756236169,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1778756288183,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -13,9 +13,9 @@\n     /** @test */\n     public function chat_history_return_array()\n     {\n         // Buat parent dummy\n-        $parent = \\App\\Models\\Parents::factory()->create();\n+        $parent = \\App\\Models\\ParentModel::factory()->create();\n \n         $response = $this->getJson(\"/api/chat/{$parent->id}/history\");\n \n         $response->assertStatus(200);\n@@ -24,9 +24,9 @@\n \n     /** @test */\n     public function send_message_tanpa_pesan_return_error()\n     {\n-        $parent = \\App\\Models\\Parents::factory()->create();\n+        $parent = \\App\\Models\\ParentModel::factory()->create();\n \n         $response = $this->postJson(\"/api/chat/{$parent->id}/send-api\", []);\n \n         // Harus return error karena field 'pesan' kosong\n"
+                }
+            ],
+            "date": 1778756236169,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace Tests\\Unit;\n\nuse Tests\\TestCase;\nuse App\\Models\\User;\nuse Illuminate\\Foundation\\Testing\\RefreshDatabase;\n\nclass ApiChatTest extends TestCase\n{\n    use RefreshDatabase;\n\n    /** @test */\n    public function chat_history_return_array()\n    {\n        // Buat parent dummy\n        $parent = \\App\\Models\\Parents::factory()->create();\n\n        $response = $this->getJson(\"/api/chat/{$parent->id}/history\");\n\n        $response->assertStatus(200);\n        $this->assertIsArray($response->json());\n    }\n\n    /** @test */\n    public function send_message_tanpa_pesan_return_error()\n    {\n        $parent = \\App\\Models\\Parents::factory()->create();\n\n        $response = $this->postJson(\"/api/chat/{$parent->id}/send-api\", []);\n\n        // Harus return error karena field 'pesan' kosong\n        $response->assertStatus(422);\n    }\n}"
+        }
+    ]
+}

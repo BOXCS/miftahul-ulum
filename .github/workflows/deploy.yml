@@ -6,8 +6,37 @@ on:
       - develop-docker
 
 jobs:
+  # ─── Job 1: Unit Test ────────────────────────────────────────────────────────
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo, pdo_mysql, redis, zip, gd, bcmath
+          coverage: none
+
+      - name: Copy .env for testing
+        run: cp .env.example .env
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Generate app key
+        run: php artisan key:generate
+
+      - name: Run Unit Tests
+        run: php artisan test --testsuite=Unit
+
+  # ─── Job 2: Deploy (hanya jika test lulus) ───────────────────────────────────
   deploy:
     runs-on: ubuntu-latest
+    needs: test  # tunggu job test selesai dan lulus
 
     steps:
       - name: Checkout code
@@ -26,7 +55,7 @@ jobs:
             git pull origin develop-docker
 
             echo "=== Build assets ==="
-            docker compose exec -T vite npm run build || true
+            docker compose run --rm vite npm run build || true
 
             echo "=== Rebuild PHP containers ==="
             docker compose up --build -d app queue reverb

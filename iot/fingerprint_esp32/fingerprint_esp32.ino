@@ -20,7 +20,7 @@
 #include <time.h>
 
 // ================= KONFIGURASI WIFI =================
-#define WIFI_SSID    "Teknologi Informasi"
+#define WIFI_SSID    "LAB-MMC"
 #define WIFI_PASS    ""
 
 // ================= KONFIGURASI SERVER VPS =================

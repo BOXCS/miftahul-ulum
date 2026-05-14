@@ -1,0 +1,18 @@
+{
+    "sourceFile": "tests/Unit/ApiIotTest.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1778756210883,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1778756210883,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace Tests\\Unit;\n\nuse Tests\\TestCase;\n\nclass ApiIotTest extends TestCase\n{\n    /** @test */\n    public function iot_ping_return_status_200()\n    {\n        $response = $this->getJson('/api/iot/ping');\n\n        $response->assertStatus(200);\n    }\n\n    /** @test */\n    public function iot_poll_return_status_200()\n    {\n        $response = $this->getJson('/api/iot/poll');\n\n        $response->assertStatus(200);\n    }\n}"
+        }
+    ]
+}

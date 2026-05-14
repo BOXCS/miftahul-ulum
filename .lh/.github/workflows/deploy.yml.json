@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 2,
+            "activePatchIndex": 3,
             "patches": [
                 {
                     "date": 1778571293957,
@@ -16,6 +16,10 @@
                 {
                     "date": 1778641216027,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -22,9 +22,9 @@\n           script: |\r\n             cd ~/miftahul-ulum\r\n \r\n             echo \"=== Pull latest code ===\"\r\n-            git pull origin main\r\n+            git pull origin develop-docker\r\n \r\n             echo \"=== Build assets ===\"\r\n             docker compose exec -T vite npm run build || true\r\n \r\n"
+                },
+                {
+                    "date": 1778756588900,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -0,0 +1,73 @@\n+name: Deploy to VPS\r\n+\r\n+on:\r\n+  push:\r\n+    branches:\r\n+      - develop-docker\r\n+\r\n+jobs:\r\n+  # ─── Job 1: Unit Test ────────────────────────────────────────────────────────\r\n+  test:\r\n+    runs-on: ubuntu-latest\r\n+    \r\n+    steps:\r\n+      - name: Checkout code\r\n+        uses: actions/checkout@v4\r\n+\r\n+      - name: Setup PHP\r\n+        uses: shivammathur/setup-php@v2\r\n+        with:\r\n+          php-version: '8.3'\r\n+          extensions: mbstring, pdo, pdo_mysql, redis, zip, gd, bcmath\r\n+          coverage: none\r\n+\r\n+      - name: Copy .env for testing\r\n+        run: cp .env.example .env\r\n+\r\n+      - name: Install Composer dependencies\r\n+        run: composer install --no-interaction --prefer-dist --optimize-autoloader\r\n+\r\n+      - name: Generate app key\r\n+        run: php artisan key:generate\r\n+\r\n+      - name: Run Unit Tests\r\n+        run: php artisan test --testsuite=Unit\r\n+\r\n+  # ─── Job 2: Deploy (hanya jika test lulus) ───────────────────────────────────\r\n+  deploy:\r\n+    runs-on: ubuntu-latest\r\n+    needs: test  # tunggu job test selesai dan lulus\r\n+\r\n+    steps:\r\n+      - name: Checkout code\r\n+        uses: actions/checkout@v4\r\n+\r\n+      - name: Deploy to VPS via SSH\r\n+        uses: appleboy/ssh-action@v1.0.3\r\n+        with:\r\n+          host: ${{ secrets.SSH_HOST }}\r\n+          username: ${{ secrets.SSH_USERNAME }}\r\n+          key: ${{ secrets.SSH_PRIVATE_KEY }}\r\n+          script: |\r\n+            cd ~/miftahul-ulum\r\n+\r\n+            echo \"=== Pull latest code ===\"\r\n+            git pull origin develop-docker\r\n+\r\n+            echo \"=== Build assets ===\"\r\n+            docker compose run --rm vite npm run build || true\r\n+\r\n+            echo \"=== Rebuild PHP containers ===\"\r\n+            docker compose up --build -d app queue reverb\r\n+\r\n+            echo \"=== Run migrations ===\"\r\n+            docker compose exec -T app php artisan migrate --force\r\n+\r\n+            echo \"=== Clear & cache config ===\"\r\n+            docker compose exec -T app php artisan optimize:clear\r\n+            docker compose exec -T app php artisan optimize\r\n+\r\n+            echo \"=== Fix permissions ===\"\r\n+            docker compose exec -T app chmod -R 777 storage bootstrap/cache\r\n+\r\n+            echo \"=== Done! ===\"\n\\ No newline at end of file\n"
                 }
             ],
             "date": 1778571293956,
