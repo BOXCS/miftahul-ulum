@@ -31,7 +31,7 @@ jobs:
         run: php artisan key:generate
 
       - name: Run Unit Tests
-        run: php artisan test --testsuite=Unit
+        run: ./vendor/bin/pest tests/Unit
 
   # ─── Job 2: Deploy (hanya jika test lulus) ───────────────────────────────────
   deploy:
