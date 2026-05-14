@@ -25,7 +25,7 @@ jobs:
         run: |
           cp .env.example .env
           sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
-          sed -i 's/DB_DATABASE=.*/DB_DATABASE=:memory:/' .env
+          sed -i 's/DB_DATABASE=.*/DB_DATABASE=\/tmp\/test.sqlite/' .env
           sed -i 's/DB_HOST=.*/DB_HOST=/' .env
           sed -i 's/DB_URL=.*/DB_URL=/' .env
           sed -i 's/CACHE_STORE=.*/CACHE_STORE=array/' .env
@@ -42,12 +42,14 @@ jobs:
         env:
           APP_ENV: testing
           DB_CONNECTION: sqlite
-          DB_DATABASE: ":memory:"
+          DB_DATABASE: "/tmp/test.sqlite"
           CACHE_STORE: array
           SESSION_DRIVER: array
           QUEUE_CONNECTION: sync
           BROADCAST_CONNECTION: log
-        run: ./vendor/bin/pest tests/Unit
+        run: |
+          touch /tmp/test.sqlite
+          ./vendor/bin/pest tests/Unit
 
   # ─── Job 2: Deploy (hanya jika test lulus) ───────────────────────────────────
   deploy:
