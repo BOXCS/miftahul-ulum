@@ -31,6 +31,7 @@ jobs:
           sed -i 's/CACHE_STORE=.*/CACHE_STORE=array/' .env
           sed -i 's/SESSION_DRIVER=.*/SESSION_DRIVER=array/' .env
           sed -i 's/QUEUE_CONNECTION=.*/QUEUE_CONNECTION=sync/' .env
+          echo "DB_URL=" >> .env
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
