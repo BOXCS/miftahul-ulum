@@ -24,12 +24,13 @@ jobs:
       - name: Copy .env for testing
         run: |
           cp .env.example .env
-          echo "DB_CONNECTION=sqlite" >> .env
-          echo "DB_DATABASE=:memory:" >> .env
-          echo "DB_URL=" >> .env
-          echo "CACHE_STORE=array" >> .env
-          echo "SESSION_DRIVER=array" >> .env
-          echo "QUEUE_CONNECTION=sync" >> .env
+          sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
+          sed -i 's/DB_DATABASE=.*/DB_DATABASE=:memory:/' .env
+          sed -i 's/DB_HOST=.*/DB_HOST=/' .env
+          sed -i 's/DB_URL=.*/DB_URL=/' .env
+          sed -i 's/CACHE_STORE=.*/CACHE_STORE=array/' .env
+          sed -i 's/SESSION_DRIVER=.*/SESSION_DRIVER=array/' .env
+          sed -i 's/QUEUE_CONNECTION=.*/QUEUE_CONNECTION=sync/' .env
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
