@@ -1,13 +1,18 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use App\Models\ParentModel;
 
 uses(RefreshDatabase::class);
 
 test('login berhasil dengan kredensial benar', function () {
-    $user = \App\Models\User::factory()->create([
+    ParentModel::create([
+        'name'     => 'Test Parent',
         'email'    => 'test@example.com',
-        'password' => bcrypt('password123'),
+        'password' => Hash::make('password123'),
+        'phone'    => '08123456789',
+        'role'     => 'ortu',
     ]);
 
     $response = $this->postJson('/api/login', [
@@ -15,13 +20,17 @@ test('login berhasil dengan kredensial benar', function () {
         'password' => 'password123',
     ]);
 
-    $response->assertStatus(200);
+    $response->assertStatus(200)
+             ->assertJson(['success' => true]);
 });
 
 test('login gagal dengan kredensial salah', function () {
-    \App\Models\User::factory()->create([
+    ParentModel::create([
+        'name'     => 'Test Parent',
         'email'    => 'test@example.com',
-        'password' => bcrypt('password123'),
+        'password' => Hash::make('password123'),
+        'phone'    => '08123456789',
+        'role'     => 'ortu',
     ]);
 
     $response = $this->postJson('/api/login', [
@@ -29,7 +38,8 @@ test('login gagal dengan kredensial salah', function () {
         'password' => 'salah_password',
     ]);
 
-    $response->assertStatus(401);
+    $response->assertStatus(401)
+             ->assertJson(['success' => false]);
 });
 
 test('login gagal tanpa email', function () {
