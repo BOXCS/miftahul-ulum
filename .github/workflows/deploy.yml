@@ -22,9 +22,6 @@ jobs:
           coverage: none
 
       - name: Copy .env for testing
-        run: cp .env.example .env
-
-      - name: Copy .env for testing
         run: |
           cp .env.example .env
           echo "DB_CONNECTION=sqlite" >> .env
