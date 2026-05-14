@@ -1,24 +1,13 @@
 <?php
 
-namespace Tests\Unit;
+test('iot ping return status 200', function () {
+    $response = $this->getJson('/api/iot/ping');
 
-use Tests\TestCase;
+    $response->assertStatus(200);
+});
 
-class ApiIotTest extends TestCase
-{
-    /** @test */
-    public function iot_ping_return_status_200()
-    {
-        $response = $this->getJson('/api/iot/ping');
+test('iot poll return status 200', function () {
+    $response = $this->getJson('/api/iot/poll');
 
-        $response->assertStatus(200);
-    }
-
-    /** @test */
-    public function iot_poll_return_status_200()
-    {
-        $response = $this->getJson('/api/iot/poll');
-
-        $response->assertStatus(200);
-    }
-}
+    $response->assertStatus(200);
+});

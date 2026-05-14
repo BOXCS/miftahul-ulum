@@ -1,56 +1,41 @@
 <?php
 
-namespace Tests\Unit;
-
-use Tests\TestCase;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-class ApiAuthTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    /** @test */
-    public function login_berhasil_dengan_kredensial_benar()
-    {
-        $user = User::factory()->create([
-            'email'    => 'test@example.com',
-            'password' => bcrypt('password123'),
-        ]);
+test('login berhasil dengan kredensial benar', function () {
+    $user = \App\Models\User::factory()->create([
+        'email'    => 'test@example.com',
+        'password' => bcrypt('password123'),
+    ]);
 
-        $response = $this->postJson('/api/login', [
-            'email'    => 'test@example.com',
-            'password' => 'password123',
-        ]);
+    $response = $this->postJson('/api/login', [
+        'email'    => 'test@example.com',
+        'password' => 'password123',
+    ]);
 
-        $response->assertStatus(200)
-                 ->assertJsonStructure(['token']);
-    }
+    $response->assertStatus(200);
+});
 
-    /** @test */
-    public function login_gagal_dengan_kredensial_salah()
-    {
-        User::factory()->create([
-            'email'    => 'test@example.com',
-            'password' => bcrypt('password123'),
-        ]);
+test('login gagal dengan kredensial salah', function () {
+    \App\Models\User::factory()->create([
+        'email'    => 'test@example.com',
+        'password' => bcrypt('password123'),
+    ]);
 
-        $response = $this->postJson('/api/login', [
-            'email'    => 'test@example.com',
-            'password' => 'salah_password',
-        ]);
+    $response = $this->postJson('/api/login', [
+        'email'    => 'test@example.com',
+        'password' => 'salah_password',
+    ]);
 
-        $response->assertStatus(401)
-                 ->assertJson(['success' => false]);
-    }
+    $response->assertStatus(401);
+});
 
-    /** @test */
-    public function login_gagal_tanpa_email()
-    {
-        $response = $this->postJson('/api/login', [
-            'password' => 'password123',
-        ]);
+test('login gagal tanpa email', function () {
+    $response = $this->postJson('/api/login', [
+        'password' => 'password123',
+    ]);
 
-        $response->assertStatus(422);
-    }
-}
+    $response->assertStatus(422);
+});

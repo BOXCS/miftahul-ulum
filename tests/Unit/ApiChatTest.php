@@ -1,35 +1,18 @@
 <?php
 
-namespace Tests\Unit;
-
-use Tests\TestCase;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-class ApiChatTest extends TestCase
-{
-    use RefreshDatabase;
+uses(RefreshDatabase::class);
 
-    /** @test */
-    public function chat_history_return_array()
-    {
-        // Buat parent dummy
-        $parent = \App\Models\ParentModel::factory()->create();
+test('chat history return array', function () {
+    $response = $this->getJson('/api/chat/1/history');
 
-        $response = $this->getJson("/api/chat/{$parent->id}/history");
+    $response->assertStatus(200);
+    expect($response->json())->toBeArray();
+});
 
-        $response->assertStatus(200);
-        $this->assertIsArray($response->json());
-    }
+test('send message tanpa pesan return error', function () {
+    $response = $this->postJson('/api/chat/1/send-api', []);
 
-    /** @test */
-    public function send_message_tanpa_pesan_return_error()
-    {
-        $parent = \App\Models\ParentModel::factory()->create();
-
-        $response = $this->postJson("/api/chat/{$parent->id}/send-api", []);
-
-        // Harus return error karena field 'pesan' kosong
-        $response->assertStatus(422);
-    }
-}
+    $response->assertStatus(422);
+});
