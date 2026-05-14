@@ -1,0 +1,18 @@
+{
+    "sourceFile": "tests/Unit/ApiAuthTest.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1778756097004,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1778756097004,
+            "name": "Commit-0",
+            "content": "<?php\n\nnamespace Tests\\Unit;\n\nuse Tests\\TestCase;\nuse App\\Models\\User;\nuse Illuminate\\Foundation\\Testing\\RefreshDatabase;\n\nclass ApiAuthTest extends TestCase\n{\n    use RefreshDatabase;\n\n    /** @test */\n    public function login_berhasil_dengan_kredensial_benar()\n    {\n        $user = User::factory()->create([\n            'email'    => 'test@example.com',\n            'password' => bcrypt('password123'),\n        ]);\n\n        $response = $this->postJson('/api/login', [\n            'email'    => 'test@example.com',\n            'password' => 'password123',\n        ]);\n\n        $response->assertStatus(200)\n                 ->assertJsonStructure(['token']);\n    }\n\n    /** @test */\n    public function login_gagal_dengan_kredensial_salah()\n    {\n        User::factory()->create([\n            'email'    => 'test@example.com',\n            'password' => bcrypt('password123'),\n        ]);\n\n        $response = $this->postJson('/api/login', [\n            'email'    => 'test@example.com',\n            'password' => 'salah_password',\n        ]);\n\n        $response->assertStatus(401)\n                 ->assertJson(['success' => false]);\n    }\n\n    /** @test */\n    public function login_gagal_tanpa_email()\n    {\n        $response = $this->postJson('/api/login', [\n            'password' => 'password123',\n        ]);\n\n        $response->assertStatus(422);\n    }\n}"
+        }
+    ]
+}
