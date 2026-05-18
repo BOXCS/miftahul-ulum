@@ -34,10 +34,10 @@ test('login gagal dengan password salah', function () {
 
     $response = $this->post('/login', [
         'email'    => 'admin@test.com',
-        'password' => 'salah',
+        'password' => 'salah_password', 
     ]);
 
-    $response->assertSessionHasErrors('email');
+    $response->assertSessionHasErrors('email');  // sekarang error akan ke 'email'
     $this->assertGuest();
 });
 
