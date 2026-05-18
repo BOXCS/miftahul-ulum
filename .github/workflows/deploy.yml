@@ -21,6 +21,11 @@ jobs:
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, pdo_mysql, redis, zip, gd, bcmath
           coverage: pcov
 
+      - name: Install Node & Build Vite
+        run: |
+          npm install
+          npm run build
+
       - name: Copy .env for testing
         run: |
           cp .env.example .env
@@ -32,6 +37,7 @@ jobs:
           sed -i 's/SESSION_DRIVER=.*/SESSION_DRIVER=array/' .env
           sed -i 's/QUEUE_CONNECTION=.*/QUEUE_CONNECTION=sync/' .env
           echo "DB_URL=" >> .env
+          echo "VITE_DEV_SERVER_URL=http://localhost:5173" >> .env
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
