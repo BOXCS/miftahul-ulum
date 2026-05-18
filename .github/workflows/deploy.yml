@@ -19,7 +19,7 @@ jobs:
         with:
           php-version: "8.4"
           extensions: mbstring, pdo, pdo_sqlite, sqlite3, pdo_mysql, redis, zip, gd, bcmath
-          coverage: none
+          coverage: pcov
 
       - name: Copy .env for testing
         run: |
@@ -50,7 +50,9 @@ jobs:
           BROADCAST_CONNECTION: log
         run: |
           touch /tmp/test.sqlite
+          php artisan config:clear
           ./vendor/bin/pest tests/Unit
+          ./vendor/bin/pest tests/Unit --coverage --min=50
 
   # ─── Job 2: Deploy (hanya jika test lulus) ───────────────────────────────────
   deploy:
