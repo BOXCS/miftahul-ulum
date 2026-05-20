@@ -41,6 +41,8 @@ RUN composer install \
     --ignore-platform-reqs
 
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# di Dockerfile
+RUN docker-php-ext-install gd
 
 EXPOSE 9000
 CMD ["php-fpm"]

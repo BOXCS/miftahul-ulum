@@ -144,27 +144,27 @@ class DashboardController extends Controller
             $bulanan['alpha'][] = $alpha;
         }
 
-        // ── Tahunan (5 tahun terakhir, % rate) ──
+        // ── Tahunan (5 tahun terakhir, % dari data yang tercatat) ──
         $tahunan = ['labels' => [], 'hadir' => [], 'izin' => [], 'alpha' => []];
         for ($i = 4; $i >= 0; $i--) {
             $y = $year - $i;
             $tahunan['labels'][] = (string) $y;
+
             $hadir = Attendance::whereYear('tanggal', $y)->whereIn('status', ['hadir', 'terlambat'])->count();
             $izin  = Attendance::whereYear('tanggal', $y)->whereIn('status', ['izin', 'sakit'])->count();
-            $total = Attendance::whereYear('tanggal', $y)->count();
-            $daysInYear = Carbon::createFromDate($y, 1, 1)->isLeapYear() ? 366 : 365;
-            $expected = $totalSantri * $prayersCount * $daysInYear;
-            $alpha = max(0, $expected - $total);
+            $alpha = Attendance::whereYear('tanggal', $y)->where('status', 'alpha')->count();
+            $total = $hadir + $izin + $alpha;
 
-            $tahunan['hadir'][] = $hadir;
-            $tahunan['izin'][]  = $izin;
-            $tahunan['alpha'][] = $alpha;
+            // Tampilkan sebagai persentase dari data yang benar-benar tercatat
+            $tahunan['hadir'][] = $total > 0 ? round(($hadir / $total) * 100, 1) : 0;
+            $tahunan['izin'][]  = $total > 0 ? round(($izin  / $total) * 100, 1) : 0;
+            $tahunan['alpha'][] = $total > 0 ? round(($alpha / $total) * 100, 1) : 0;
         }
 
         return [
             '7hari'   => $sevenDays,
             'bulanan' => $bulanan,
-            'tahunan' => $tahunan,
+            'tahunan' => array_merge($tahunan, ['isPercent' => true]),
         ];
     }
 
