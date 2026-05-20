@@ -7,13 +7,13 @@ use App\Models\Announcement;
 uses(RefreshDatabase::class);
 
 test('halaman pengumuman dapat diakses oleh user login', function () {
+    $this->withoutVite();
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->get('/announcements');
 
-    // Terima 200 atau redirect, yang penting bukan 500
     $response->assertStatus(200);
-})->skip('View error di test environment');
+});
 
 test('halaman pengumuman redirect ke login jika belum login', function () {
     $response = $this->get('/announcements');
