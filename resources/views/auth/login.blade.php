@@ -618,7 +618,7 @@
 
             <p class="hero-desc">
                 Mencetak Generasi Rabbani Berakhlakul Karimah.<br>
-                Akses informasi
+                Akses informasi, perkembangan santri, dan komunikasi resmi dalam satu platform terpadu.
             </p>
         </div>
 
