@@ -1,5 +1,9 @@
 <?php
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
+
 test('iot ping return status 200', function () {
     $response = $this->getJson('/api/iot/ping');
 
