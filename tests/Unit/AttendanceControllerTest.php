@@ -55,8 +55,8 @@ test('halaman attendance create dapat diakses oleh user login', function () {
 test('halaman attendance report controller code berjalan', function () {
     $user = User::factory()->create();
     $response = $this->actingAs($user)->get('/attendance/report');
-    // View belum dibuat sehingga return 500, tapi controller logic tetap ter-cover
-    expect($response->status())->toBe(500);
+    // View berhasil dirender
+    expect($response->status())->toBe(200);
 });
 
 /* ---------- UNAUTHORIZED ---------- */
