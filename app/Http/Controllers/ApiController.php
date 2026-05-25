@@ -109,6 +109,7 @@ class ApiController extends Controller
             ->get()
             ->map(function ($s) {
                 return [
+                    "nis" => $s->nis,
                     "id_santri" => (string) $s->id,
                     "nama" => $s->name, // ✅ rename
                     "tahun_angkatan" => $s->class, // mapping sementara
