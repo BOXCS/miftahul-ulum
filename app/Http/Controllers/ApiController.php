@@ -91,6 +91,7 @@ class ApiController extends Controller
             "success" => true,
             "message" => "OK",
             "data" => [
+                "nis" => $s->nis,
                 "id_santri" => (string) $s->id,
                 "nama" => $s->name,
                 "tahun_angkatan" => $s->class,
