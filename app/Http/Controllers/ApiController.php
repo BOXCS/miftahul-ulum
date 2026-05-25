@@ -144,18 +144,18 @@ class ApiController extends Controller
 
         $attendance = $records->map(function ($dayRecords) {
             $dayRecords = $dayRecords->keyBy("waktu_shalat");
-            $totalHadir = $dayRecords->filter(fn($r) => $r->status === "hadir")->count();
+            $totalHadir = $dayRecords->filter(fn($r) => in_array($r->status, ["hadir", "terlambat"]))->count();
 
             $getRecord = fn($shalat) => $dayRecords->get($shalat);
 
             return [
                 "tanggal" => $dayRecords->first()->tanggal->format("Y-m-d"),
                 "jumlah_kehadiran" => $totalHadir,
-                "Subuh" => $getRecord("Subuh") && $getRecord("Subuh")->status === "hadir" ? 1 : 0,
-                "Dzuhur" => $getRecord("Dzuhur") && $getRecord("Dzuhur")->status === "hadir" ? 1 : 0,
-                "Ashar" => $getRecord("Ashar") && $getRecord("Ashar")->status === "hadir" ? 1 : 0,
-                "Maghrib" => $getRecord("Maghrib") && $getRecord("Maghrib")->status === "hadir" ? 1 : 0,
-                "Isya" => $getRecord("Isya") && $getRecord("Isya")->status === "hadir" ? 1 : 0,
+                "Subuh" => $getRecord("Subuh") && in_array($getRecord("Subuh")->status, ["hadir", "terlambat"]) ? 1 : 0,
+                "Dzuhur" => $getRecord("Dzuhur") && in_array($getRecord("Dzuhur")->status, ["hadir", "terlambat"]) ? 1 : 0,
+                "Ashar" => $getRecord("Ashar") && in_array($getRecord("Ashar")->status, ["hadir", "terlambat"]) ? 1 : 0,
+                "Maghrib" => $getRecord("Maghrib") && in_array($getRecord("Maghrib")->status, ["hadir", "terlambat"]) ? 1 : 0,
+                "Isya" => $getRecord("Isya") && in_array($getRecord("Isya")->status, ["hadir", "terlambat"]) ? 1 : 0,
                 "jam_masuk_subuh" => $getRecord("Subuh")?->jam_masuk?->toTimeString(),
                 "jam_keluar_subuh" => $getRecord("Subuh")?->jam_keluar?->toTimeString(),
                 "jam_masuk_dzuhur" => $getRecord("Dzuhur")?->jam_masuk?->toTimeString(),
@@ -179,7 +179,7 @@ class ApiController extends Controller
     public function kehadiranSummary($id)
     {
         $totalHadir = Attendance::where("student_id", $id)
-            ->where("status", "hadir")
+            ->whereIn("status", ["hadir", "terlambat"])
             ->count();
         $totalIzin = Attendance::where("student_id", $id)
             ->where("status", "izin")
