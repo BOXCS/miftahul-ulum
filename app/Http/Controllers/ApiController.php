@@ -134,36 +134,40 @@ class ApiController extends Controller
 
     public function kehadiranMingguan($id)
     {
-        $attendance = Attendance::where("student_id", $id)
+        $records = Attendance::where("student_id", $id)
             ->whereBetween("tanggal", [
                 now()->startOfWeek(),
                 now()->endOfWeek(),
             ])
             ->get()
-            ->map(function ($a) {
-                return [
-                    "tanggal" => $a->tanggal ?? "",
+            ->groupBy("tanggal");
 
-                    "jumlah_kehadiran" => $a->jumlah_kehadiran ?? 0,
+        $attendance = $records->map(function ($dayRecords) {
+            $dayRecords = $dayRecords->keyBy("waktu_shalat");
+            $totalHadir = $dayRecords->filter(fn($r) => $r->status === "hadir")->count();
 
-                    "Subuh" => (int) ($a->Subuh ?? 0),
-                    "Dzuhur" => (int) ($a->Dzuhur ?? 0),
-                    "Ashar" => (int) ($a->Ashar ?? 0),
-                    "Maghrib" => (int) ($a->Maghrib ?? 0),
-                    "Isya" => (int) ($a->Isya ?? 0),
+            $getRecord = fn($shalat) => $dayRecords->get($shalat);
 
-                    "jam_masuk_subuh" => $a->jam_masuk_subuh ?? null,
-                    "jam_keluar_subuh" => $a->jam_keluar_subuh ?? null,
-                    "jam_masuk_dzuhur" => $a->jam_masuk_dzuhur ?? null,
-                    "jam_keluar_dzuhur" => $a->jam_keluar_dzuhur ?? null,
-                    "jam_masuk_ashar" => $a->jam_masuk_ashar ?? null,
-                    "jam_keluar_ashar" => $a->jam_keluar_ashar ?? null,
-                    "jam_masuk_maghrib" => $a->jam_masuk_maghrib ?? null,
-                    "jam_keluar_maghrib" => $a->jam_keluar_maghrib ?? null,
-                    "jam_masuk_isya" => $a->jam_masuk_isya ?? null,
-                    "jam_keluar_isya" => $a->jam_keluar_isya ?? null,
-                ];
-            });
+            return [
+                "tanggal" => $dayRecords->first()->tanggal->format("Y-m-d"),
+                "jumlah_kehadiran" => $totalHadir,
+                "Subuh" => $getRecord("Subuh") && $getRecord("Subuh")->status === "hadir" ? 1 : 0,
+                "Dzuhur" => $getRecord("Dzuhur") && $getRecord("Dzuhur")->status === "hadir" ? 1 : 0,
+                "Ashar" => $getRecord("Ashar") && $getRecord("Ashar")->status === "hadir" ? 1 : 0,
+                "Maghrib" => $getRecord("Maghrib") && $getRecord("Maghrib")->status === "hadir" ? 1 : 0,
+                "Isya" => $getRecord("Isya") && $getRecord("Isya")->status === "hadir" ? 1 : 0,
+                "jam_masuk_subuh" => $getRecord("Subuh")?->jam_masuk?->toTimeString(),
+                "jam_keluar_subuh" => $getRecord("Subuh")?->jam_keluar?->toTimeString(),
+                "jam_masuk_dzuhur" => $getRecord("Dzuhur")?->jam_masuk?->toTimeString(),
+                "jam_keluar_dzuhur" => $getRecord("Dzuhur")?->jam_keluar?->toTimeString(),
+                "jam_masuk_ashar" => $getRecord("Ashar")?->jam_masuk?->toTimeString(),
+                "jam_keluar_ashar" => $getRecord("Ashar")?->jam_keluar?->toTimeString(),
+                "jam_masuk_maghrib" => $getRecord("Maghrib")?->jam_masuk?->toTimeString(),
+                "jam_keluar_maghrib" => $getRecord("Maghrib")?->jam_keluar?->toTimeString(),
+                "jam_masuk_isya" => $getRecord("Isya")?->jam_masuk?->toTimeString(),
+                "jam_keluar_isya" => $getRecord("Isya")?->jam_keluar?->toTimeString(),
+            ];
+        })->values();
 
         return response()->json([
             "success" => true,
