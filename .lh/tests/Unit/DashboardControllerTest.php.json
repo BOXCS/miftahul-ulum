@@ -1,0 +1,26 @@
+{
+    "sourceFile": "tests/Unit/DashboardControllerTest.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 2,
+            "patches": [
+                {
+                    "date": 1779142551001,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1779142857965,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -8,9 +8,9 @@\n test('dashboard dapat diakses oleh user login', function () {\n     $user = User::factory()->create();\n     $response = $this->actingAs($user)->get('/');\n     $response->assertStatus(200);\n-});\n+})->skip('Vite manifest tidak tersedia di test environment');\n \n test('dashboard redirect ke login jika belum login', function () {\n     $response = $this->get('/');\n     $response->assertRedirect('/login');\n"
+                },
+                {
+                    "date": 1779142880051,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -8,9 +8,9 @@\n test('dashboard dapat diakses oleh user login', function () {\n     $user = User::factory()->create();\n     $response = $this->actingAs($user)->get('/');\n     $response->assertStatus(200);\n-})->skip('Vite manifest tidak tersedia di test environment');\n+});\n \n test('dashboard redirect ke login jika belum login', function () {\n     $response = $this->get('/');\n     $response->assertRedirect('/login');\n"
+                }
+            ],
+            "date": 1779142551001,
+            "name": "Commit-0",
+            "content": "<?php\n\nuse Illuminate\\Foundation\\Testing\\RefreshDatabase;\nuse App\\Models\\User;\n\nuses(RefreshDatabase::class);\n\ntest('dashboard dapat diakses oleh user login', function () {\n    $user = User::factory()->create();\n    $response = $this->actingAs($user)->get('/');\n    $response->assertStatus(200);\n});\n\ntest('dashboard redirect ke login jika belum login', function () {\n    $response = $this->get('/');\n    $response->assertRedirect('/login');\n});"
+        }
+    ]
+}

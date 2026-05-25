@@ -1,0 +1,22 @@
+{
+    "sourceFile": "tests/Pest.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1778757722980,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1778757747195,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,4 +1,6 @@\n+<!-- test/Pest.php -->\r\n+\r\n <?php\r\n \r\n use Illuminate\\Foundation\\Testing\\RefreshDatabase;\r\n use Tests\\TestCase;\r\n"
+                }
+            ],
+            "date": 1778757722980,
+            "name": "Commit-0",
+            "content": "<?php\r\n\r\nuse Illuminate\\Foundation\\Testing\\RefreshDatabase;\r\nuse Tests\\TestCase;\r\n\r\nuses(TestCase::class)->in('Unit', 'Feature');"
+        }
+    ]
+}

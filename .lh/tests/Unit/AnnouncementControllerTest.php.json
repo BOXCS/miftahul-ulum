@@ -1,0 +1,30 @@
+{
+    "sourceFile": "tests/Unit/AnnouncementControllerTest.php",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 3,
+            "patches": [
+                {
+                    "date": 1779089006123,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1779089760812,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -59,10 +59,15 @@\n });\n \n test('pengumuman dapat dihapus', function () {\n     $user = User::factory()->create();\n-    $announcement = Announcement::factory()->create();\n \n+    $announcement = Announcement::create([\n+        'judul'    => 'Pengumuman Hapus',\n+        'konten'   => 'Konten pengumuman yang akan dihapus',\n+        'kategori' => 'umum',\n+    ]);\n+\n     $response = $this->actingAs($user)->delete(\"/announcements/{$announcement->id}\");\n \n     $response->assertRedirect();\n     $this->assertDatabaseMissing('announcements', ['id' => $announcement->id]);\n"
+                },
+                {
+                    "date": 1779090153730,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -10,10 +10,11 @@\n     $user = User::factory()->create();\n \n     $response = $this->actingAs($user)->get('/announcements');\n \n+    // Terima 200 atau redirect, yang penting bukan 500\n     $response->assertStatus(200);\n-});\n+})->skip('View error di test environment');\n \n test('halaman pengumuman redirect ke login jika belum login', function () {\n     $response = $this->get('/announcements');\n \n"
+                },
+                {
+                    "date": 1779143098614,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -12,9 +12,9 @@\n     $response = $this->actingAs($user)->get('/announcements');\n \n     // Terima 200 atau redirect, yang penting bukan 500\n     $response->assertStatus(200);\n-})->skip('View error di test environment');\n+});\n \n test('halaman pengumuman redirect ke login jika belum login', function () {\n     $response = $this->get('/announcements');\n \n"
+                }
+            ],
+            "date": 1779089006123,
+            "name": "Commit-0",
+            "content": "<?php\n\nuse Illuminate\\Foundation\\Testing\\RefreshDatabase;\nuse App\\Models\\User;\nuse App\\Models\\Announcement;\n\nuses(RefreshDatabase::class);\n\ntest('halaman pengumuman dapat diakses oleh user login', function () {\n    $user = User::factory()->create();\n\n    $response = $this->actingAs($user)->get('/announcements');\n\n    $response->assertStatus(200);\n});\n\ntest('halaman pengumuman redirect ke login jika belum login', function () {\n    $response = $this->get('/announcements');\n\n    $response->assertRedirect('/login');\n});\n\ntest('pengumuman berhasil dibuat', function () {\n    $user = User::factory()->create();\n\n    $response = $this->actingAs($user)->post('/announcements', [\n        'judul'    => 'Test Pengumuman',\n        'konten'   => 'Isi pengumuman test yang cukup panjang',\n        'kategori' => 'umum',\n    ]);\n\n    $response->assertRedirect();\n    $this->assertDatabaseHas('announcements', [\n        'judul' => 'Test Pengumuman',\n    ]);\n});\n\ntest('pengumuman gagal dibuat tanpa judul', function () {\n    $user = User::factory()->create();\n\n    $response = $this->actingAs($user)->post('/announcements', [\n        'konten'   => 'Isi pengumuman',\n        'kategori' => 'umum',\n    ]);\n\n    $response->assertSessionHasErrors('judul');\n});\n\ntest('pengumuman gagal dibuat dengan kategori tidak valid', function () {\n    $user = User::factory()->create();\n\n    $response = $this->actingAs($user)->post('/announcements', [\n        'judul'    => 'Test',\n        'konten'   => 'Isi pengumuman',\n        'kategori' => 'invalid_kategori',\n    ]);\n\n    $response->assertSessionHasErrors('kategori');\n});\n\ntest('pengumuman dapat dihapus', function () {\n    $user = User::factory()->create();\n    $announcement = Announcement::factory()->create();\n\n    $response = $this->actingAs($user)->delete(\"/announcements/{$announcement->id}\");\n\n    $response->assertRedirect();\n    $this->assertDatabaseMissing('announcements', ['id' => $announcement->id]);\n});"
+        }
+    ]
+}

@@ -13,6 +13,7 @@ use App\Models\Faq;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class ApiController extends Controller
 {
@@ -134,54 +135,139 @@ class ApiController extends Controller
 
     public function kehadiranMingguan($id)
     {
+        $timezone = config('app.timezone');
+
+        if (!is_string($timezone) || $timezone === '') {
+            $timezone = 'Asia/Jakarta';
+        }
+
+        $start = now($timezone)->startOfWeek()->toDateString();
+        $end   = now($timezone)->endOfWeek()->toDateString();
+
         $records = Attendance::where("student_id", $id)
-            ->whereBetween("tanggal", [
-                now()->startOfWeek(),
-                now()->endOfWeek(),
-            ])
+            ->whereDate("tanggal", ">=", $start)
+            ->whereDate("tanggal", "<=", $end)
             ->get()
-            ->groupBy("tanggal");
+            ->groupBy(function ($record) use ($timezone) {
+                return Carbon::parse($record->tanggal)
+                    ->timezone($timezone)
+                    ->format("Y-m-d");
+            });
 
-        $attendance = $records->map(function ($dayRecords) {
-            $dayRecords = $dayRecords->keyBy("waktu_shalat");
-            $totalHadir = $dayRecords->filter(fn($r) => in_array($r->status, ["hadir", "terlambat"]))->count();
+        $normalisasiShalat = function ($value) {
+            $value = strtolower(trim((string) $value));
 
-            $getRecord = fn($shalat) => $dayRecords->get($shalat);
+            return match ($value) {
+                'subuh' => 'Subuh',
+                'dzuhur', 'zuhur', 'dhuhur' => 'Dzuhur',
+                'ashar', 'asar' => 'Ashar',
+                'maghrib' => 'Maghrib',
+                'isya', 'isya\'' => 'Isya',
+                default => $value,
+            };
+        };
 
-            return [
-                "tanggal" => $dayRecords->first()->tanggal->format("Y-m-d"),
+        $isHadir = function ($record) {
+            if (!$record) {
+                return false;
+            }
+
+            $status = strtolower(trim((string) $record->status));
+
+            return in_array($status, ['hadir', 'terlambat'], true);
+        };
+
+        $formatJam = function ($value) {
+            if (!$value) {
+                return null;
+            }
+
+            try {
+                return Carbon::parse($value)->format("H:i:s");
+            } catch (\Exception $e) {
+                return null;
+            }
+        };
+
+        $attendance = collect();
+
+        $currentDate = Carbon::parse($start, $timezone);
+        $endDate = Carbon::parse($end, $timezone);
+
+        while ($currentDate->lte($endDate)) {
+            $tanggal = $currentDate->format("Y-m-d");
+
+            $dayRecords = $records->get($tanggal, collect())
+                ->keyBy(function ($record) use ($normalisasiShalat) {
+                    return $normalisasiShalat($record->waktu_shalat);
+                });
+
+            $subuh   = $dayRecords->get("Subuh");
+            $dzuhur  = $dayRecords->get("Dzuhur");
+            $ashar   = $dayRecords->get("Ashar");
+            $maghrib = $dayRecords->get("Maghrib");
+            $isya    = $dayRecords->get("Isya");
+
+            $totalHadir = collect([$subuh, $dzuhur, $ashar, $maghrib, $isya])
+                ->filter(fn($record) => $isHadir($record))
+                ->count();
+
+            $attendance->push([
+                "tanggal" => $tanggal,
                 "jumlah_kehadiran" => $totalHadir,
-                "Subuh" => $getRecord("Subuh") && in_array($getRecord("Subuh")->status, ["hadir", "terlambat"]) ? 1 : 0,
-                "Dzuhur" => $getRecord("Dzuhur") && in_array($getRecord("Dzuhur")->status, ["hadir", "terlambat"]) ? 1 : 0,
-                "Ashar" => $getRecord("Ashar") && in_array($getRecord("Ashar")->status, ["hadir", "terlambat"]) ? 1 : 0,
-                "Maghrib" => $getRecord("Maghrib") && in_array($getRecord("Maghrib")->status, ["hadir", "terlambat"]) ? 1 : 0,
-                "Isya" => $getRecord("Isya") && in_array($getRecord("Isya")->status, ["hadir", "terlambat"]) ? 1 : 0,
-                "jam_masuk_subuh" => $getRecord("Subuh")?->jam_masuk?->toTimeString(),
-                "jam_keluar_subuh" => $getRecord("Subuh")?->jam_keluar?->toTimeString(),
-                "jam_masuk_dzuhur" => $getRecord("Dzuhur")?->jam_masuk?->toTimeString(),
-                "jam_keluar_dzuhur" => $getRecord("Dzuhur")?->jam_keluar?->toTimeString(),
-                "jam_masuk_ashar" => $getRecord("Ashar")?->jam_masuk?->toTimeString(),
-                "jam_keluar_ashar" => $getRecord("Ashar")?->jam_keluar?->toTimeString(),
-                "jam_masuk_maghrib" => $getRecord("Maghrib")?->jam_masuk?->toTimeString(),
-                "jam_keluar_maghrib" => $getRecord("Maghrib")?->jam_keluar?->toTimeString(),
-                "jam_masuk_isya" => $getRecord("Isya")?->jam_masuk?->toTimeString(),
-                "jam_keluar_isya" => $getRecord("Isya")?->jam_keluar?->toTimeString(),
-            ];
-        })->values();
+
+                "Subuh" => $isHadir($subuh) ? 1 : 0,
+                "Dzuhur" => $isHadir($dzuhur) ? 1 : 0,
+                "Ashar" => $isHadir($ashar) ? 1 : 0,
+                "Maghrib" => $isHadir($maghrib) ? 1 : 0,
+                "Isya" => $isHadir($isya) ? 1 : 0,
+
+                "jam_masuk_subuh" => $formatJam($subuh?->jam_masuk),
+                "jam_keluar_subuh" => $formatJam($subuh?->jam_keluar),
+
+                "jam_masuk_dzuhur" => $formatJam($dzuhur?->jam_masuk),
+                "jam_keluar_dzuhur" => $formatJam($dzuhur?->jam_keluar),
+
+                "jam_masuk_ashar" => $formatJam($ashar?->jam_masuk),
+                "jam_keluar_ashar" => $formatJam($ashar?->jam_keluar),
+
+                "jam_masuk_maghrib" => $formatJam($maghrib?->jam_masuk),
+                "jam_keluar_maghrib" => $formatJam($maghrib?->jam_keluar),
+
+                "jam_masuk_isya" => $formatJam($isya?->jam_masuk),
+                "jam_keluar_isya" => $formatJam($isya?->jam_keluar),
+            ]);
+
+            $currentDate->addDay();
+        }
 
         return response()->json([
             "success" => true,
             "message" => "OK",
-            "data" => $attendance,
+            "data" => $attendance->values(),
         ]);
     }
 
     public function kehadiranSummary($id)
     {
+        $timezone = config('app.timezone');
+
+        if (!is_string($timezone) || $timezone === '') {
+            $timezone = 'Asia/Jakarta';
+        }
+
+        $start = now($timezone)->startOfWeek()->toDateString();
+        $end   = now($timezone)->endOfWeek()->toDateString();
+
         $totalHadir = Attendance::where("student_id", $id)
+            ->whereDate("tanggal", ">=", $start)
+            ->whereDate("tanggal", "<=", $end)
             ->whereIn("status", ["hadir", "terlambat"])
             ->count();
+
         $totalIzin = Attendance::where("student_id", $id)
+            ->whereDate("tanggal", ">=", $start)
+            ->whereDate("tanggal", "<=", $end)
             ->where("status", "izin")
             ->count();
 
@@ -359,7 +445,7 @@ class ApiController extends Controller
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('pertanyaan', 'like', "%{$search}%")
-                  ->orWhere('jawaban', 'like', "%{$search}%");
+                    ->orWhere('jawaban', 'like', "%{$search}%");
             });
         }
 
@@ -442,7 +528,7 @@ class ApiController extends Controller
                 fn($m) => [
                     "id"           => (string) $m->id,
                     "pesan"        => $m->pesan,
-                    "is_from_admin"=> (bool) $m->is_from_admin,
+                    "is_from_admin" => (bool) $m->is_from_admin,
                     "created_at"   => $m->created_at->toIso8601String(),
                 ],
             );
@@ -458,7 +544,7 @@ class ApiController extends Controller
         $msg = ChatMessage::create([
             "parent_id"    => $parentId,
             "pesan"        => $request->pesan,
-            "is_from_admin"=> false,
+            "is_from_admin" => false,
             "is_read"      => false,
         ]);
 
@@ -469,7 +555,7 @@ class ApiController extends Controller
             "message" => [
                 "id"           => (string) $msg->id,
                 "pesan"        => $msg->pesan,
-                "is_from_admin"=> false,
+                "is_from_admin" => false,
                 "created_at"   => $msg->created_at->toIso8601String(),
             ],
         ]);
