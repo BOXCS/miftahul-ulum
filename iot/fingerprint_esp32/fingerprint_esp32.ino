@@ -24,7 +24,7 @@
 #define WIFI_PASS    ""
 
 // ================= KONFIGURASI SERVER VPS =================
-#define SERVER_BASE_URL "http://103.157.27.237:8000"
+#define SERVER_BASE_URL "http://103.157.27.237"
 #define SERVER_SIG      "miftahul_ulum"
 
 // ================= KONFIGURASI SISTEM =================
