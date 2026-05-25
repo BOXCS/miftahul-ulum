@@ -109,8 +109,8 @@ class ApiController extends Controller
             ->get()
             ->map(function ($s) {
                 return [
-                    "nis" => $s->nis,
                     "id_santri" => (string) $s->id,
+                    "nis" => $s->nis,
                     "nama" => $s->name, // ✅ rename
                     "tahun_angkatan" => $s->class, // mapping sementara
                     "sidik_jari" => null, // belum ada alat
@@ -259,25 +259,63 @@ class ApiController extends Controller
         }
 
         $start = now($timezone)->startOfWeek()->toDateString();
-        $end   = now($timezone)->endOfWeek()->toDateString();
 
-        $totalHadir = Attendance::where("student_id", $id)
-            ->whereDate("tanggal", ">=", $start)
-            ->whereDate("tanggal", "<=", $end)
-            ->whereIn("status", ["hadir", "terlambat"])
+        // Pakai hari ini, bukan endOfWeek.
+        // Supaya Senin hanya dihitung 5 shalat, bukan langsung 35 shalat.
+        $today = now($timezone)->toDateString();
+
+        $shalatList = ['Subuh', 'Dzuhur', 'Ashar', 'Maghrib', 'Isya'];
+
+        $records = Attendance::where('student_id', $id)
+            ->whereBetween('tanggal', [$start, $today])
+            ->orderBy('tanggal')
+            ->orderBy('waktu_shalat')
+            ->get()
+            ->unique(function ($record) {
+                return $record->tanggal . '-' . $record->waktu_shalat;
+            })
+            ->values();
+
+        $totalHadir = $records
+            ->whereIn('status', ['hadir', 'terlambat'])
             ->count();
 
-        $totalIzin = Attendance::where("student_id", $id)
-            ->whereDate("tanggal", ">=", $start)
-            ->whereDate("tanggal", "<=", $end)
-            ->where("status", "izin")
+        $totalIzin = $records
+            ->where('status', 'izin')
             ->count();
+
+        $totalSakit = $records
+            ->where('status', 'sakit')
+            ->count();
+
+        $totalAlphaTercatat = $records
+            ->where('status', 'alpha')
+            ->count();
+
+        $jumlahHari = \Carbon\Carbon::parse($start)
+            ->diffInDays(\Carbon\Carbon::parse($today)) + 1;
+
+        $totalShalat = $jumlahHari * count($shalatList);
+
+        $totalTerisi = $totalHadir + $totalIzin + $totalSakit + $totalAlphaTercatat;
+
+        $alphaKosong = max($totalShalat - $totalTerisi, 0);
+
+        $totalAlpha = $totalAlphaTercatat + $alphaKosong;
+
+        $persentase = $totalShalat > 0
+            ? round(($totalHadir / $totalShalat) * 100, 2)
+            : 0;
 
         return response()->json([
-            "success" => true,
-            "data" => [
-                "hadir" => $totalHadir,
-                "izin" => $totalIzin,
+            'success' => true,
+            'data' => [
+                'hadir' => $totalHadir,
+                'izin' => $totalIzin,
+                'alpha' => $totalAlpha,
+                'sakit' => $totalSakit,
+                'total_shalat' => $totalShalat,
+                'persentase' => $persentase,
             ],
         ]);
     }
