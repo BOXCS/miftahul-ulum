@@ -7,7 +7,7 @@ uses(RefreshDatabase::class);
 
 test('dashboard dapat diakses oleh user login', function () {
     $user = User::factory()->create();
-    $response = $this->actingAs($user)->get('/');
+    $response = $this->actingAs($user)->get('/dashboard');
     $response->assertStatus(200);
 });
 
