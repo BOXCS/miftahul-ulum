@@ -12,6 +12,6 @@ test('dashboard dapat diakses oleh user login', function () {
 });
 
 test('dashboard redirect ke login jika belum login', function () {
-    $response = $this->get('/');
+    $response = $this->get('/dashboard');
     $response->assertRedirect('/login');
 });
