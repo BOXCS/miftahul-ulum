@@ -15,11 +15,11 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StaffController;
 
 // Landing Page
-Route::get('/landing', function () {
+Route::get('/', function () {
     return view('landing');
 })->name('landing');
 // Dashboard
-Route::get("/", [DashboardController::class, "index"])->name("dashboard");
+Route::get("/dashboard", [DashboardController::class, "index"])->name("dashboard");
 
 // Login
 Route::get('/login', [AuthController::class, 'login'])->name('login');
@@ -29,7 +29,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware(['auth'])->group(function () {
 
     // Dashboard
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     // Students
     Route::get('/students', [StudentController::class, 'index'])->name('students.index');
     Route::get('/students/create', [StudentController::class, 'create'])->name('students.create');
