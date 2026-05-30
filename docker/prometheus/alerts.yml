@@ -1,0 +1,130 @@
+groups:
+  - name: infrastructure-alerts
+    rules:
+      - alert: TargetDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Target down: {{ $labels.job }} - {{ $labels.instance }}"
+          description: "Target {{ $labels.instance }} pada job {{ $labels.job }} tidak dapat di-scrape selama 1 menit."
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{job="node", mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU usage tinggi"
+          description: "CPU usage pada {{ $labels.instance }} lebih dari 80% selama 5 menit."
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes{job="node"} / node_memory_MemTotal_bytes{job="node"})) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memory usage tinggi"
+          description: "Memory usage pada {{ $labels.instance }} lebih dari 85% selama 5 menit."
+
+      - alert: DiskAlmostFull
+        expr: 100 * (1 - (node_filesystem_avail_bytes{job="node", fstype!~"tmpfs|overlay|squashfs"} / node_filesystem_size_bytes{job="node", fstype!~"tmpfs|overlay|squashfs"})) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk hampir penuh"
+          description: "Disk {{ $labels.mountpoint }} pada {{ $labels.instance }} lebih dari 85%."
+
+  - name: application-alerts
+    rules:
+      - alert: WebsiteDown
+        expr: probe_success{job="blackbox-http"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Website down"
+          description: "{{ $labels.instance }} gagal diakses oleh Blackbox Exporter."
+
+      - alert: WebsiteSlowResponse
+        expr: probe_duration_seconds{job="blackbox-http"} > 2
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Website lambat"
+          description: "{{ $labels.instance }} memiliki response time lebih dari 2 detik."
+
+      - alert: SSLExpiringSoon
+        expr: (probe_ssl_earliest_cert_expiry{job="blackbox-http"} - time()) / 86400 < 14
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "SSL certificate hampir expired"
+          description: "SSL untuk {{ $labels.instance }} akan expired kurang dari 14 hari."
+
+      - alert: MySQLDown
+        expr: mysql_up{job="mysql"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MySQL down"
+          description: "MySQL tidak dapat dimonitor oleh exporter."
+
+      - alert: MySQLHighConnectionUsage
+        expr: 100 * (mysql_global_status_threads_connected{job="mysql"} / mysql_global_variables_max_connections{job="mysql"}) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Koneksi MySQL tinggi"
+          description: "Penggunaan koneksi MySQL lebih dari 80%."
+
+      - alert: MySQLSlowQueryDetected
+        expr: increase(mysql_global_status_slow_queries{job="mysql"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow query MySQL terdeteksi"
+          description: "Ada peningkatan slow query dalam 5 menit terakhir."
+
+      - alert: RedisDown
+        expr: redis_up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis down"
+          description: "Redis tidak dapat dimonitor oleh exporter."
+
+      - alert: RedisRejectedConnections
+        expr: increase(redis_rejected_connections_total{job="redis"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis menolak koneksi"
+          description: "Redis rejected connections meningkat."
+
+      - alert: NginxDown
+        expr: nginx_up{job="nginx"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Nginx exporter down"
+          description: "Nginx tidak dapat dimonitor oleh exporter."
+
+      - alert: ContainerNotSeen
+        expr: time() - container_last_seen{name=~".*laravel.*"} > 60
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container tidak terlihat"
+          description: "Container {{ $labels.name }} tidak terlihat oleh cAdvisor lebih dari 60 detik."

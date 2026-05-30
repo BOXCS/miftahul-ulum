@@ -1,5 +1,4 @@
 services:
-
   app:
     build:
       context: .
@@ -7,32 +6,32 @@ services:
     container_name: laravel_app
     restart: unless-stopped
     volumes:
-      - .:/var/www/html
-      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
+    - .:/var/www/html
+    - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
     depends_on:
-      - mysql
-      - redis
+    - mysql
+    - redis
     networks:
-      - app-network
+    - app-network
     environment:
-      - APP_ENV=${APP_ENV:-production}
-
+    - APP_ENV=${APP_ENV:-production}
   nginx:
     image: nginx:alpine
     container_name: laravel_nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+    - 80:80
+    - 443:443
     volumes:
-      - .:/var/www/html
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+    - .:/var/www/html
+    - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
-      - app
+    - app
     networks:
-      - app-network
-
+    - app-network
+    expose:
+    - '8080'
   reverb:
     build:
       context: .
@@ -41,15 +40,14 @@ services:
     restart: unless-stopped
     command: php artisan reverb:start --host=0.0.0.0 --port=8080
     ports:
-      - "8081:8080"
+    - 8081:8080
     volumes:
-      - .:/var/www/html
+    - .:/var/www/html
     depends_on:
-      - app
-      - redis
+    - app
+    - redis
     networks:
-      - app-network
-
+    - app-network
   queue:
     build:
       context: .
@@ -58,92 +56,197 @@ services:
     restart: unless-stopped
     command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
     volumes:
-      - .:/var/www/html
+    - .:/var/www/html
     depends_on:
-      - app
-      - redis
+    - app
+    - redis
     networks:
-      - app-network
-
+    - app-network
   mysql:
     image: mysql:8.0
     container_name: laravel_mysql
     restart: unless-stopped
     ports:
-      - "3310:3306"
+    - 127.0.0.1:3310:3306
     environment:
       MYSQL_DATABASE: pesantren_db
       MYSQL_ROOT_PASSWORD: rootsecret
-      MYSQL_ROOT_HOST: "%"
+      MYSQL_ROOT_HOST: '%'
     volumes:
-      - mysql_data:/var/lib/mysql
+    - mysql_data:/var/lib/mysql
     networks:
-      - app-network
-
+    - app-network
   redis:
     image: redis:alpine
     container_name: laravel_redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+    - 127.0.0.1:6379:6379
     volumes:
-      - redis_data:/data
+    - redis_data:/data
     networks:
-      - app-network
-
+    - app-network
   prometheus:
     image: prom/prometheus:latest
     container_name: laravel_prometheus
     restart: unless-stopped
     networks:
-      - app-network
+    - app-network
     volumes:
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
+    - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    - ./docker/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+    - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-
+    - --config.file=/etc/prometheus/prometheus.yml
+    - --storage.tsdb.path=/prometheus
   grafana:
     image: grafana/grafana:latest
     container_name: laravel_grafana
     restart: unless-stopped
     ports:
-      - "9100:3000"
+    - 9100:3000
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin123
-      - GF_USERS_ALLOW_SIGN_UP=false
+    - GF_SECURITY_ADMIN_USER=admin
+    - GF_SECURITY_ADMIN_PASSWORD=admin123
+    - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
-      - grafana_data:/var/lib/grafana
-      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+    - grafana_data:/var/lib/grafana
+    - ./docker/grafana/provisioning:/etc/grafana/provisioning
     depends_on:
-      - prometheus
+    - prometheus
     networks:
-      - app-network
-
+    - app-network
   node-exporter:
     image: prom/node-exporter:latest
     container_name: laravel_node_exporter
     restart: unless-stopped
     volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
+    - /proc:/host/proc:ro
+    - /sys:/host/sys:ro
+    - /:/rootfs:ro
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
-      - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    - --path.procfs=/host/proc
+    - --path.rootfs=/rootfs
+    - --path.sysfs=/host/sys
+    - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
     networks:
-      - app-network
-
+    - app-network
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: laravel_cadvisor
+    restart: unless-stopped
+    privileged: true
+    expose:
+    - '8080'
+    volumes:
+    - /:/rootfs:ro
+    - /var/run:/var/run:ro
+    - /sys:/sys:ro
+    - /var/lib/docker/:/var/lib/docker:ro
+    - /dev/disk/:/dev/disk:ro
+    networks:
+    - app-network
+  mysqld-exporter:
+    image: prom/mysqld-exporter:latest
+    container_name: laravel_mysqld_exporter
+    restart: unless-stopped
+    command:
+    - --config.my-cnf=/.my.cnf
+    volumes:
+    - ./docker/prometheus/mysqld-exporter.cnf:/.my.cnf:ro
+    expose:
+    - '9104'
+    depends_on:
+    - mysql
+    networks:
+    - app-network
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: laravel_redis_exporter
+    restart: unless-stopped
+    command:
+    - --redis.addr=redis://redis:6379
+    expose:
+    - '9121'
+    depends_on:
+    - redis
+    networks:
+    - app-network
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: laravel_nginx_exporter
+    restart: unless-stopped
+    command:
+    - --nginx.scrape-uri=http://nginx:8080/stub_status
+    expose:
+    - '9113'
+    depends_on:
+    - nginx
+    networks:
+    - app-network
+  blackbox-exporter:
+    image: prom/blackbox-exporter:latest
+    container_name: laravel_blackbox_exporter
+    restart: unless-stopped
+    command:
+    - --config.file=/etc/blackbox_exporter/config.yml
+    volumes:
+    - ./docker/prometheus/blackbox.yml:/etc/blackbox_exporter/config.yml:ro
+    expose:
+    - '9115'
+    networks:
+    - app-network
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: laravel_alertmanager
+    restart: unless-stopped
+    command:
+    - --config.file=/etc/alertmanager/alertmanager.yml
+    - --storage.path=/alertmanager
+    volumes:
+    - ./docker/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    - alertmanager_data:/alertmanager
+    expose:
+    - '9093'
+    networks:
+    - app-network
+  loki:
+    image: grafana/loki:latest
+    container_name: laravel_loki
+    restart: unless-stopped
+    command:
+    - -config.file=/etc/loki/local-config.yaml
+    expose:
+    - '3100'
+    volumes:
+    - loki_data:/loki
+    networks:
+    - app-network
+  alloy:
+    image: grafana/alloy:latest
+    container_name: laravel_alloy
+    restart: unless-stopped
+    command:
+    - run
+    - --server.http.listen-addr=0.0.0.0:12345
+    - --storage.path=/var/lib/alloy/data
+    - /etc/alloy/config.alloy
+    volumes:
+    - ./docker/alloy/alloy.river:/etc/alloy/config.alloy:ro
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    expose:
+    - '12345'
+    depends_on:
+    - loki
+    networks:
+    - app-network
 volumes:
-  mysql_data:
-  redis_data:
-  prometheus_data:
-  grafana_data:
-
+  mysql_data: null
+  redis_data: null
+  prometheus_data: null
+  grafana_data: null
+  alertmanager_data: {}
+  loki_data: {}
 networks:
   app-network:
     driver: bridge

@@ -1,7 +1,100 @@
 global:
   scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
 
 scrape_configs:
-  - job_name: 'node'
+  - job_name: "prometheus"
     static_configs:
-      - targets: ['node-exporter:9100']
+      - targets:
+          - "prometheus:9090"
+
+  - job_name: "node"
+    static_configs:
+      - targets:
+          - "node-exporter:9100"
+
+  - job_name: "cadvisor"
+    static_configs:
+      - targets:
+          - "cadvisor:8080"
+
+  - job_name: "mysql"
+    static_configs:
+      - targets:
+          - "mysqld-exporter:9104"
+
+  - job_name: "redis"
+    static_configs:
+      - targets:
+          - "redis-exporter:9121"
+
+  - job_name: "nginx"
+    static_configs:
+      - targets:
+          - "nginx-exporter:9113"
+
+  - job_name: "blackbox-exporter"
+    static_configs:
+      - targets:
+          - "blackbox-exporter:9115"
+
+  - job_name: "alertmanager"
+    static_configs:
+      - targets:
+          - "alertmanager:9093"
+
+  - job_name: "loki"
+    static_configs:
+      - targets:
+          - "loki:3100"
+
+  - job_name: "alloy"
+    static_configs:
+      - targets:
+          - "alloy:12345"
+
+  - job_name: "blackbox-http"
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - https://miftahululumkalisat.web.id/
+          - https://miftahululumkalisat.web.id/login
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  - job_name: "blackbox-tcp"
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+    static_configs:
+      - targets:
+          - mysql:3306
+          - redis:6379
+          - reverb:8080
+          - app:9000
+          - queue:9000
+          - nginx:80
+          - nginx:443
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
