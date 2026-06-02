@@ -613,7 +613,7 @@
             <div class="hero-divider"></div>
 
             <h1 class="hero-title">
-                Portal Admin<br>& Pengurus Pondok</span>
+                Portal Masuk<br>& Pengurus Pondok</span>
             </h1>
 
             <p class="hero-desc">
